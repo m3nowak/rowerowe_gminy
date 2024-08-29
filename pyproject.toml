@@ -1,0 +1,39 @@
+[project]
+name = "rowerowe_gminy"
+version = "0.0.1"
+description = "Narzędzia Rowerowych Gmin"
+authors = [
+    {name = "Mikołaj Nowak", email = "12396461+m3nowak@users.noreply.github.com"},
+]
+dependencies = [
+    "pygml>=0.2.2",
+]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.build]
+includes = ["src/eis/"]
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "ruff>=0.6.3",
+]
+[tool.autopep8]
+max_line_length = 120
+
+[tool.ruff]
+line-length = 120
+
+[tool.pdm.scripts]
+sort = {cmd = "ruff check --extend-select I001 --fix src"}
+format = {cmd = "ruff format src"}
+pimp = {composite = ["sort", "format"]}
