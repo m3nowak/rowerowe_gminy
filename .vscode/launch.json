@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "GEO",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/rowerowe_gminy/geo/__init__.py",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Core",
             "type": "debugpy",
             "request": "launch",

@@ -18,7 +18,9 @@ MAPPING = {
 
 COMMAND_TEMPLATE = "ogr2ogr -f GeoJSON -s_srs EPSG:2180 -t_srs EPSG:4326 {dst_fname} {src_fname}"
 
-assert shutil.which("ogr2ogr") is not None, "ogr2ogr command not found (get \"gdal\" package at https://gdal.org/en/latest/download.html)"
+assert (
+    shutil.which("ogr2ogr") is not None
+), 'ogr2ogr command not found (get "gdal" package at https://gdal.org/en/latest/download.html)'
 
 for src_fname in MAPPING:
     assert os.path.exists(src_fname), f"File {src_fname} not found"

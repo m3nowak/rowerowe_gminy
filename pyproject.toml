@@ -6,10 +6,22 @@ authors = [
     {name = "Mikołaj Nowak", email = "12396461+m3nowak@users.noreply.github.com"},
 ]
 dependencies = [
+    "click>=8.1.7",
 ]
 requires-python = ">=3.12"
 readme = "README.md"
 license = {text = "MIT"}
+
+[project.optional-dependencies]
+scrap = [
+    "pandas>=2.2.2",
+    "lxml>=5.3.0",
+    "beautifulsoup4>=4.12.3",
+]
+all = ["rowerowe_gminy[scrap,geo]"]
+geo = [
+    "geojson>=3.1.0",
+]
 
 [build-system]
 requires = ["pdm-backend"]
@@ -28,6 +40,10 @@ dev = [
 ]
 [tool.autopep8]
 max_line_length = 120
+
+[project.scripts]
+gminy-scrapping = "rowerowe_gminy.scrapping:__main__.main"
+
 
 [tool.ruff]
 line-length = 120
