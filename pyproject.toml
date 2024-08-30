@@ -6,7 +6,6 @@ authors = [
     {name = "Mikołaj Nowak", email = "12396461+m3nowak@users.noreply.github.com"},
 ]
 dependencies = [
-    "pygml>=0.2.2",
 ]
 requires-python = ">=3.12"
 readme = "README.md"
@@ -34,6 +33,8 @@ max_line_length = 120
 line-length = 120
 
 [tool.pdm.scripts]
-sort = {cmd = "ruff check --extend-select I001 --fix src"}
-format = {cmd = "ruff format src"}
+sort = {cmd = "ruff check --extend-select I001 --fix src scripts"}
+format = {cmd = "ruff format src scripts"}
 pimp = {composite = ["sort", "format"]}
+
+mk-data = { composite = [ "scripts/download_gml.py", "scripts/gml_to_json.py" ] }
