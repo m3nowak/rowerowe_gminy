@@ -21,6 +21,7 @@ scrap = [
 all = ["rowerowe_gminy[scrap,geo]"]
 geo = [
     "geojson>=3.1.0",
+    "geopandas>=1.0.1",
 ]
 
 [build-system]

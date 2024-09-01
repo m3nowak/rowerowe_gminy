@@ -1,11 +1,10 @@
-import os.path
-import pandas as pd
-import urllib.request
-import urllib.parse
-
 import logging
+import os.path
+import urllib.parse
+import urllib.request
 
 import bs4
+import pandas as pd
 
 import rowerowe_gminy.core
 
@@ -87,6 +86,7 @@ def mk_voivodeships_data(communes_data: pd.DataFrame) -> pd.DataFrame:
     voivodeships_data["TERYT"] = voivodeships_data["TERYT"].apply(lambda x: x[:-5])
     return voivodeships_data
 
+
 def _fix_coa_link(link: str) -> str:
     link = link.replace("//", "")
     splitted = link.split("/")[:-1]
@@ -101,13 +101,13 @@ def get_coa_link(wiki_page_link: str) -> str | None:
     full_link = urllib.parse.urljoin(WIKI_BASE_URL, wiki_page_link)
     html = urllib.request.urlopen(full_link).read().decode("utf-8")
     soup = bs4.BeautifulSoup(html, "html.parser")
-    infobox = soup.find("table", class_="infobox") # type: ignore
+    infobox = soup.find("table", class_="infobox")  # type: ignore
     assert infobox is not None, f"No infobox found at {full_link}"
-    ibox2 = infobox.find("table", class_="ibox2") # type: ignore
+    ibox2 = infobox.find("table", class_="ibox2")  # type: ignore
     if ibox2 is not None:
-        img = ibox2.find("img", attrs={"alt": "Herb"}) # type: ignore
+        img = ibox2.find("img", attrs={"alt": "Herb"})  # type: ignore
         if img is not None:
-            img_src = img.attrs["src"] #type: ignore
+            img_src = img.attrs["src"]  # type: ignore
             logging.info(f"Got COA link for {full_link}")
             return _fix_coa_link(img_src)
         else:
@@ -115,10 +115,10 @@ def get_coa_link(wiki_page_link: str) -> str | None:
     else:
         logging.info(f"No ibox2 found for {full_link}")
     logging.info(f"No COA link found for {full_link}")
-    #try direct
-    img = soup.find("img", attrs={"alt": "Herb"}, class_ = "mw-file-element")
+    # try direct
+    img = soup.find("img", attrs={"alt": "Herb"}, class_="mw-file-element")
     if img is not None:
-        img_src = img.attrs["src"] #type: ignore
+        img_src = img.attrs["src"]  # type: ignore
         logging.info(f"Got COA link for {full_link}")
         return _fix_coa_link(img_src)
     else:
@@ -131,6 +131,7 @@ def extend_wiki_data(df: pd.DataFrame) -> pd.DataFrame:
     logging.info(f"Got {df["coa_link"].count()} COA links out of {df['TERYT'].count()}")
     return df
 
+
 def save_data(path: str):
     communes = get_communes_data()
     counties = mk_counties_data(communes)
@@ -139,9 +140,9 @@ def save_data(path: str):
     voivodeships = extend_wiki_data(voivodeships)
     counties = extend_wiki_data(counties)
     communes = extend_wiki_data(communes)
-    
+
     communes.to_json(os.path.join(path, f"{rowerowe_gminy.core.COMMUNES_FNAME}.json"), orient="records", indent=2)
     counties.to_json(os.path.join(path, f"{rowerowe_gminy.core.COUNTIES_FNAME}.json"), orient="records", indent=2)
-    voivodeships.to_json(os.path.join(path, f"{rowerowe_gminy.core.VOIVODESHIPS_FNAME}.json"), orient="records", indent=2)
-    
-
+    voivodeships.to_json(
+        os.path.join(path, f"{rowerowe_gminy.core.VOIVODESHIPS_FNAME}.json"), orient="records", indent=2
+    )
