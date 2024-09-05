@@ -2,6 +2,8 @@ import click
 
 import rowerowe_gminy.scrapping
 
+from .adm_info import save_data
+
 
 @click.group()
 def cli():
@@ -18,7 +20,7 @@ def cli():
     required=True,
 )
 def adm(output: str):
-    rowerowe_gminy.scrapping.save_data(output)
+    save_data(output)
 
 
 def main():

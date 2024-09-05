@@ -4,6 +4,7 @@ import os.path
 import typing
 
 import geopandas
+import pandas
 
 import rowerowe_gminy.core
 
@@ -48,17 +49,26 @@ def simplify_geometry(fc: geopandas.GeoDataFrame, acc: float) -> geopandas.GeoDa
     fc.geometry = fc.geometry.simplify(acc)
     return fc
 
+def combine_datasets(gdf_list: typing.List[geopandas.GeoDataFrame]) -> geopandas.GeoDataFrame:
+    result = pandas.concat(gdf_list)
+    return typing.cast(geopandas.GeoDataFrame, result)
 
 def reformat_dataset(src_dir: str, dst_dir: str):
     # types = [rowerowe_gminy.core.VOIVODESHIPS_FNAME, rowerowe_gminy.core.COUNTIES_FNAME, rowerowe_gminy.core.COMMUNES_FNAME, rowerowe_gminy.core.COUNTRY_FNAME]
     gdf_dict = load_gml_files(src_dir)
+    to_save = []
     for fctype, gdf in gdf_dict.items():
-        gdf = simplify_geometry(gdf, 25)
+        gdf = simplify_geometry(gdf, 500)
         gdf.geometry = gdf.geometry.to_crs(crs="EPSG:4326")
         gdf = reformat_metadata(gdf)
         dst_path = os.path.join(dst_dir, f"{fctype}.json")
-        gdf.to_file(dst_path, driver="GeoJSON")
-
+        to_save.append((gdf, dst_path))
+    joined = combine_datasets([gdf for gdf, _ in to_save])
+    dst_path = os.path.join(dst_dir, rowerowe_gminy.core.COMBO_FNAME + "500.json")
+    joined.to_file(dst_path, driver="GeoJSON")
+    # to_save.append((joined, dst_path))
+    # for gdf, dst_path in to_save:
+    #     gdf.to_file(dst_path, driver="GeoJSON")
 
 def main():
     logging.basicConfig(level=logging.INFO)
