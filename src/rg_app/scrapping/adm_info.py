@@ -7,6 +7,7 @@ import bs4
 import pandas as pd
 
 import rg_app.core
+from rg_app.core import REGIONS_INDEX
 
 pd.options.mode.copy_on_write = True
 
@@ -22,7 +23,7 @@ def get_communes_data() -> pd.DataFrame:
     # drop 2 last columns
     df = df.iloc[:, :-2]
     # rename columns
-    df.columns = ["TERYT", "commune", "county", "voivodeship", "area", "population"]
+    df.columns = [REGIONS_INDEX, "commune", "county", "voivodeship", "area", "population"]
 
     df["link"] = df["commune"].apply(lambda x: x[1])
     df["name"] = df["commune"].apply(lambda x: x[0])
@@ -32,7 +33,7 @@ def get_communes_data() -> pd.DataFrame:
     df["county_link"] = df["county"].apply(lambda x: x[1])
     df["county"] = df["county"].apply(lambda x: x[0])
 
-    df["is_mnpp"] = df["county_link"].isna()
+    df["only_child"] = df["county_link"].isna()
     df["county_link"] = df["county_link"].fillna(df["link"])
 
     df["voivodeship_link"] = df["voivodeship"].apply(lambda x: x[1])
@@ -42,38 +43,40 @@ def get_communes_data() -> pd.DataFrame:
 
     df["population"] = df["population"].apply(lambda x: int(x[0].replace(" ", "")))
 
-    df["TERYT"] = df["TERYT"].apply(lambda x: x[0])
+    df[REGIONS_INDEX] = df[REGIONS_INDEX].apply(lambda x: x[0])
 
     return df
 
 
 def mk_counties_data(communes_data: pd.DataFrame) -> pd.DataFrame:
     communes_data = communes_data.copy()
+    communes_data[REGIONS_INDEX] = communes_data[REGIONS_INDEX].apply(lambda x: x[:-3])
     counties_data = (
-        communes_data.groupby("county")
+        communes_data.groupby(REGIONS_INDEX)
         .agg(
             name=pd.NamedAgg(column="county", aggfunc="first"),  # rename column to "name"
-            TERYT=pd.NamedAgg(column="TERYT", aggfunc="first"),
+            # TERYT=pd.NamedAgg(column=REGIONS_INDEX, aggfunc="first"),
             link=pd.NamedAgg(column="county_link", aggfunc="first"),
             area=pd.NamedAgg(column="area", aggfunc="sum"),
             population=pd.NamedAgg(column="population", aggfunc="sum"),
             communes=pd.NamedAgg(column="name", aggfunc="count"),
             voivodeship=pd.NamedAgg(column="voivodeship", aggfunc="first"),
             voivodeship_link=pd.NamedAgg(column="voivodeship_link", aggfunc="first"),
+            has_one_child=pd.NamedAgg(column="only_child", aggfunc="first"),
         )
         .reset_index()
     )
-    counties_data["TERYT"] = counties_data["TERYT"].apply(lambda x: x[:-3])
     return counties_data
 
 
 def mk_voivodeships_data(communes_data: pd.DataFrame) -> pd.DataFrame:
     communes_data = communes_data.copy()
+    communes_data[REGIONS_INDEX] = communes_data[REGIONS_INDEX].apply(lambda x: x[:-5])
     voivodeships_data = (
-        communes_data.groupby("voivodeship")
+        communes_data.groupby(REGIONS_INDEX)
         .agg(
             name=pd.NamedAgg(column="voivodeship", aggfunc="first"),  # rename column to "name"
-            TERYT=pd.NamedAgg(column="TERYT", aggfunc="first"),
+            # TERYT=pd.NamedAgg(column=REGIONS_INDEX, aggfunc="first"),
             link=pd.NamedAgg(column="voivodeship_link", aggfunc="first"),
             area=pd.NamedAgg(column="area", aggfunc="sum"),
             population=pd.NamedAgg(column="population", aggfunc="sum"),
@@ -82,7 +85,6 @@ def mk_voivodeships_data(communes_data: pd.DataFrame) -> pd.DataFrame:
         )
         .reset_index()
     )
-    voivodeships_data["TERYT"] = voivodeships_data["TERYT"].apply(lambda x: x[:-5])
     return voivodeships_data
 
 
@@ -134,20 +136,23 @@ def extend_wiki_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def standardize(df: pd.DataFrame) -> pd.DataFrame:
-    df["TERYT"] = df["TERYT"].astype(str)
-    max_teryt_len = df["TERYT"].str.len().max()
+    df[REGIONS_INDEX] = df[REGIONS_INDEX].astype(str)
+    max_teryt_len = df[REGIONS_INDEX].str.len().max()
     if max_teryt_len == 7:
         df["type"] = "GMI"
+        df["has_one_child"] = False
     elif max_teryt_len == 4:
         df["type"] = "POW"
-        df["is_mnpp"] = False
+        df["only_child"] = False
     elif max_teryt_len == 2:
         df["type"] = "WOJ"
-        df["is_mnpp"] = False
+        df["has_one_child"] = False
+        df["only_child"] = False
     else:
         raise ValueError(f"Unexpected TERYT length {max_teryt_len}")
-    result = df[["TERYT", "name", "area", "population", "link", "coa_link"]].copy()
-    result.set_index("TERYT")
+    result = df[[REGIONS_INDEX, "name", "area", "population", "link", "coa_link", "has_one_child", "only_child", "type"]].copy()
+    # result = df[[REGIONS_INDEX, "name", "area", "population", "link", "has_one_child", "only_child", "type"]].copy()
+    result.set_index(REGIONS_INDEX)
     return result
 
 

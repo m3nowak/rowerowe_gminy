@@ -22,7 +22,7 @@ def adm(output: str):
     save_data(output)
 
 
-@cli.command(help="Download COA images")
+@cli.command(help="Download Coat Of Arms images")
 @click.argument("df_path", type=click.Path(exists=True, dir_okay=False))
 @click.option(
     "--output_dir",
@@ -39,7 +39,7 @@ def adm(output: str):
     help="Path to save modified dataframe",
     type=click.Path(dir_okay=False, writable=True),
 )
-def coa_download(df_path: str, output_dir: str, resulting_df_path: str | None = None):
+def coa(df_path: str, output_dir: str, resulting_df_path: str | None = None):
     download_coa_list(df_path, output_dir, resulting_df_path)
 
 
