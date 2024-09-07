@@ -22,6 +22,7 @@ all = ["rowerowe_gminy[scrap,geo]"]
 geo = [
     "geojson>=3.1.0",
     "geopandas>=1.0.1",
+    "topojson>=1.9",
 ]
 
 [build-system]
@@ -33,7 +34,7 @@ build-backend = "pdm.backend"
 distribution = true
 
 [tool.pdm.build]
-includes = ["src/eis/"]
+includes = ["src/rg_app/"]
 
 [tool.pdm.dev-dependencies]
 dev = [
@@ -43,7 +44,7 @@ dev = [
 max_line_length = 120
 
 [project.scripts]
-gminy-scrapping = "rowerowe_gminy.scrapping:__main__.main"
+rg-scrapping = "rg_app.scrapping:__main__.main"
 
 
 [tool.ruff]

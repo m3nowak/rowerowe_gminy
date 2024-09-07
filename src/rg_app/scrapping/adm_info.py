@@ -6,7 +6,7 @@ import urllib.request
 import bs4
 import pandas as pd
 
-import rowerowe_gminy.core
+import rg_app.core
 
 pd.options.mode.copy_on_write = True
 
@@ -87,13 +87,15 @@ def mk_voivodeships_data(communes_data: pd.DataFrame) -> pd.DataFrame:
 
 
 def _fix_coa_link(link: str) -> str:
-    link = link.replace("//", "")
-    splitted = link.split("/")[:-1]
-    if "thumb" in splitted:
-        splitted.remove("thumb")
-    else:
-        logging.warning(f"COA link does not contain 'thumb' {link}")
-    return "https://" + "/".join(splitted)
+    return link
+    # skip fixing
+    # link = link.replace("//", "")
+    # splitted = link.split("/")[:-1]
+    # if "thumb" in splitted:
+    #     splitted.remove("thumb")
+    # else:
+    #     logging.warning(f"COA link does not contain 'thumb' {link}")
+    # return "https://" + "/".join(splitted)
 
 
 def get_coa_link(wiki_page_link: str) -> str | None:
@@ -130,6 +132,7 @@ def extend_wiki_data(df: pd.DataFrame) -> pd.DataFrame:
     logging.info(f"Got {df["coa_link"].count()} COA links out of {df['TERYT'].count()}")
     return df
 
+
 def standardize(df: pd.DataFrame) -> pd.DataFrame:
     df["TERYT"] = df["TERYT"].astype(str)
     max_teryt_len = df["TERYT"].str.len().max()
@@ -147,6 +150,7 @@ def standardize(df: pd.DataFrame) -> pd.DataFrame:
     result.set_index("TERYT")
     return result
 
+
 def save_data(path: str):
     communes = get_communes_data()
     counties = mk_counties_data(communes)
@@ -156,12 +160,10 @@ def save_data(path: str):
     counties = extend_wiki_data(counties)
     communes = extend_wiki_data(communes)
 
-    communes.to_json(os.path.join(path, f"{rowerowe_gminy.core.COMMUNES_FNAME}.json"), orient="records", indent=2)
-    counties.to_json(os.path.join(path, f"{rowerowe_gminy.core.COUNTIES_FNAME}.json"), orient="records", indent=2)
-    voivodeships.to_json(
-        os.path.join(path, f"{rowerowe_gminy.core.VOIVODESHIPS_FNAME}.json"), orient="records", indent=2
-    )
+    communes.to_json(os.path.join(path, f"{rg_app.core.COMMUNES_FNAME}.json"), orient="records", indent=2)
+    counties.to_json(os.path.join(path, f"{rg_app.core.COUNTIES_FNAME}.json"), orient="records", indent=2)
+    voivodeships.to_json(os.path.join(path, f"{rg_app.core.VOIVODESHIPS_FNAME}.json"), orient="records", indent=2)
 
     std = [standardize(communes), standardize(counties), standardize(voivodeships)]
     combo = pd.concat(std)
-    combo.to_json(os.path.join(path, f"{rowerowe_gminy.core.COMBO_FNAME}.json"), orient="table", indent=2)
+    combo.to_json(os.path.join(path, f"{rg_app.core.COMBO_FNAME}.json"), orient="records", indent=2)

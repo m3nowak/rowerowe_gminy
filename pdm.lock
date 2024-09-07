@@ -5,7 +5,7 @@
 groups = ["default", "dev", "geo", "geopandas", "scrap"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:0b2f41f787775f56b6faaab1958595f1c34e61cc762ed7974ae1df03f744cab5"
+content_hash = "sha256:ec7d2fdb04bc8757f1da542320b23f8d8e18bfa6e55dbee13306c018efa8de17"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
@@ -345,6 +345,22 @@ groups = ["scrap"]
 files = [
     {file = "soupsieve-2.6-py3-none-any.whl", hash = "sha256:e72c4ff06e4fb6e4b5a9f0f55fe6e81514581fca1515028625d0f299c602ccc9"},
     {file = "soupsieve-2.6.tar.gz", hash = "sha256:e2e68417777af359ec65daac1057404a3c8a5455bb8abc36f1a9866ab1a51abb"},
+]
+
+[[package]]
+name = "topojson"
+version = "1.9"
+requires_python = ">=3.8"
+summary = "topojson - a powerful library to encode geographic data as topology in Python!🌍"
+groups = ["geo"]
+dependencies = [
+    "numpy",
+    "packaging",
+    "shapely",
+]
+files = [
+    {file = "topojson-1.9-py3-none-any.whl", hash = "sha256:122e6e91fb422549644504580eee86f8a37703dc5ccb1a8e6d8928b750706fe7"},
+    {file = "topojson-1.9.tar.gz", hash = "sha256:5a8389ff576d5540660d4430dab56fcadef7c1f90b9f1aa486b1cb140033ff3b"},
 ]
 
 [[package]]

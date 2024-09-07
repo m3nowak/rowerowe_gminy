@@ -8,14 +8,14 @@
             "name": "GEO",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/rowerowe_gminy/geo/__init__.py",
+            "program": "${workspaceFolder}/src/rg_app/geo/__init__.py",
             "console": "integratedTerminal"
         },
         {
             "name": "Core",
             "type": "debugpy",
             "request": "launch",
-            "module": "rowerowe_gminy.core"
+            "module": "rg_app.core"
         }
     ]
 }
