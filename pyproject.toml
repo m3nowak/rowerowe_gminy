@@ -24,6 +24,11 @@ geo = [
     "geopandas>=1.0.1",
     "topojson>=1.9",
 ]
+api = [
+    "aiohttp>=3.10.5",
+    "litestar>=2.11.0",
+    "uvicorn>=0.30.6",
+]
 
 [build-system]
 requires = ["pdm-backend"]

@@ -5,6 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "API",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rg_app.api"
+        },
+        {
             "name": "GEO",
             "type": "debugpy",
             "request": "launch",
