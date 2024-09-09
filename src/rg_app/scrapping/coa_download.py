@@ -5,7 +5,9 @@ import urllib.request
 import pandas as pd
 
 
-def download_coa_list(df_path: str, output_dir: str, resulting_df_path: str | None = None, skip_downloaded: bool = True):
+def download_coa_list(
+    df_path: str, output_dir: str, resulting_df_path: str | None = None, skip_downloaded: bool = True
+):
     df = pd.read_json(df_path, dtype={"TERYT": str})
 
     ldf = df.dropna(subset=["coa_link"])
@@ -30,7 +32,7 @@ def download_coa_list(df_path: str, output_dir: str, resulting_df_path: str | No
     ldf["coa_link"] = ldf["coa_fname"]
     ldf.drop(columns=["coa_fname"], inplace=True)
 
-    #update df coa_link
+    # update df coa_link
     df.update(ldf)
 
     if resulting_df_path:

@@ -1,15 +1,12 @@
 import logging
 import os
 import os.path
-import typing
+from dataclasses import dataclass
 
 import geopandas
 import pandas
 
 import rg_app.core
-
-from dataclasses import dataclass
-
 from rg_app.core import REGIONS_INDEX
 
 
@@ -19,6 +16,7 @@ class GdfBundle:
     counties: geopandas.GeoDataFrame
     communes: geopandas.GeoDataFrame
     country: geopandas.GeoDataFrame
+
 
 def _reformat_metadata(fc: geopandas.GeoDataFrame) -> geopandas.GeoDataFrame:
     fc[REGIONS_INDEX] = fc["JPT_KOD_JE"].astype(str)
@@ -30,6 +28,7 @@ def _reformat_metadata(fc: geopandas.GeoDataFrame) -> geopandas.GeoDataFrame:
     fc[REGIONS_INDEX] = fc[REGIONS_INDEX].str.zfill(max_teryt_len)
     fc.set_index(REGIONS_INDEX, inplace=True)
     return fc
+
 
 def _extend_region_data(fc: geopandas.GeoDataFrame) -> geopandas.GeoDataFrame:
     fc["COU_ID"] = fc.index.str.slice(0, 4)
@@ -59,8 +58,12 @@ def load_gml_files(src_dir: str) -> GdfBundle:
         result[fctype] = _extend_region_data(_reformat_metadata(geopandas.read_file(path)))
     return GdfBundle(**result)
 
+
 def bundle_to_combo(bundle: GdfBundle) -> geopandas.GeoDataFrame:
-    return geopandas.GeoDataFrame(pandas.concat([bundle.voivodeships, bundle.counties, bundle.communes, bundle.country]))
+    return geopandas.GeoDataFrame(
+        pandas.concat([bundle.voivodeships, bundle.counties, bundle.communes, bundle.country])
+    )
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

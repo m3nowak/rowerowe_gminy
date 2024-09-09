@@ -26,8 +26,10 @@ geo = [
 ]
 api = [
     "aiohttp>=3.10.5",
-    "litestar>=2.11.0",
+    "litestar[jwt]>=2.11.0",
     "uvicorn>=0.30.6",
+    "pydantic>=2.9.1",
+    "httpx>=0.27.2",
 ]
 
 [build-system]
@@ -50,6 +52,7 @@ max_line_length = 120
 
 [project.scripts]
 rg-scrapping = "rg_app.scrapping:__main__.main"
+rg-api = "rg_app.api:__main__.main"
 
 
 [tool.ruff]
@@ -61,3 +64,4 @@ format = {cmd = "ruff format src scripts"}
 pimp = {composite = ["sort", "format"]}
 
 mk-data = { composite = [ "scripts/download_gml.py", "scripts/gml_to_json.py" ] }
+openapi = { cmd = "rg-api openapi -j -o openapi.json" }

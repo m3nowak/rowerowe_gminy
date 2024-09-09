@@ -8,7 +8,8 @@
             "name": "API",
             "type": "debugpy",
             "request": "launch",
-            "module": "rg_app.api"
+            "module": "rg_app.api",
+            "args": ["run"]
         },
         {
             "name": "GEO",

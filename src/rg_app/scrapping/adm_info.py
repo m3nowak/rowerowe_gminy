@@ -150,7 +150,9 @@ def standardize(df: pd.DataFrame) -> pd.DataFrame:
         df["only_child"] = False
     else:
         raise ValueError(f"Unexpected TERYT length {max_teryt_len}")
-    result = df[[REGIONS_INDEX, "name", "area", "population", "link", "coa_link", "has_one_child", "only_child", "type"]].copy()
+    result = df[
+        [REGIONS_INDEX, "name", "area", "population", "link", "coa_link", "has_one_child", "only_child", "type"]
+    ].copy()
     # result = df[[REGIONS_INDEX, "name", "area", "population", "link", "has_one_child", "only_child", "type"]].copy()
     result.set_index(REGIONS_INDEX)
     return result
