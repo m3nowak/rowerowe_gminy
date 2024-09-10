@@ -166,3 +166,5 @@ data/
 
 openapi.json
 openapi.yaml
+
+config.yaml

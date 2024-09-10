@@ -1,15 +1,19 @@
+from datetime import timedelta
 import os
 import typing as ty
-from pydantic import BaseModel
+
 import httpx
-
-
+import msgspec
+from litestar import post
 from litestar.connection import ASGIConnection
 from litestar.security.jwt import JWTAuth, Token
-from litestar import post
 from litestar.status_codes import HTTP_200_OK
 
-class StravaAuthResponse(BaseModel):
+from rg_app.api.config import Config
+from rg_app.api.utils import BaseStruct
+
+
+class StravaAuthResponse(msgspec.Struct):
     token_type: ty.Literal["Bearer"]
     expires_at: int
     expires_in: int
@@ -17,7 +21,8 @@ class StravaAuthResponse(BaseModel):
     access_token: str
     athlete: dict[str, ty.Any]
 
-'''Example response
+
+"""Example response
   {
   "token_type": "Bearer",
   "expires_at": 1725926700, #unix ts
@@ -47,20 +52,29 @@ class StravaAuthResponse(BaseModel):
     "follower": null
   }
 }
-'''
+"""
 
-class AuthRequest(BaseModel):
+
+class AuthRequest(BaseStruct):
     code: str
+    remember_longer: bool = False
 
-class MinimalUser(BaseModel):
+
+class MinimalUser(BaseStruct):
     id: int
 
-class AuthResponse(BaseModel):
+
+class AuthResponse(BaseStruct):
     token: str
     user: MinimalUser
+    some_example_data: str | None = None
 
-async def retrieve_user_handler(token: Token, connection: "ASGIConnection[ty.Any, ty.Any, ty.Any, ty.Any]") -> ty.Optional[MinimalUser]:
+
+async def retrieve_user_handler(
+    token: Token, connection: "ASGIConnection[ty.Any, ty.Any, ty.Any, ty.Any]"
+) -> ty.Optional[MinimalUser]:
     return MinimalUser(id=int(token.sub))
+
 
 jwt_auth = JWTAuth[MinimalUser](
     retrieve_user_handler=retrieve_user_handler,
@@ -68,10 +82,11 @@ jwt_auth = JWTAuth[MinimalUser](
     exclude=["/authenticate", "/docs"],
 )
 
-async def authenticate(code: str) -> StravaAuthResponse| None:
+
+async def authenticate(code: str, config: Config) -> StravaAuthResponse | None:
     data_dict = {
-        "client_id": os.environ.get("STRAVA_CLIENT_ID"),
-        "client_secret": os.environ.get("STRAVA_SECRET_ID"),
+        "client_id": config.strava_client_id,
+        "client_secret": config.strava_client_secret,
         "code": code,
         "grant_type": "authorization_code",
     }
@@ -79,17 +94,21 @@ async def authenticate(code: str) -> StravaAuthResponse| None:
         r = await client.post("https://www.strava.com/oauth/token", data=data_dict)
         if r.is_error:
             return None
-        sar = StravaAuthResponse.model_validate_json(r.text)
+        sar = msgspec.json.decode(r.text, type=StravaAuthResponse)
         return sar
-    
-@post("/authenticate", tags=["auth"], description="Authenticate with Strava with provided code", status_code=HTTP_200_OK)
-async def authenticate_handler(data: AuthRequest) -> AuthResponse:
-    sar = await authenticate(data.code)
+
+
+@post(
+    "/authenticate", 
+    tags=["auth"], 
+    description="Authenticate with Strava with provided code", 
+    status_code=HTTP_200_OK
+)
+async def authenticate_handler(data: AuthRequest, config:Config) -> AuthResponse:
+    sar = await authenticate(data.code, config)
     assert sar is not None
-    user_id:int|None = sar.athlete.get("id")
+    user_id: int | None = sar.athlete.get("id")
     assert user_id is not None
-    token = jwt_auth.create_token(identifier=str(user_id))
+    expiration = timedelta(days=30) if data.remember_longer else timedelta(days=1)
+    token = jwt_auth.create_token(identifier=str(user_id), expiration=expiration)
     return AuthResponse(token=token, user=MinimalUser(id=user_id))
-
-
-    
