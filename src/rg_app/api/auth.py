@@ -1,6 +1,7 @@
-from datetime import timedelta
 import os
 import typing as ty
+from datetime import timedelta
+from enum import StrEnum
 
 import httpx
 import msgspec
@@ -20,6 +21,16 @@ class StravaAuthResponse(msgspec.Struct):
     refresh_token: str
     access_token: str
     athlete: dict[str, ty.Any]
+
+
+class StravaScopes(StrEnum):
+    READ = "read"
+    READ_ALL = "read_all"
+    PROFILE_READ_ALL = "profile:read_all"
+    PROFILE_WRITE = "profile:write"
+    ACTIVITY_READ = "activity:read"
+    ACTIVITY_READ_ALL = "activity:read_all"
+    ACTIVITY_WRITE = "activity:write"
 
 
 """Example response
@@ -57,6 +68,7 @@ class StravaAuthResponse(msgspec.Struct):
 
 class AuthRequest(BaseStruct):
     code: str
+    scopes: ty.List[StravaScopes]
     remember_longer: bool = False
 
 
@@ -99,12 +111,9 @@ async def authenticate(code: str, config: Config) -> StravaAuthResponse | None:
 
 
 @post(
-    "/authenticate", 
-    tags=["auth"], 
-    description="Authenticate with Strava with provided code", 
-    status_code=HTTP_200_OK
+    "/authenticate", tags=["auth"], description="Authenticate with Strava with provided code", status_code=HTTP_200_OK
 )
-async def authenticate_handler(data: AuthRequest, config:Config) -> AuthResponse:
+async def authenticate_handler(data: AuthRequest, config: Config) -> AuthResponse:
     sar = await authenticate(data.code, config)
     assert sar is not None
     user_id: int | None = sar.athlete.get("id")
