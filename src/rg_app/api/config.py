@@ -8,6 +8,7 @@ class Config(BaseStruct):
     strava_client_secret: str
     jwt_secret: str
     frontend_url: str
+    db_url: str
 
     @classmethod
     def from_file(cls, path: str) -> "Config":
@@ -21,4 +22,5 @@ class Config(BaseStruct):
             strava_client_secret="dummy",
             jwt_secret="dummy",
             frontend_url="http://localhost:3000",
+            db_url="sqlite+aiosqlite:///async.sqlite",
         )

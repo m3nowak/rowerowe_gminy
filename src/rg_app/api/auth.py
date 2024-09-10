@@ -9,9 +9,12 @@ from litestar import post
 from litestar.connection import ASGIConnection
 from litestar.security.jwt import JWTAuth, Token
 from litestar.status_codes import HTTP_200_OK
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from rg_app.api.config import Config
 from rg_app.api.utils import BaseStruct
+
+from rg_app.db import User
 
 
 class StravaAuthResponse(msgspec.Struct):
@@ -21,6 +24,16 @@ class StravaAuthResponse(msgspec.Struct):
     refresh_token: str
     access_token: str
     athlete: dict[str, ty.Any]
+
+    def make_username(self) -> str:
+        if self.athlete.get("firstname") is not None or self.athlete.get("lastname") is not None:
+            snc = [self.athlete.get("firstname"), self.athlete.get("lastname")]
+            snc = list(filter(lambda x: x is not None, snc))
+            return " ".join(snc) # type: ignore
+        elif self.athlete.get("username") is not None:
+            return self.athlete["username"]
+        else:
+            return str(self.athlete["id"])
 
 
 class StravaScopes(StrEnum):
@@ -113,11 +126,30 @@ async def authenticate(code: str, config: Config) -> StravaAuthResponse | None:
 @post(
     "/authenticate", tags=["auth"], description="Authenticate with Strava with provided code", status_code=HTTP_200_OK
 )
-async def authenticate_handler(data: AuthRequest, config: Config) -> AuthResponse:
+async def authenticate_handler(data: AuthRequest, config: Config, db_session: AsyncSession) -> AuthResponse:
     sar = await authenticate(data.code, config)
     assert sar is not None
     user_id: int | None = sar.athlete.get("id")
     assert user_id is not None
+
+    user = await db_session.get(User, user_id)
+    if user:
+        user.access_token = sar.access_token
+        user.refresh_token = sar.refresh_token
+        user.expires_at = sar.expires_at
+        user.name = sar.make_username()
+        await db_session.refresh(user)
+    else:
+        user = User(
+            id=user_id,
+            access_token=sar.access_token,
+            refresh_token=sar.refresh_token,
+            expires_at=sar.expires_at,
+            name=sar.make_username(),
+            )
+        db_session.add(user)
+        await db_session.commit()
+
     expiration = timedelta(days=30) if data.remember_longer else timedelta(days=1)
-    token = jwt_auth.create_token(identifier=str(user_id), expiration=expiration)
+    token = jwt_auth.create_token(identifier=str(user_id), token_expiration=expiration)
     return AuthResponse(token=token, user=MinimalUser(id=user_id))
