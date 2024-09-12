@@ -9,7 +9,7 @@ from rg_app.api.config import Config
 from rg_app.api.plugins.config_plugin import ConfigPlugin
 
 
-def app_factory(config: Config, debug_mode:bool=False) -> Litestar:
+def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
     sa_config = SQLAlchemyAsyncConfig(connection_string=config.db_url)
     sa_plugin = SQLAlchemyInitPlugin(config=sa_config)
     problem_details_plugin = ProblemDetailsPlugin(ProblemDetailsConfig())

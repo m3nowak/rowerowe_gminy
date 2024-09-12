@@ -13,7 +13,7 @@ def cli():
 
 
 @cli.command(help="Run server", name="run")
-@click.option("-c", "--config", "config_path", type=click.Path(exists=True), help="Config file path")
+@click.option("-c", "--config", "config_path", type=click.Path(exists=True), help="Config file path", required=True)
 @click.option("--debug", is_flag=True, help="Debug mode")
 def run(config_path: str, debug: bool = False):
     config = Config.from_file(config_path)

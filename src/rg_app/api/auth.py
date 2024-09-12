@@ -1,6 +1,6 @@
 import os
 import typing as ty
-from datetime import timedelta
+from datetime import timedelta, datetime, UTC
 from enum import StrEnum
 
 import httpx
@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from rg_app.api.config import Config
 from rg_app.api.utils import BaseStruct
-
 from rg_app.db import User
 
 
@@ -29,7 +28,7 @@ class StravaAuthResponse(msgspec.Struct):
         if self.athlete.get("firstname") is not None or self.athlete.get("lastname") is not None:
             snc = [self.athlete.get("firstname"), self.athlete.get("lastname")]
             snc = list(filter(lambda x: x is not None, snc))
-            return " ".join(snc) # type: ignore
+            return " ".join(snc)  # type: ignore
         elif self.athlete.get("username") is not None:
             return self.athlete["username"]
         else:
@@ -137,6 +136,7 @@ async def authenticate_handler(data: AuthRequest, config: Config, db_session: As
         user.access_token = sar.access_token
         user.refresh_token = sar.refresh_token
         user.expires_at = sar.expires_at
+        user.last_login = datetime.now(UTC)
         user.name = sar.make_username()
         await db_session.refresh(user)
     else:
@@ -146,7 +146,7 @@ async def authenticate_handler(data: AuthRequest, config: Config, db_session: As
             refresh_token=sar.refresh_token,
             expires_at=sar.expires_at,
             name=sar.make_username(),
-            )
+        )
         db_session.add(user)
         await db_session.commit()
 
