@@ -1,0 +1,15 @@
+name: API Container
+on: 
+  workflow_dispatch
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: gacts/install-podman@v1.1.1
+    - name: Build the Container image
+      run: podman build . --file Dockerfile --tag ghcr.io/m3nowak/rowerowe_gminy/api:0.0.1-$(date +%s)
