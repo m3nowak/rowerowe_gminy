@@ -1,4 +1,8 @@
 FROM docker.io/library/almalinux:9 AS common
+LABEL org.opencontainers.image.source=https://github.com/m3nowak/rowerowe_gminy
+LABEL org.opencontainers.image.description="Rowerowe Gminy"
+LABEL org.opencontainers.image.licenses=Apache-2.0
+
 RUN ["dnf", "install", "-y", "python3.12", "python3.12-pip"]
 
 FROM common AS build
@@ -19,4 +23,4 @@ USER rgapp
 WORKDIR /home/rgapp/app
 COPY --chown=rgapp:rgapp --from=venv-api /home/rgapp/venv /home/rgapp/venv
 ENV PATH="/home/rgapp/venv/bin:$PATH"
-CMD rg-api
+ENTRYPOINT [ "rg-api", "run" ]

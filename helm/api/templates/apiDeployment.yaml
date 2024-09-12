@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rg-api
+  template:
+    metadata:
+      labels:
+        app: rg-api
+    spec:
+      containers:
+        - name: my-api-container
+          pullPolicy: Always
+          image: {{ include "image" (dict "Values" .Values "Chart" .Chart) }}
+          ports:
+            - containerPort: 8000
+          resources: {{ .Values.api.resources | toYaml | nindent 12 }}
+          args: ["--config", "/etc/api/config.yaml"]
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/api
+      volumes:
+        - name: config-volume
+          secret:
+            secretName: {{ .Values.api.configSecretRef }}
+            
