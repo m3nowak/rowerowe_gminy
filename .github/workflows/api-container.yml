@@ -2,14 +2,32 @@ name: API Container
 on: 
   workflow_dispatch
 
+env:
+  IMAGE_TAG: 0.0.1-$(date +%s)
+  IMAGE_TAG_2: '0.0.1'
+  IMAGE_NAME: ghcr.io/m3nowak/rowerowe_gminy/api
+
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
-    - uses: gacts/install-podman@v1.1.1
+    - name: install python + pdm
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3 python3-pip
+        curl -sSL https://pdm-project.org/install-pdm.py | python3 -
+        pdm self add pdm-version
+    - name: Install Podman
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y podman
     - name: Build the Container image
-      run: podman build . --file Dockerfile --tag ghcr.io/m3nowak/rowerowe_gminy/api:0.0.1-$(date +%s)
+      run: |
+        podman build . --file Dockerfile --tag $IMAGE_NAME:$IMAGE_TAG --tag $IMAGE_NAME:latest --build-arg IMAGE_TAG=$IMAGE_TAG_2
+    - name: Push the Container image to ghcr
+      run: |
+        podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.GITHUB_TOKEN }}
+        podman push $IMAGE_NAME:$IMAGE_TAG
+        podman push $IMAGE_NAME:latest
+        podman push $IMAGE_NAME:$IMAGE_TAG_2
