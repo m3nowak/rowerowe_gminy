@@ -31,10 +31,10 @@ jobs:
     - name: Build the Container image
       run: >
         podman build .
-        --tag podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}
-        --tag podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
-        --tag podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
-        --tag podman push $IMAGE_NAME:latest
+        --tag $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}
+        --tag $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
+        --tag $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
+        --tag $IMAGE_NAME:latest
     - name: Push the Container image to ghcr
       run: |
         podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.GITHUB_TOKEN }}
