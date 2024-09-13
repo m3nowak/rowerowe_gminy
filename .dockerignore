@@ -168,6 +168,7 @@ openapi.json
 openapi.yaml
 
 config.yaml
+config.*.yaml
 helm/
 .github/
 .vscode/

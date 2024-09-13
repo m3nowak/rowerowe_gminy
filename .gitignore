@@ -168,3 +168,4 @@ openapi.json
 openapi.yaml
 
 config.yaml
+config.*.yaml

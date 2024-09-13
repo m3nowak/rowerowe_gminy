@@ -26,9 +26,10 @@ api = [
 ]
 db = ["alembic>=1.13.2", "rowerowe_gminy[db_common]"]
 wha = [
-    "litestar[standard]>=2.11.0",
+    "litestar>=2.11.0",
     "msgspec>=0.18.6",
     "nats-py[nkeys]>=2.9.0",
+    "hypercorn>=0.17.3",
 ]
 
 

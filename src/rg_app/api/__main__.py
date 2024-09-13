@@ -15,10 +15,11 @@ def cli():
 @cli.command(help="Run server", name="run")
 @click.option("-c", "--config", "config_path", type=click.Path(exists=True), help="Config file path", required=True)
 @click.option("--debug", is_flag=True, help="Debug mode")
-def run(config_path: str, debug: bool = False):
+@click.option("--port", help="Server port", default=8000, type=int)
+def run(config_path: str, port: int, debug: bool = False):
     config = Config.from_file(config_path)
     app = app_factory(config, debug_mode=debug)
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 
 @cli.command(help="Generate OpenAPI schema", name="openapi")

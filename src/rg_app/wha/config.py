@@ -5,7 +5,10 @@ from rg_app.common.msg import BaseStruct
 
 class NATSConfig(BaseStruct):
     url: str | list[str]
-    js_domain: str
+    js_domain: str | None = None
+    creds_path: str | None = None
+    stream: str = "incoming-wha"
+    subject_prefix: str = "rg.incoming.wha"
 
 
 class Config(BaseStruct):
