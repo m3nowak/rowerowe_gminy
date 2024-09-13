@@ -1,9 +1,9 @@
 from litestar import Litestar, get
-
-from rg_app.common.litestar.plugins import NatsPluginConfig, NatsPlugin
 from nats.aio.client import Client as NatsClient
 from nats.js import JetStreamContext
 from nats.js.errors import KeyNotFoundError
+
+from rg_app.common.litestar.plugins import NatsPlugin, NatsPluginConfig
 
 
 @get("/")
@@ -18,7 +18,6 @@ async def index(nats: NatsClient, js: JetStreamContext) -> str:
         current_val = 0
     await kv.put("hello", str(current_val + 1).encode())
     return f"Hello, world!, {current_val}"
-
 
 
 nats_plugin = NatsPlugin(NatsPluginConfig(url="nats://localhost:4222", js=True))

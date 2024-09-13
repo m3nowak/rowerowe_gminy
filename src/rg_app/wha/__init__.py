@@ -1,1 +1,1 @@
-""" WHA = WebHook Adapter"""
+"""WHA = WebHook Adapter"""

@@ -1,9 +1,7 @@
-
 import click
 import uvicorn
 
 from .app import app
-
 
 
 @click.command(help="Run server")
@@ -13,6 +11,7 @@ def run(debug: bool = False):
     # config = Config.from_file(config_path)
     # app = app_factory(config, debug_mode=debug)
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
 
 def main():
     run()

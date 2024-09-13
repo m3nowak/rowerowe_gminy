@@ -2,9 +2,11 @@ import msgspec
 
 from rg_app.common.msg import BaseStruct
 
+
 class NATSConfig(BaseStruct):
-    url: str| list[str]
+    url: str | list[str]
     js_domain: str
+
 
 class Config(BaseStruct):
     strava_client_id: str
@@ -12,7 +14,6 @@ class Config(BaseStruct):
     self_url: str
     verify_token: str
     nats: NATSConfig
-    
 
     @classmethod
     def from_file(cls, path: str) -> "Config":

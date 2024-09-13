@@ -1,17 +1,19 @@
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from typing import AsyncGenerator
+
+import nats
 from litestar import Litestar
 from litestar.config.app import AppConfig
 from litestar.di import Provide
 from litestar.plugins import InitPluginProtocol
-from dataclasses import dataclass
-import nats
 from nats.aio.client import Client as NatsClient
 from nats.js import JetStreamContext
 
+
 @dataclass
 class NatsPluginConfig:
-    '''Configuration for the NatsPlugin
+    """Configuration for the NatsPlugin
     Args:
     ----------
     url: str | list[str]
@@ -34,7 +36,7 @@ class NatsPluginConfig:
         Token for the NATS server
     conn_kwargs: dict[str, str] | None = None
         Additional keyword arguments to pass to the NATS client
-    '''
+    """
 
     url: str | list[str]
     js: bool | list[str] = False
@@ -72,7 +74,7 @@ class NatsPlugin(InitPluginProtocol):
                     user=self.cfg.user,
                     password=self.cfg.password,
                     token=self.cfg.token,
-                    **conn_kwargs
+                    **conn_kwargs,
                 )
                 app.state[_STATE_KEY] = nc
             try:
@@ -87,7 +89,7 @@ class NatsPlugin(InitPluginProtocol):
 
         def nats_provide_fn() -> NatsClient:
             return app_config.state[_STATE_KEY]
-        
+
         def jetstream_provide_fn(domain: str | None = None) -> JetStreamContext:
             return app_config.state[_STATE_KEY].jetstream(domain=domain)
 
@@ -97,5 +99,7 @@ class NatsPlugin(InitPluginProtocol):
             if isinstance(self.cfg.js, list):
                 for domain in self.cfg.js:
                     domain_kwarg = f"{self.cfg.js_kwarg}_{domain}"
-                    app_config.dependencies[domain_kwarg] = Provide(lambda: jetstream_provide_fn(domain), sync_to_thread=False)
+                    app_config.dependencies[domain_kwarg] = Provide(
+                        lambda: jetstream_provide_fn(domain), sync_to_thread=False
+                    )
         return app_config

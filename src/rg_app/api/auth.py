@@ -1,6 +1,6 @@
 import os
 import typing as ty
-from datetime import timedelta, datetime, UTC
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 
 import httpx
