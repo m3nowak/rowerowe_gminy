@@ -1,6 +1,6 @@
 import msgspec
 
-from rg_app.api.utils import BaseStruct
+from rg_app.common.msg.base_struct import BaseStruct
 
 
 class Config(BaseStruct):

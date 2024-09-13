@@ -12,6 +12,13 @@
             "args": ["run", "-c", "config.yaml", "--debug"]
         },
         {
+            "name": "Webhook API",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rg_app.wha",
+            "args": ["--debug"]
+        },
+        {
             "name": "GEO",
             "type": "debugpy",
             "request": "launch",

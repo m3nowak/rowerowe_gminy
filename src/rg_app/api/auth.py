@@ -12,7 +12,7 @@ from litestar.status_codes import HTTP_200_OK
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from rg_app.api.config import Config
-from rg_app.api.utils import BaseStruct
+from rg_app.common.msg import BaseStruct
 from rg_app.db import User
 
 

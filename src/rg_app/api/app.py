@@ -6,7 +6,7 @@ from litestar.plugins.sqlalchemy import SQLAlchemyAsyncConfig, SQLAlchemyInitPlu
 
 from rg_app.api.auth import authenticate_handler, jwt_auth
 from rg_app.api.config import Config
-from rg_app.api.plugins.config_plugin import ConfigPlugin
+from rg_app.common.litestar.plugins import ConfigPlugin
 
 
 def app_factory(config: Config, debug_mode: bool = False) -> Litestar:

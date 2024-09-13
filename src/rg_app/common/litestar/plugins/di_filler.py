@@ -3,7 +3,7 @@ from litestar.di import Provide
 from litestar.plugins import InitPluginProtocol
 
 
-class DiFiller(InitPluginProtocol):
+class DiFillerPlugin(InitPluginProtocol):
     """Plugin for filling DI container with empty dependencies"""
 
     def __init__(self, keys: list[str]) -> None:
