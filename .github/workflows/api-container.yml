@@ -29,11 +29,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y podman
     - name: Build the Container image
-      run: |
-        podman build . \
-          --tag podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }} \
-          --tag podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }} \
-          --tag podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }} \
+      run: >
+        podman build . 
+          --tag podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }} 
+          --tag podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }} 
+          --tag podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }} 
           --tag podman push $IMAGE_NAME:latest
     - name: Push the Container image to ghcr
       run: |
