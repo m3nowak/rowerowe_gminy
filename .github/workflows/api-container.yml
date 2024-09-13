@@ -37,7 +37,7 @@ jobs:
         --tag $IMAGE_NAME:latest
     - name: Push the Container image to ghcr
       run: |
-        podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.GITHUB_TOKEN }}
+        podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.PACKAGES_TOKEN }}
         podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}
         podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
         podman push $IMAGE_NAME:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
