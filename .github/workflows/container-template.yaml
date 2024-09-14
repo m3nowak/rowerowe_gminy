@@ -7,9 +7,9 @@ on:
       target_image:
         required: true
         type: string
-
-env:
-  IMG_NAME_BASE: ghcr.io/m3nowak/rowerowe_gminy/
+      image_repo_base:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -37,15 +37,15 @@ jobs:
     - name: Build the Container image
       run: >
         podman build .
-        --tag $IMG_NAME_BASE${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}
-        --tag $IMG_NAME_BASE${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
-        --tag $IMG_NAME_BASE${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
-        --tag $IMG_NAME_BASE${{ inputs.target_image }}:latest
+        --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}
+        --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
+        --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
+        --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:latest
         --target api
     - name: Push the Container image to ghcr
       run: |
         podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.PACKAGES_TOKEN }}
-        podman push $IMG_NAME_BASE${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}
-        podman push $IMG_NAME_BASE${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
-        podman push $IMG_NAME_BASE${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
-        podman push $IMG_NAME_BASE${{ inputs.target_image }}:latest
+        podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}
+        podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
+        podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
+        podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:latest

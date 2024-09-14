@@ -7,3 +7,4 @@ jobs:
     uses: ./.github/workflows/container-template.yaml
     with:
       target_image: api
+      image_repo_base: ghcr.io/m3nowak/rowerowe_gminy
