@@ -1,4 +1,3 @@
-import os
 import typing as ty
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
@@ -6,12 +5,12 @@ from enum import StrEnum
 import httpx
 import msgspec
 from litestar import post
-from litestar.connection import ASGIConnection
-from litestar.security.jwt import JWTAuth, Token
 from litestar.status_codes import HTTP_200_OK
+from litestar.security.jwt import JWTAuth
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from rg_app.api.config import Config
+from .config import Config
+from .jwt import MinimalUser, CreateTokenHandler
 from rg_app.common.msg import BaseStruct
 from rg_app.db import User
 
@@ -83,28 +82,9 @@ class AuthRequest(BaseStruct):
     scopes: ty.List[StravaScopes]
     remember_longer: bool = False
 
-
-class MinimalUser(BaseStruct):
-    id: int
-
-
 class AuthResponse(BaseStruct):
     token: str
     user: MinimalUser
-    some_example_data: str | None = None
-
-
-async def retrieve_user_handler(
-    token: Token, connection: "ASGIConnection[ty.Any, ty.Any, ty.Any, ty.Any]"
-) -> ty.Optional[MinimalUser]:
-    return MinimalUser(id=int(token.sub))
-
-
-jwt_auth = JWTAuth[MinimalUser](
-    retrieve_user_handler=retrieve_user_handler,
-    token_secret=os.environ.get("JWT_SECRET", "abcd123"),
-    exclude=["/authenticate", "/docs"],
-)
 
 
 async def authenticate(code: str, config: Config) -> StravaAuthResponse | None:
@@ -125,7 +105,9 @@ async def authenticate(code: str, config: Config) -> StravaAuthResponse | None:
 @post(
     "/authenticate", tags=["auth"], description="Authenticate with Strava with provided code", status_code=HTTP_200_OK
 )
-async def authenticate_handler(data: AuthRequest, config: Config, db_session: AsyncSession) -> AuthResponse:
+async def authenticate_handler(
+    data: AuthRequest, config: Config, db_session: AsyncSession, jwt: CreateTokenHandler
+) -> AuthResponse:
     sar = await authenticate(data.code, config)
     assert sar is not None
     user_id: int | None = sar.athlete.get("id")
@@ -151,5 +133,5 @@ async def authenticate_handler(data: AuthRequest, config: Config, db_session: As
         await db_session.commit()
 
     expiration = timedelta(days=30) if data.remember_longer else timedelta(days=1)
-    token = jwt_auth.create_token(identifier=str(user_id), token_expiration=expiration)
+    token = jwt.create_token(identifier=str(user_id), token_expiration=expiration)
     return AuthResponse(token=token, user=MinimalUser(id=user_id))

@@ -26,10 +26,21 @@ async def register_sub(config: Config, sleep: int = 5, app: Litestar | None = No
         )
         current_subs.raise_for_status()
         sub_list = current_subs.json()
+
+        callback_url = urljoin(config.self_url, LOCAL_WH_URL)
+        callback_present = False
+
         if sub_list:
             for sub in sub_list:
-                sub_id = sub["id"]
-                await client.delete(urljoin(STRAVA_SUB_URL, str(sub_id)))
+                if sub["callback_url"] != callback_url:
+                    sub_id = sub["id"]
+                    await client.delete(urljoin(STRAVA_SUB_URL, str(sub_id)))
+                else:
+                    callback_present = True
+        if callback_present:
+            if app and app.logger:
+                app.logger.info("Webhook already registered")
+            return
         sub = {
             "client_id": config.strava_client_id,
             "client_secret": config.strava_client_secret,
