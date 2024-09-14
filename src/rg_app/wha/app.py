@@ -54,7 +54,7 @@ async def index(nats: NatsClient, js: JetStreamContext) -> str:
 
 
 def app_factory(config: Config, debug_mode: bool = False, no_register: bool = False) -> Litestar:
-    nats_plugin = NatsPlugin(NatsPluginConfig(url=config.nats.url, js=True))
+    nats_plugin = NatsPlugin(NatsPluginConfig(url=config.nats.url, js=True, user_credentials=config.nats.creds_path))
     config_plugin = ConfigPlugin(config)
     on_startup = []
     if not no_register:
