@@ -2,6 +2,7 @@ import asyncio
 
 import click
 import uvicorn
+
 from .app import app_factory
 from .config import Config
 
@@ -17,7 +18,7 @@ async def gthr(to_gather):
 @click.option("--port", help="Server port", default=8000, type=int)
 def run(config_path: str, port: int, debug: bool = False, no_register: bool = False):
     config = Config.from_file(config_path)
-    app = app_factory(config, debug_mode=debug)
+    app = app_factory(config, debug_mode=debug, no_register=no_register)
     uvicorn.run(app, host="0.0.0.0", port=port)
 
 

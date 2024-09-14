@@ -31,13 +31,11 @@ async def webhook_validation(
 async def webhook_handler(
     data: StravaEvent,
     nats: NatsClient,
+    js: JetStreamContext,
     config: Config,
 ) -> dict[str, str]:
-    headers = {
-        "Nats-Expected-Stream": config.nats.stream,
-    }
     topic = ".".join([config.nats.subject_prefix, data.object_type, data.aspect_type])
-    await nats.publish(topic, msgspec.json.encode(data), headers=headers)
+    await js.publish(topic, msgspec.json.encode(data), stream=config.nats.stream)
     return {"status": "ok"}
 
 

@@ -1,9 +1,9 @@
 import asyncio
+import sys
 from urllib.parse import urljoin
-from litestar import Litestar
 
 import httpx
-import sys
+from litestar import Litestar
 
 from .common import LOCAL_WH_URL
 from .config import Config
@@ -14,7 +14,9 @@ STRAVA_SUB_URL = "https://www.strava.com/api/v3/push_subscriptions"
 def register_sub_hook_factory(config: Config, sleep: int = 5):
     async def register_sub_hook(app: Litestar):
         asyncio.create_task(register_sub(config, sleep, app))
+
     return register_sub_hook
+
 
 async def register_sub(config: Config, sleep: int = 5, app: Litestar | None = None):
     await asyncio.sleep(sleep)
