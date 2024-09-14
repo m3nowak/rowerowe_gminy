@@ -10,6 +10,8 @@ from litestar.plugins import InitPluginProtocol
 from nats.aio.client import Client as NatsClient
 from nats.js import JetStreamContext
 
+import asyncio
+
 
 @dataclass
 class NatsPluginConfig:

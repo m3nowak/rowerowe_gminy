@@ -12,8 +12,7 @@ from rg_app.common.litestar.plugins import ConfigPlugin, NatsPlugin, NatsPluginC
 from .common import LOCAL_WH_URL
 from .config import Config
 from .models import StravaEvent
-
-STRAVA_SUB_URL = "https://www.strava.com/api/v3/push_subscriptions"
+from .register_sub import register_sub_hook_factory
 
 
 @get(f"/{LOCAL_WH_URL}")
@@ -56,13 +55,18 @@ async def index(nats: NatsClient, js: JetStreamContext) -> str:
     return f"Hello, world!, {current_val}"
 
 
-def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
+def app_factory(config: Config, debug_mode: bool = False, no_register: bool = False) -> Litestar:
     nats_plugin = NatsPlugin(NatsPluginConfig(url=config.nats.url, js=True))
     config_plugin = ConfigPlugin(config)
+    on_startup = []
+    if not no_register:
+        on_startup.append(register_sub_hook_factory(config, 5))
+
     app = Litestar(
         [index, webhook_validation, webhook_handler],
         plugins=[nats_plugin, config_plugin],
         debug=debug_mode,
+        on_startup=on_startup,
     )
 
     return app

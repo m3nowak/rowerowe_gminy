@@ -1,12 +1,9 @@
 import asyncio
 
 import click
-from hypercorn.asyncio import serve
-from hypercorn.config import Config as HypercornConfig
-
+import uvicorn
 from .app import app_factory
 from .config import Config
-from .register_sub import register_sub
 
 
 async def gthr(to_gather):
@@ -21,13 +18,7 @@ async def gthr(to_gather):
 def run(config_path: str, port: int, debug: bool = False, no_register: bool = False):
     config = Config.from_file(config_path)
     app = app_factory(config, debug_mode=debug)
-    hc_config = HypercornConfig()
-    hc_config.bind = [f"0.0.0.0:{port}"]
-    to_gather = [serve(app, hc_config, mode="asgi")]  # type: ignore
-    if not no_register:
-        to_gather.append(register_sub(config))
-    asyncio.run(gthr(to_gather))
-    # uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 
 def main():

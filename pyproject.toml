@@ -26,10 +26,9 @@ api = [
 ]
 db = ["alembic>=1.13.2", "rowerowe_gminy[db_common]"]
 wha = [
-    "litestar>=2.11.0",
+    "litestar[standard]>=2.11.0",
     "msgspec>=0.18.6",
     "nats-py[nkeys]>=2.9.0",
-    "hypercorn>=0.17.3",
 ]
 
 
@@ -53,6 +52,7 @@ max_line_length = 120
 rg-scrapping = "rg_app.scrapping:__main__.main"
 rg-api = "rg_app.api:__main__.main"
 rg-db = "rg_app.db:__main__.main"
+rg-wha = "rg_app.wha:__main__.main"
 
 
 [tool.ruff]
@@ -69,3 +69,5 @@ db-revision = { cmd = "alembic revision --autogenerate", working_dir = "src/rg_a
 start-db = { cmd = "docker run --name rg-app-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -v rg-app-db:/var/lib/postgresql -d docker.io/library/postgres:16" }
 resume-db = { cmd = "docker start rg-app-db" }
 migrate-db = { cmd = "rg-db migrate postgresql+psycopg://postgres:postgres@localhost/postgres"}
+
+start-nats = { cmd = "docker run --name rg-app-nats -p 4222:4222 -v rg-nats:/nats-data -v ./data/nats/nats-server.conf:/etc/nats/nats-server.conf -d docker.io/library/nats:2.10 -c /etc/nats/nats-server.conf" }

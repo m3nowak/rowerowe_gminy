@@ -1,7 +1,9 @@
 import asyncio
 from urllib.parse import urljoin
+from litestar import Litestar
 
 import httpx
+import sys
 
 from .common import LOCAL_WH_URL
 from .config import Config
@@ -9,7 +11,12 @@ from .config import Config
 STRAVA_SUB_URL = "https://www.strava.com/api/v3/push_subscriptions"
 
 
-async def register_sub(config: Config, sleep: int = 5):
+def register_sub_hook_factory(config: Config, sleep: int = 5):
+    async def register_sub_hook(app: Litestar):
+        asyncio.create_task(register_sub(config, sleep, app))
+    return register_sub_hook
+
+async def register_sub(config: Config, sleep: int = 5, app: Litestar | None = None):
     await asyncio.sleep(sleep)
     async with httpx.AsyncClient() as client:
         current_subs = await client.get(
@@ -28,4 +35,14 @@ async def register_sub(config: Config, sleep: int = 5):
             "verify_token": config.verify_token,
         }
         new_sub = await client.post(STRAVA_SUB_URL, data=sub)
+        if new_sub.is_success:
+            if app and app.logger:
+                app.logger.info("Webhook registered!")
+        else:
+            if app:
+                if app.logger:
+                    app.logger.error("Failed to register webhook")
+                    app.logger.error(new_sub.text)
+                    app.logger.error("I am dead 😱")
+                sys.exit(1)
         new_sub.raise_for_status()
