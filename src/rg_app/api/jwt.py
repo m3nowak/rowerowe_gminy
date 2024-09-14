@@ -1,13 +1,12 @@
 import typing as ty
+from datetime import timedelta
 
-from litestar.connection import ASGIConnection
 from litestar.config.app import AppConfig
-from litestar.security.jwt import JWTAuth, Token
+from litestar.connection import ASGIConnection
+from litestar.datastructures import State
 from litestar.di import Provide
 from litestar.plugins import InitPluginProtocol
-from litestar.datastructures import State
-
-from datetime import timedelta
+from litestar.security.jwt import JWTAuth, Token
 
 from rg_app.common.msg import BaseStruct
 
@@ -25,7 +24,7 @@ async def _retrieve_user_handler(
     return MinimalUser(id=int(token.sub))
 
 
-#Ugly hack, somehow JWTAuth cannot be used as a dependency
+# Ugly hack, somehow JWTAuth cannot be used as a dependency
 class CreateTokenHandler:
     def __init__(self, jwt: JWTAuth[MinimalUser]) -> None:
         self._ch = jwt.create_token

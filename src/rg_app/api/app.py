@@ -4,11 +4,12 @@ from litestar.openapi.plugins import SwaggerRenderPlugin
 from litestar.plugins.problem_details import ProblemDetailsConfig, ProblemDetailsPlugin
 from litestar.plugins.sqlalchemy import SQLAlchemyAsyncConfig, SQLAlchemyInitPlugin
 
+from rg_app.common.litestar.plugins import ConfigPlugin
+
 from .auth import authenticate_handler
 from .config import Config
 from .hc import hc_handler
 from .jwt import SimpleJwtPlugin
-from rg_app.common.litestar.plugins import ConfigPlugin
 
 
 def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
@@ -18,7 +19,7 @@ def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
     config_plugin = ConfigPlugin(config)
 
     jwt_plugin = SimpleJwtPlugin(secret=config.jwt_secret, exclude=["/authenticate", "/docs", "/hc"])
-    
+
     app = Litestar(
         debug=debug_mode,
         route_handlers=[authenticate_handler, hc_handler],

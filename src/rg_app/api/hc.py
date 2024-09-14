@@ -1,8 +1,8 @@
-from litestar import get
-
 import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncSession
+from litestar import get
 from litestar.exceptions import ServiceUnavailableException
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 @get("/hc")
 async def hc_handler(db_session: AsyncSession) -> str:

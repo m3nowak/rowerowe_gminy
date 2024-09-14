@@ -6,13 +6,13 @@ import httpx
 import msgspec
 from litestar import post
 from litestar.status_codes import HTTP_200_OK
-from litestar.security.jwt import JWTAuth
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .config import Config
-from .jwt import MinimalUser, CreateTokenHandler
 from rg_app.common.msg import BaseStruct
 from rg_app.db import User
+
+from .config import Config
+from .jwt import CreateTokenHandler, MinimalUser
 
 
 class StravaAuthResponse(msgspec.Struct):
@@ -81,6 +81,7 @@ class AuthRequest(BaseStruct):
     code: str
     scopes: ty.List[StravaScopes]
     remember_longer: bool = False
+
 
 class AuthResponse(BaseStruct):
     token: str
