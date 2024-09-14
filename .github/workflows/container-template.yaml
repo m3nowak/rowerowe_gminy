@@ -10,6 +10,10 @@ on:
       image_repo_base:
         required: true
         type: string
+      token:
+        required: true
+        type: string
+        
 
 jobs:
   build:
@@ -44,7 +48,7 @@ jobs:
         --target api
     - name: Push the Container image to ghcr
       run: |
-        podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.PACKAGES_TOKEN }}
+        podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ inputs.token }}
         podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}
         podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
         podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
