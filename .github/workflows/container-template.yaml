@@ -3,6 +3,9 @@ name: Container build template
 
 on:
   workflow_call:
+    secrets:
+      packages_token:
+        required: true
     inputs:
       target_image:
         required: true
@@ -44,7 +47,7 @@ jobs:
           --target api
       - name: Push the Container image to ghcr
         run: |
-          podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.PACKAGES_TOKEN }}
+          podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.packages_token }}
           podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}
           podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
           podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
