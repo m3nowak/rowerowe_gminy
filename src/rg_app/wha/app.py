@@ -4,7 +4,6 @@ from litestar.exceptions import PermissionDeniedException, ServiceUnavailableExc
 from litestar.params import Parameter
 from nats.aio.client import Client as NatsClient
 from nats.js import JetStreamContext
-from nats.js.errors import KeyNotFoundError
 from typing_extensions import Annotated
 
 from rg_app.common.litestar.plugins import ConfigPlugin, NatsPlugin, NatsPluginConfig
@@ -24,6 +23,7 @@ async def webhook_validation(
 ) -> dict[str, str]:
     if verify_token != config.verify_token:
         raise PermissionDeniedException("Invalid verify token")
+    print("Webhook validation successful")
     return {"hub.challenge": challenge}
 
 
@@ -48,7 +48,14 @@ async def index(nats: NatsClient, js: JetStreamContext) -> str:
 
 
 def app_factory(config: Config, debug_mode: bool = False, no_register: bool = False) -> Litestar:
-    nats_plugin = NatsPlugin(NatsPluginConfig(url=config.nats.url, js=True, user_credentials=config.nats.creds_path))
+    nats_plugin = NatsPlugin(
+        NatsPluginConfig(
+            url=config.nats.url,
+            js=True,
+            user_credentials=config.nats.creds_path,
+            inbox_prefix=config.nats.inbox_prefix.encode(),
+        )
+    )
     config_plugin = ConfigPlugin(config)
     on_startup = []
     if not no_register:

@@ -9,6 +9,7 @@ class NATSConfig(BaseStruct):
     creds_path: str | None = None
     stream: str = "incoming-wha"
     subject_prefix: str = "rg.incoming.wha"
+    inbox_prefix: str = "_inbox.wha"
 
 
 class Config(BaseStruct):
