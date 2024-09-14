@@ -44,7 +44,7 @@ jobs:
           --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
           --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
           --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:latest
-          --target api
+          --target ${{ inputs.target_image }}
       - name: Push the Container image to ghcr
         run: |
           podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.packages_token }}
