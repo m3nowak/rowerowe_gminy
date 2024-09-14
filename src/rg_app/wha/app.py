@@ -17,9 +17,9 @@ from .register_sub import register_sub_hook_factory
 
 @get(f"/{LOCAL_WH_URL}")
 async def webhook_validation(
-    verify_token: Annotated[str, Parameter(query="hub.verify_token")],
-    _: Annotated[str, Parameter(query="hub.mode")],
-    challenge: Annotated[str, Parameter(query="hub.challenge")],
+    verify_token: Annotated[str, Parameter(query="hub.verify_token", default="")],
+    _: Annotated[str, Parameter(query="hub.mode", default="")],
+    challenge: Annotated[str, Parameter(query="hub.challenge", default="")],
     config: Config,
 ) -> dict[str, str]:
     if verify_token != config.verify_token:
