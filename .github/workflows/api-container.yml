@@ -1,11 +1,10 @@
 name: API Container
-on: 
-  workflow_dispatch
+on: workflow_dispatch
 
 jobs:
   use_template:
     uses: ./.github/workflows/container-template.yaml
+    secrets: inherit
     with:
       target_image: api
       image_repo_base: ghcr.io/m3nowak/rowerowe_gminy
-      token: ${{ secrets.PACKAGES_TOKEN }}

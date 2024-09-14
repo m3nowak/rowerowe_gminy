@@ -10,46 +10,42 @@ on:
       image_repo_base:
         required: true
         type: string
-      token:
-        required: true
-        type: string
-        
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: What day is it?
-      id: date
-      run: echo "date=$(date +%F)" >> "$GITHUB_OUTPUT"
-    - name: install python + pdm
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y python3 python3-pip
-        curl -sSL https://pdm-project.org/install-pdm.py | python3 -
-        pdm self add pdm-version
-    - name: pdm install + version
-      id: pdm_install
-      run: |
-        pdm install
-        echo "version=$(pdm version)" >> "$GITHUB_OUTPUT"
-    - name: Install Podman
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y podman
-    - name: Build the Container image
-      run: >
-        podman build .
-        --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}
-        --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
-        --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
-        --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:latest
-        --target api
-    - name: Push the Container image to ghcr
-      run: |
-        podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ inputs.token }}
-        podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}
-        podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
-        podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
-        podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:latest
+      - uses: actions/checkout@v4
+      - name: What day is it?
+        id: date
+        run: echo "date=$(date +%F)" >> "$GITHUB_OUTPUT"
+      - name: install python + pdm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip
+          curl -sSL https://pdm-project.org/install-pdm.py | python3 -
+          pdm self add pdm-version
+      - name: pdm install + version
+        id: pdm_install
+        run: |
+          pdm install
+          echo "version=$(pdm version)" >> "$GITHUB_OUTPUT"
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+      - name: Build the Container image
+        run: >
+          podman build .
+          --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}
+          --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
+          --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
+          --tag ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:latest
+          --target api
+      - name: Push the Container image to ghcr
+        run: |
+          podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.PACKAGES_TOKEN }}
+          podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}
+          podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ steps.date.outputs.date }}
+          podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:${{ steps.pdm_install.outputs.version }}-${{ github.run_number }}
+          podman push ${{ inputs.image_repo_base }}/${{ inputs.target_image }}:latest
