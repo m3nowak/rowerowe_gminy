@@ -1,5 +1,5 @@
 FROM docker.io/library/almalinux:9 AS common
-LABEL org.opencontainers.image.source = "https://github.com/m3nowak/rowerowe_gminy/"
+LABEL org.opencontainers.image.source = "https://github.com/m3nowak/rowerowe_gminy"
 LABEL org.opencontainers.image.description="Rowerowe Gminy"
 LABEL org.opencontainers.image.licenses=Apache-2.0
 
