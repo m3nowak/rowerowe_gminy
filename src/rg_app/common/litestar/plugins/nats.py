@@ -2,13 +2,13 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import AsyncGenerator
 
-import nats
 from litestar import Litestar
 from litestar.config.app import AppConfig
 from litestar.di import Provide
 from litestar.plugins import InitPluginProtocol
-from nats.aio.client import Client as NatsClient
 from nats.js import JetStreamContext
+
+from rg_app.nats_util.client import connect as nats_connect, NatsClient
 
 
 @dataclass
@@ -67,7 +67,7 @@ class NatsPlugin(InitPluginProtocol):
                 nc = app.state[_STATE_KEY]
             except KeyError:
                 conn_kwargs = self.cfg.conn_kwargs or {}
-                nc = await nats.connect(
+                nc = await nats_connect(
                     self.cfg.url,
                     user_credentials=self.cfg.user_credentials,
                     inbox_prefix=self.cfg.inbox_prefix,

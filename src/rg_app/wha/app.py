@@ -2,7 +2,7 @@ import msgspec
 from litestar import Litestar, get, post
 from litestar.exceptions import PermissionDeniedException, ServiceUnavailableException
 from litestar.params import Parameter
-from nats.aio.client import Client as NatsClient
+from rg_app.nats_util.client import NatsClient
 from nats.js import JetStreamContext
 from typing_extensions import Annotated
 
@@ -30,17 +30,16 @@ async def webhook_validation(
 @post(f"/{LOCAL_WH_URL}", status_code=202)
 async def webhook_handler(
     data: StravaEvent,
-    nats: NatsClient,
     js: JetStreamContext,
     config: Config,
 ) -> dict[str, str]:
-    topic = ".".join([config.nats.subject_prefix, data.object_type, data.aspect_type])
+    topic = ".".join([config.nats.subject_prefix, data.object_type, str(data.object_id)])
     await js.publish(topic, msgspec.json.encode(data), stream=config.nats.stream)
     return {"status": "ok"}
 
 
 @get("/")
-async def index(nats: NatsClient, js: JetStreamContext) -> str:
+async def index(nats: NatsClient) -> str:
     if nats.is_connected:
         return "Server ready"
     else:

@@ -71,3 +71,4 @@ resume-db = { cmd = "docker start rg-app-db" }
 migrate-db = { cmd = "rg-db migrate postgresql+psycopg://postgres:postgres@localhost/postgres"}
 
 start-nats = { cmd = "docker run --name rg-app-nats -p 4222:4222 -v rg-nats:/nats-data -v ./data/nats/nats-server.conf:/etc/nats/nats-server.conf -d docker.io/library/nats:2.10 -c /etc/nats/nats-server.conf" }
+resume-nats = { cmd = "docker start rg-app-nats" }
