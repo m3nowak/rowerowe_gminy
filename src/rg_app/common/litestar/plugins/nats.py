@@ -8,7 +8,8 @@ from litestar.di import Provide
 from litestar.plugins import InitPluginProtocol
 from nats.js import JetStreamContext
 
-from rg_app.nats_util.client import connect as nats_connect, NatsClient
+from rg_app.nats_util.client import NatsClient
+from rg_app.nats_util.client import connect as nats_connect
 
 
 @dataclass

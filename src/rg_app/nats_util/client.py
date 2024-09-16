@@ -12,7 +12,9 @@ from .msg import ReplyMsg
 
 
 async def connect(url: str | list[str], **kwargs):
-    return await nats.connect(url, **kwargs)
+    nc = NatsClient()
+    await nc.connect(url, **kwargs)
+    return nc
 
 
 def _standardize_subject(subject: SubjectLike | None) -> str:

@@ -2,11 +2,11 @@ import msgspec
 from litestar import Litestar, get, post
 from litestar.exceptions import PermissionDeniedException, ServiceUnavailableException
 from litestar.params import Parameter
-from rg_app.nats_util.client import NatsClient
 from nats.js import JetStreamContext
 from typing_extensions import Annotated
 
 from rg_app.common.litestar.plugins import ConfigPlugin, NatsPlugin, NatsPluginConfig
+from rg_app.nats_util.client import NatsClient
 
 from .common import LOCAL_WH_URL
 from .config import Config
