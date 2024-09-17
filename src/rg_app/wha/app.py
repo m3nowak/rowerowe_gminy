@@ -14,8 +14,9 @@ from .models import StravaEvent
 from .register_sub import register_sub_hook_factory
 
 
-@get(f"/{LOCAL_WH_URL}")
+@get(f"/{LOCAL_WH_URL}/{{path_token:str}}")
 async def webhook_validation(
+    path_token: str,
     verify_token: Annotated[str, Parameter(query="hub.verify_token", default="")],
     _: Annotated[str, Parameter(query="hub.mode", default="")],
     challenge: Annotated[str, Parameter(query="hub.challenge", default="")],
@@ -23,16 +24,21 @@ async def webhook_validation(
 ) -> dict[str, str]:
     if verify_token != config.verify_token:
         raise PermissionDeniedException("Invalid verify token")
+    if path_token != config.verify_token:
+        raise PermissionDeniedException("Invalid path token")
     print("Webhook validation successful")
     return {"hub.challenge": challenge}
 
 
-@post(f"/{LOCAL_WH_URL}", status_code=202)
+@post(f"/{LOCAL_WH_URL}/{{path_token:str}}", status_code=200)
 async def webhook_handler(
+    path_token: str,
     data: StravaEvent,
     js: JetStreamContext,
     config: Config
 ) -> dict[str, str]:
+    if path_token != config.verify_token:
+        raise PermissionDeniedException("Invalid path token")
     topic = ".".join([config.nats.subject_prefix, data.object_type, str(data.object_id)])
     await js.publish(topic, msgspec.json.encode(data), stream=config.nats.stream)
     return {"status": "ok"}
