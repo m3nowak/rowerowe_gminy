@@ -1,5 +1,5 @@
 import msgspec
-from litestar import Litestar, get, post, Request
+from litestar import Litestar, get, post
 from litestar.exceptions import PermissionDeniedException, ServiceUnavailableException
 from litestar.params import Parameter
 from nats.js import JetStreamContext
@@ -31,10 +31,8 @@ async def webhook_validation(
 async def webhook_handler(
     data: StravaEvent,
     js: JetStreamContext,
-    config: Config,
-    request: Request
+    config: Config
 ) -> dict[str, str]:
-    print(request.headers)
     topic = ".".join([config.nats.subject_prefix, data.object_type, str(data.object_id)])
     await js.publish(topic, msgspec.json.encode(data), stream=config.nats.stream)
     return {"status": "ok"}
