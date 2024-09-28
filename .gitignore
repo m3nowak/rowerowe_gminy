@@ -169,3 +169,6 @@ openapi.yaml
 
 config.yaml
 config.*.yaml
+
+#secrets
+secrets/
