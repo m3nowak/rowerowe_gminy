@@ -1,10 +1,7 @@
-from rg_app.common.config import BaseConfigStruct, SecretReference
+from rg_app.common.config import BaseConfigStruct, BaseNatsConfig, SecretReference
 
 
-class NATSConfig(BaseConfigStruct):
-    url: str | list[str]
-    js_domain: str | None = None
-    creds_path: str | None = None
+class NATSConfig(BaseNatsConfig):
     stream: str = "incoming-wha"
     subject_prefix: str = "rg.incoming.wha"
     inbox_prefix: str = "_inbox.wha"

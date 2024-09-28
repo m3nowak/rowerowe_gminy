@@ -32,6 +32,7 @@ wha = [
 ]
 worker = [
     "faststream[nats]>=0.5.25",
+    "click>=8.1.7",
 ]
 
 

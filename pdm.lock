@@ -5,7 +5,7 @@
 groups = ["default", "api", "db", "db_common", "dev", "geo", "scrap", "wha", "worker"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:399a0135d4d2fef413031506c15c1de321fe7cb41351a851065ebd732789db22"
+content_hash = "sha256:01ee733c0615d7adf7e0c3c068853a66e389eb7d3a90d067ca5a252a8718ee7e"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
@@ -230,7 +230,7 @@ name = "click"
 version = "8.1.7"
 requires_python = ">=3.7"
 summary = "Composable command line interface toolkit"
-groups = ["default", "api", "wha"]
+groups = ["default", "api", "wha", "worker"]
 dependencies = [
     "colorama; platform_system == \"Windows\"",
     "importlib-metadata; python_version < \"3.8\"",
@@ -245,7 +245,7 @@ name = "colorama"
 version = "0.4.6"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 summary = "Cross-platform colored terminal text."
-groups = ["default", "api", "wha"]
+groups = ["default", "api", "wha", "worker"]
 marker = "platform_system == \"Windows\" or sys_platform == \"win32\""
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},

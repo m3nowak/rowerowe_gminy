@@ -5,18 +5,41 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Worker",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rg_app.worker",
+            "args": [
+                "-c",
+                "config.worker.yaml",
+                "--debug"
+            ]
+        },
+        {
             "name": "API",
             "type": "debugpy",
             "request": "launch",
             "module": "rg_app.api",
-            "args": ["run", "-c", "config.api.yaml", "--debug"]
+            "args": [
+                "run",
+                "-c",
+                "config.api.yaml",
+                "--debug"
+            ]
         },
         {
             "name": "Webhook Adapter",
             "type": "debugpy",
             "request": "launch",
             "module": "rg_app.wha",
-            "args": ["--debug", "-c", "config.wha.yaml", "--port", "8001", "--no-register"]
+            "args": [
+                "--debug",
+                "-c",
+                "config.wha.yaml",
+                "--port",
+                "8001",
+                "--no-register"
+            ]
         },
         {
             "name": "GEO",

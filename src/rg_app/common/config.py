@@ -45,3 +45,10 @@ class SecretReference(BaseConfigStruct):
             with open(os.path.join(self.secret_mount_path, self.secret_key)) as f:
                 self._value = f.read().strip()
         return self._value
+
+
+class BaseNatsConfig(BaseConfigStruct):
+    url: str | list[str]
+    js_domain: str | None = None
+    creds_path: str | None = None
+    inbox_prefix: str = "_inbox"
