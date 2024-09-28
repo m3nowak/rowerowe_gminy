@@ -53,9 +53,12 @@ dev = [
 ]
 
 [tool.pdm.scripts]
-sort = { cmd = "ruff check --extend-select I001 --fix src scripts" }
-format = { cmd = "ruff format src scripts" }
-pimp = { composite = ["sort", "format"] }
+lint = {cmd = "ruff check src tests"}
+lint-fix = {cmd = "ruff check --fix src tests"}
+format = {cmd = "ruff format --check src tests"}
+format-fix = {cmd = "ruff format src tests"}
+pimp = {composite = ["lint-fix", "format-fix"]}
+types = {cmd = "pyright"}
 
 mk-data = { composite = ["scripts/download_gml.py", "scripts/gml_to_json.py"] }
 openapi = { cmd = "rg-api openapi -j -o openapi.json" }
