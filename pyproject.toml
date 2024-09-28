@@ -37,6 +37,9 @@ requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 
+[tool.autopep8]
+max_line_length = 120
+
 [tool.pdm]
 distribution = true
 
@@ -44,19 +47,10 @@ distribution = true
 includes = ["src/rg_app/"]
 
 [tool.pdm.dev-dependencies]
-dev = ["ruff>=0.6.3"]
-[tool.autopep8]
-max_line_length = 120
-
-[project.scripts]
-rg-scrapping = "rg_app.scrapping:__main__.main"
-rg-api = "rg_app.api:__main__.main"
-rg-db = "rg_app.db:__main__.main"
-rg-wha = "rg_app.wha:__main__.main"
-
-
-[tool.ruff]
-line-length = 120
+dev = [
+    "ruff>=0.6.3",
+    "pyright>=1.1.382.post1",
+]
 
 [tool.pdm.scripts]
 sort = { cmd = "ruff check --extend-select I001 --fix src scripts" }
@@ -72,3 +66,25 @@ migrate-db = { cmd = "rg-db migrate postgresql+psycopg://postgres:postgres@local
 
 start-nats = { cmd = "docker run --name rg-app-nats -p 4222:4222 -v rg-nats:/nats-data -v ./data/nats/nats-server.conf:/etc/nats/nats-server.conf -d docker.io/library/nats:2.10 -c /etc/nats/nats-server.conf" }
 resume-nats = { cmd = "docker start rg-app-nats" }
+[project.scripts]
+rg-scrapping = "rg_app.scrapping:__main__.main"
+rg-api = "rg_app.api:__main__.main"
+rg-db = "rg_app.db:__main__.main"
+rg-wha = "rg_app.wha:__main__.main"
+
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-select = ["I001"]
+
+[tool.pyright]
+include = ["src", "tests"]
+exclude = [
+    "**/__pycache__",
+]
+reportMissingImports = "error"
+pythonVersion = "3.12"
+pythonPlatform = "Linux"
