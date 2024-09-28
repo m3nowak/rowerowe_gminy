@@ -22,7 +22,8 @@ async def register_sub(config: Config, sleep: int = 5, app: Litestar | None = No
     await asyncio.sleep(sleep)
     async with httpx.AsyncClient() as client:
         current_subs = await client.get(
-            STRAVA_SUB_URL, params={"client_id": config.strava_client_id, "client_secret": config.get_strava_client_secret()}
+            STRAVA_SUB_URL,
+            params={"client_id": config.strava_client_id, "client_secret": config.get_strava_client_secret()},
         )
         current_subs.raise_for_status()
         sub_list = current_subs.json()

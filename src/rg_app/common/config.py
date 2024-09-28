@@ -1,5 +1,4 @@
 import os.path
-from functools import cached_property
 from typing import Self
 
 import msgspec
@@ -35,12 +34,14 @@ class SecretReference(BaseConfigStruct):
 
     _value: str | None = None
 
-    @cached_property("_value")
+    @property
     def value(self) -> str:
         """Returns the value of the secret.
 
         Returns:
             str: The value of the secret.
         """
-        with open(os.path.join(self.secret_mount_path, self.secret_key)) as f:
-            return f.read().strip()
+        if self._value is None:
+            with open(os.path.join(self.secret_mount_path, self.secret_key)) as f:
+                self._value = f.read().strip()
+        return self._value

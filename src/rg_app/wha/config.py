@@ -1,5 +1,3 @@
-import msgspec
-
 from rg_app.common.config import BaseConfigStruct, SecretReference
 
 
@@ -24,10 +22,9 @@ class Config(BaseConfigStruct):
             return self.strava_client_secret.value
         else:
             return self.strava_client_secret
-    
+
     def get_verify_token(self) -> str:
         if isinstance(self.verify_token, SecretReference):
             return self.verify_token.value
         else:
             return self.verify_token
-
