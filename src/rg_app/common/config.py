@@ -33,7 +33,9 @@ class SecretReference(BaseConfigStruct):
     secret_mount_path: str
     secret_key: str
 
-    @cached_property
+    _value: str | None = None
+
+    @cached_property("_value")
     def value(self) -> str:
         """Returns the value of the secret.
 
