@@ -1,5 +1,6 @@
 import logging
 import os.path
+import typing as ty
 import urllib.parse
 import urllib.request
 
@@ -155,7 +156,7 @@ def standardize(df: pd.DataFrame) -> pd.DataFrame:
     ].copy()
     # result = df[[REGIONS_INDEX, "name", "area", "population", "link", "has_one_child", "only_child", "type"]].copy()
     result.set_index(REGIONS_INDEX)
-    return result
+    return ty.cast(pd.DataFrame, result)
 
 
 def save_data(path: str):

@@ -1,3 +1,5 @@
+import typing as ty
+
 import geopandas as gpd
 import topojson as tp
 
@@ -18,7 +20,7 @@ def toposimplify_gdf(regions_gdf: gpd.GeoDataFrame, toposimplify: float) -> gpd.
         simplify_algorithm="dp",
         prevent_oversimplify=True,
     )
-    regions_gdf = topo.to_gdf(winding_order="CW_CCW", crs=TARGET_CRS, validate=True)
+    regions_gdf = ty.cast(gpd.GeoDataFrame, topo.to_gdf(winding_order="CW_CCW", crs=TARGET_CRS, validate=True))
     # fix crs
     regions_gdf.geometry.set_crs(crs=SOURCE_CRS, inplace=True, allow_override=True)
     regions_gdf.geometry = regions_gdf.geometry.to_crs(crs=TARGET_CRS)

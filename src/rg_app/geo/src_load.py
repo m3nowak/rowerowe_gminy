@@ -23,7 +23,7 @@ def _reformat_metadata(fc: geopandas.GeoDataFrame) -> geopandas.GeoDataFrame:
     fc["name"] = fc["JPT_NAZWA_"]
     fc["type"] = fc["JPT_SJR_KO"]
     to_drop = fc.columns.difference(["geometry", REGIONS_INDEX, "name", "type"])
-    fc = fc.drop(columns=to_drop)
+    fc = fc.drop(columns=to_drop)  # type: ignore
     max_teryt_len = fc[REGIONS_INDEX].str.len().max()
     fc[REGIONS_INDEX] = fc[REGIONS_INDEX].str.zfill(max_teryt_len)
     fc.set_index(REGIONS_INDEX, inplace=True)

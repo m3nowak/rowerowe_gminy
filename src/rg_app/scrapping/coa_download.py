@@ -1,5 +1,6 @@
 import os.path
 import time
+import typing as ty
 import urllib.request
 
 import pandas as pd
@@ -16,18 +17,20 @@ def download_coa_list(
     # download images
 
     headers = {"User-Agent": "RoweroweGminy/0.0 (https://rowerowegminy.pl/; rowerowe-gminy@mp.miknowak.pl)"}
-    for row in ldf.itertuples():
+    for row in ldf.iterrows():
+        row = ty.cast(ty.Any, row)
+        # f it if something goes wrong check this line
         url = str(row.coa_link)
         if url.startswith("//"):
             url = "https:" + url
         tgt_fname = os.path.join(output_dir, str(row.coa_fname))
         if skip_downloaded and os.path.exists(tgt_fname):
-            print(f"Skipping {url}, COA of {row.name}")
+            name = ty.cast(str, row.name)
+            print(f"Skipping {url}, COA of {name}")
         else:
             with open(tgt_fname, "wb") as f:
                 req = urllib.request.Request(url, headers=headers)
                 f.write(urllib.request.urlopen(req).read())
-            print(f"Downloaded {url}, COA of {row.name}")
             time.sleep(0.05)
     ldf["coa_link"] = ldf["coa_fname"]
     ldf.drop(columns=["coa_fname"], inplace=True)

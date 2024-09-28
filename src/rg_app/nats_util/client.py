@@ -56,14 +56,14 @@ class NatsClient(nats.aio.client.Client):
         final_payload = _standardize_payload(payload, json)
         await super().publish(final_subject, payload=final_payload, reply=final_reply, headers=headers)
 
-    async def request(
+    async def request_ext(
         self,
         subject: SubjectLike,
         payload: TextPayload | None = None,
         timeout: float = 0.5,
         headers: dict[str, str] | None = None,
         json: CommonJsonable | None = None,
-    ):
+    ) -> ReplyMsg:
         final_subject = _standardize_subject(subject)
         final_payload = _standardize_payload(payload, json)
         response = await super().request(final_subject, payload=final_payload, timeout=timeout, headers=headers)
