@@ -2,10 +2,10 @@
 # It is not intended for manual editing.
 
 [metadata]
-groups = ["default", "api", "db", "db_common", "dev", "geo", "scrap", "wha"]
+groups = ["default", "api", "db", "db_common", "dev", "geo", "scrap", "wha", "worker"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:0b2bb2a45334547531e17b807c6680ec0eda070e5a4cadef17d5a198c402c061"
+content_hash = "sha256:399a0135d4d2fef413031506c15c1de321fe7cb41351a851065ebd732789db22"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
@@ -125,7 +125,7 @@ name = "annotated-types"
 version = "0.7.0"
 requires_python = ">=3.8"
 summary = "Reusable constraint types to use with typing.Annotated"
-groups = ["api"]
+groups = ["api", "worker"]
 dependencies = [
     "typing-extensions>=4.0.0; python_version < \"3.9\"",
 ]
@@ -139,7 +139,7 @@ name = "anyio"
 version = "4.4.0"
 requires_python = ">=3.8"
 summary = "High level compatibility layer for multiple asynchronous event loop implementations"
-groups = ["api", "wha"]
+groups = ["api", "wha", "worker"]
 dependencies = [
     "exceptiongroup>=1.0.2; python_version < \"3.11\"",
     "idna>=2.8",
@@ -307,6 +307,22 @@ files = [
 ]
 
 [[package]]
+name = "fast-depends"
+version = "2.4.11"
+requires_python = ">=3.8"
+summary = "FastDepends - extracted and cleared from HTTP domain logic FastAPI Dependency Injection System. Async and sync are both supported."
+groups = ["worker"]
+dependencies = [
+    "anyio<5.0.0,>=3.0.0",
+    "pydantic!=1.8,!=1.8.1,<3.0.0,>=1.7.4",
+    "typing-extensions<4.12.1; python_version < \"3.9\"",
+]
+files = [
+    {file = "fast_depends-2.4.11-py3-none-any.whl", hash = "sha256:f361d6b6375184a800e93ecaf874a5ebc9905fe4f5fafecc50de2c81acf850d8"},
+    {file = "fast_depends-2.4.11.tar.gz", hash = "sha256:29c8022232d1f67408d41fc251d2756c74ba98298e0502454de9f42df99a2ab0"},
+]
+
+[[package]]
 name = "fast-query-parsers"
 version = "1.0.3"
 requires_python = ">=3.8"
@@ -329,6 +345,38 @@ files = [
     {file = "fast_query_parsers-1.0.3-cp38-abi3-win32.whl", hash = "sha256:14b3fab7e9a6ac1c1efaf66c3fd2a3fd1e25ede03ed14118035e530433830a11"},
     {file = "fast_query_parsers-1.0.3-cp38-abi3-win_amd64.whl", hash = "sha256:21ae5f3a209aee7d3b84bdcdb33dd79f39fc8cb608b3ae8cfcb78123758c1a16"},
     {file = "fast_query_parsers-1.0.3.tar.gz", hash = "sha256:5200a9e02997ad51d4d76a60ea1b256a68a184b04359540eb6310a15013df68f"},
+]
+
+[[package]]
+name = "faststream"
+version = "0.5.25"
+requires_python = ">=3.8"
+summary = "FastStream: the simplest way to work with a messaging queues"
+groups = ["worker"]
+dependencies = [
+    "anyio<5,>=3.7.1",
+    "fast-depends<3.0.0,>=2.4.0b0",
+    "typing-extensions>=4.8.0",
+]
+files = [
+    {file = "faststream-0.5.25-py3-none-any.whl", hash = "sha256:872d88a112d3d9c454dbc0fa4fe4211717e4422b3aa2f75f9d239bffc3c31075"},
+    {file = "faststream-0.5.25.tar.gz", hash = "sha256:926a4a8e013140a37b1c06ad16eb9a35529c9f626def3d846ec4ac171e050bc6"},
+]
+
+[[package]]
+name = "faststream"
+version = "0.5.25"
+extras = ["nats"]
+requires_python = ">=3.8"
+summary = "FastStream: the simplest way to work with a messaging queues"
+groups = ["worker"]
+dependencies = [
+    "faststream==0.5.25",
+    "nats-py<=3.0.0,>=2.7.0",
+]
+files = [
+    {file = "faststream-0.5.25-py3-none-any.whl", hash = "sha256:872d88a112d3d9c454dbc0fa4fe4211717e4422b3aa2f75f9d239bffc3c31075"},
+    {file = "faststream-0.5.25.tar.gz", hash = "sha256:926a4a8e013140a37b1c06ad16eb9a35529c9f626def3d846ec4ac171e050bc6"},
 ]
 
 [[package]]
@@ -480,7 +528,7 @@ name = "idna"
 version = "3.8"
 requires_python = ">=3.6"
 summary = "Internationalized Domain Names in Applications (IDNA)"
-groups = ["api", "wha"]
+groups = ["api", "wha", "worker"]
 files = [
     {file = "idna-3.8-py3-none-any.whl", hash = "sha256:050b4e5baadcd44d760cedbd2b8e639f2ff89bbc7a5730fcc662954303377aac"},
     {file = "idna-3.8.tar.gz", hash = "sha256:d838c2c0ed6fced7693d5e8ab8e734d5f8fda53a039c0164afb0b82e771e3603"},
@@ -746,7 +794,7 @@ name = "nats-py"
 version = "2.9.0"
 requires_python = ">=3.7"
 summary = "NATS client for Python"
-groups = ["wha"]
+groups = ["wha", "worker"]
 files = [
     {file = "nats_py-2.9.0.tar.gz", hash = "sha256:01886eb9e0a87f0ec630652cf1fae65d2a8556378a609bc6cc07d2ea60c8d0dd"},
 ]
@@ -911,7 +959,7 @@ name = "pydantic"
 version = "2.9.1"
 requires_python = ">=3.8"
 summary = "Data validation using Python type hints"
-groups = ["api"]
+groups = ["api", "worker"]
 dependencies = [
     "annotated-types>=0.6.0",
     "pydantic-core==2.23.3",
@@ -928,7 +976,7 @@ name = "pydantic-core"
 version = "2.23.3"
 requires_python = ">=3.8"
 summary = "Core functionality for Pydantic validation and serialization"
-groups = ["api"]
+groups = ["api", "worker"]
 dependencies = [
     "typing-extensions!=4.7.0,>=4.6.0",
 ]
@@ -1222,7 +1270,7 @@ name = "sniffio"
 version = "1.3.1"
 requires_python = ">=3.7"
 summary = "Sniff out which async library your code is running under"
-groups = ["api", "wha"]
+groups = ["api", "wha", "worker"]
 files = [
     {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
     {file = "sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc"},
@@ -1284,7 +1332,7 @@ name = "typing-extensions"
 version = "4.12.2"
 requires_python = ">=3.8"
 summary = "Backported and Experimental Type Hints for Python 3.8+"
-groups = ["api", "db", "db_common", "dev", "wha"]
+groups = ["api", "db", "db_common", "dev", "wha", "worker"]
 files = [
     {file = "typing_extensions-4.12.2-py3-none-any.whl", hash = "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d"},
     {file = "typing_extensions-4.12.2.tar.gz", hash = "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8"},

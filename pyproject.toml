@@ -30,6 +30,9 @@ wha = [
     "msgspec>=0.18.6",
     "nats-py[nkeys]>=2.9.0",
 ]
+worker = [
+    "faststream[nats]>=0.5.25",
+]
 
 
 [build-system]
