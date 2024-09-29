@@ -23,15 +23,16 @@ class StravaAuthResponse(msgspec.Struct):
     access_token: str
     athlete: dict[str, ty.Any]
 
-    def make_username(self) -> str:
-        if self.athlete.get("firstname") is not None or self.athlete.get("lastname") is not None:
-            snc = [self.athlete.get("firstname"), self.athlete.get("lastname")]
-            snc = list(filter(lambda x: x is not None, snc))
-            return " ".join(snc)  # type: ignore
-        elif self.athlete.get("username") is not None:
-            return self.athlete["username"]
-        else:
-            return str(self.athlete["id"])
+
+def make_username(sar: StravaAuthResponse) -> str:
+    if sar.athlete.get("firstname") is not None or sar.athlete.get("lastname") is not None:
+        snc = [sar.athlete.get("firstname"), sar.athlete.get("lastname")]
+        snc = list(filter(lambda x: x is not None, snc))
+        return " ".join(snc)  # type: ignore
+    elif sar.athlete.get("username") is not None:
+        return sar.athlete["username"]
+    else:
+        return str(sar.athlete["id"])
 
 
 class StravaScopes(StrEnum):
@@ -120,7 +121,7 @@ async def authenticate_handler(
         user.refresh_token = sar.refresh_token
         user.expires_at = sar.expires_at
         user.last_login = datetime.now(UTC)
-        user.name = sar.make_username()
+        user.name = make_username(sar)
         await db_session.refresh(user)
     else:
         user = User(
@@ -128,7 +129,7 @@ async def authenticate_handler(
             access_token=sar.access_token,
             refresh_token=sar.refresh_token,
             expires_at=sar.expires_at,
-            name=sar.make_username(),
+            name=make_username(sar),
         )
         db_session.add(user)
         await db_session.commit()
