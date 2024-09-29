@@ -52,3 +52,5 @@ class BaseNatsConfig(BaseConfigStruct):
     js_domain: str | None = None
     creds_path: str | None = None
     inbox_prefix: str = "_inbox"
+
+__all__ = ["BaseConfigStruct", "SecretReference", "BaseNatsConfig"]

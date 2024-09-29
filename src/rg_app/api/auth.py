@@ -91,7 +91,7 @@ class AuthResponse(BaseStruct):
 async def authenticate(code: str, config: Config) -> StravaAuthResponse | None:
     data_dict = {
         "client_id": config.strava_client_id,
-        "client_secret": config.strava_client_secret,
+        "client_secret": config.get_strava_client_secret(),
         "code": code,
         "grant_type": "authorization_code",
     }

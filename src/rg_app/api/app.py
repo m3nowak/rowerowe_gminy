@@ -13,12 +13,12 @@ from .jwt import SimpleJwtPlugin
 
 
 def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
-    sa_config = SQLAlchemyAsyncConfig(connection_string=config.db_url)
+    sa_config = SQLAlchemyAsyncConfig(connection_string=config.get_db_url())
     sa_plugin = SQLAlchemyInitPlugin(config=sa_config)
     problem_details_plugin = ProblemDetailsPlugin(ProblemDetailsConfig())
     config_plugin = ConfigPlugin(config)
 
-    jwt_plugin = SimpleJwtPlugin(secret=config.jwt_secret, exclude=["/authenticate", "/docs", "/hc"])
+    jwt_plugin = SimpleJwtPlugin(secret=config.get_jwt_secret(), exclude=["/authenticate", "/docs", "/hc"])
 
     app = Litestar(
         debug=debug_mode,
