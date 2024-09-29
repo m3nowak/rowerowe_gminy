@@ -53,4 +53,5 @@ class BaseNatsConfig(BaseConfigStruct):
     creds_path: str | None = None
     inbox_prefix: str = "_inbox"
 
+
 __all__ = ["BaseConfigStruct", "SecretReference", "BaseNatsConfig"]
