@@ -14,12 +14,12 @@ class Config(BaseConfigStruct):
         if isinstance(self.strava_client_secret, SecretReference):
             return self.strava_client_secret.value
         return self.strava_client_secret
-    
+
     def get_jwt_secret(self) -> str:
         if isinstance(self.jwt_secret, SecretReference):
             return self.jwt_secret.value
         return self.jwt_secret
-    
+
     def get_db_url(self) -> str:
         if isinstance(self.db_url, SecretReference):
             return self.db_url.value
