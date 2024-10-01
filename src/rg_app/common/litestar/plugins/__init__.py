@@ -1,5 +1,6 @@
 from .config import ConfigPlugin
 from .di_filler import DiFillerPlugin
 from .nats import NatsPlugin, NatsPluginConfig
+from .strava_plugin import StravaPlugin, StravaPluginConfig
 
-__all__ = ["ConfigPlugin", "DiFillerPlugin", "NatsPlugin", "NatsPluginConfig"]
+__all__ = ["ConfigPlugin", "DiFillerPlugin", "NatsPlugin", "NatsPluginConfig", "StravaPlugin", "StravaPluginConfig"]

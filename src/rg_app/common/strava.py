@@ -25,6 +25,11 @@ class TokenResponse:
     refresh_token: str
 
 
+@dataclass(frozen=True)
+class AthleteTokenResponse(TokenResponse):
+    athlete: dict[str, Any]
+
+
 class StravaTokenManager:
     def __init__(self, client_id, client_secret):
         self._client_id = client_id
@@ -57,7 +62,7 @@ class StravaTokenManager:
             refresh_token=data["refresh_token"],
         )
 
-    async def authenticate(self, code: str) -> TokenResponse:
+    async def authenticate(self, code: str) -> AthleteTokenResponse:
         assert self._client is not None, "You must call this in async with begin() block"
         request = {
             "client_id": self._client_id,
@@ -68,8 +73,9 @@ class StravaTokenManager:
         resp = await self._client.post(_URL, data=request)
         resp.raise_for_status()
         data = resp.json()
-        return TokenResponse(
+        return AthleteTokenResponse(
             access_token=data["access_token"],
             expires_at=datetime.fromtimestamp(data["expires_at"]),
             refresh_token=data["refresh_token"],
+            athlete=data["athlete"],
         )

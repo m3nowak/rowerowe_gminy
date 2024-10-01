@@ -4,7 +4,7 @@ from litestar.openapi.plugins import SwaggerRenderPlugin
 from litestar.plugins.problem_details import ProblemDetailsConfig, ProblemDetailsPlugin
 from litestar.plugins.sqlalchemy import SQLAlchemyAsyncConfig, SQLAlchemyInitPlugin
 
-from rg_app.common.litestar.plugins import ConfigPlugin
+from rg_app.common.litestar.plugins import ConfigPlugin, StravaPlugin, StravaPluginConfig
 
 from .auth import authenticate_handler
 from .config import Config
@@ -18,6 +18,12 @@ def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
     problem_details_plugin = ProblemDetailsPlugin(ProblemDetailsConfig())
     config_plugin = ConfigPlugin(config)
 
+    strava_plugin_config = StravaPluginConfig(
+        client_id=config.strava_client_id,
+        client_secret=config.get_strava_client_secret(),
+    )
+    strava_plugin = StravaPlugin(strava_plugin_config)
+
     jwt_plugin = SimpleJwtPlugin(secret=config.get_jwt_secret(), exclude=["/authenticate", "/docs", "/hc"])
 
     app = Litestar(
@@ -29,6 +35,6 @@ def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
             render_plugins=[SwaggerRenderPlugin()],
             path="/docs",
         ),
-        plugins=[problem_details_plugin, config_plugin, sa_plugin, jwt_plugin],
+        plugins=[problem_details_plugin, config_plugin, sa_plugin, jwt_plugin, strava_plugin],
     )
     return app
