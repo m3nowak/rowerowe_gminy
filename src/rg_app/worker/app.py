@@ -4,7 +4,7 @@ from faststream import FastStream
 from faststream.nats import NatsBroker
 
 from .config import Config
-from .routers import echo_router, stream_router
+from .routers import webhook_router
 
 
 def app_factory(config: Config, debug: bool) -> FastStream:
@@ -14,9 +14,9 @@ def app_factory(config: Config, debug: bool) -> FastStream:
         log_level=log_level,
         inbox_prefix=config.nats.inbox_prefix,
         user_credentials=config.nats.creds_path,
-        pedantic=True,
+        # pedantic=True,
     )
-    broker.include_routers(echo_router, stream_router)
+    broker.include_routers(webhook_router)
 
     app = FastStream(broker)
     app.logger
