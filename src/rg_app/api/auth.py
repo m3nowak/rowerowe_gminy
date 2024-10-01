@@ -2,37 +2,27 @@ import typing as ty
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 
-import httpx
-import msgspec
 from litestar import post
 from litestar.status_codes import HTTP_200_OK
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from rg_app.common.msg import BaseStruct
+from rg_app.common.strava import AthleteTokenResponse, StravaTokenManager
 from rg_app.db import User
 
 from .config import Config
 from .jwt import CreateTokenHandler, MinimalUser
 
 
-class StravaAuthResponse(msgspec.Struct):
-    token_type: ty.Literal["Bearer"]
-    expires_at: int
-    expires_in: int
-    refresh_token: str
-    access_token: str
-    athlete: dict[str, ty.Any]
-
-
-def make_username(sar: StravaAuthResponse) -> str:
-    if sar.athlete.get("firstname") is not None or sar.athlete.get("lastname") is not None:
-        snc = [sar.athlete.get("firstname"), sar.athlete.get("lastname")]
+def make_username(atr: AthleteTokenResponse) -> str:
+    if atr.athlete.get("firstname") is not None or atr.athlete.get("lastname") is not None:
+        snc = [atr.athlete.get("firstname"), atr.athlete.get("lastname")]
         snc = list(filter(lambda x: x is not None, snc))
         return " ".join(snc)  # type: ignore
-    elif sar.athlete.get("username") is not None:
-        return sar.athlete["username"]
+    elif atr.athlete.get("username") is not None:
+        return atr.athlete["username"]
     else:
-        return str(sar.athlete["id"])
+        return str(atr.athlete["id"])
 
 
 class StravaScopes(StrEnum):
@@ -89,47 +79,37 @@ class AuthResponse(BaseStruct):
     user: MinimalUser
 
 
-async def authenticate(code: str, config: Config) -> StravaAuthResponse | None:
-    data_dict = {
-        "client_id": config.strava_client_id,
-        "client_secret": config.get_strava_client_secret(),
-        "code": code,
-        "grant_type": "authorization_code",
-    }
-    async with httpx.AsyncClient() as client:
-        r = await client.post("https://www.strava.com/oauth/token", data=data_dict)
-        if r.is_error:
-            return None
-        sar = msgspec.json.decode(r.text, type=StravaAuthResponse)
-        return sar
-
-
 @post(
     "/authenticate", tags=["auth"], description="Authenticate with Strava with provided code", status_code=HTTP_200_OK
 )
 async def authenticate_handler(
-    data: AuthRequest, config: Config, db_session: AsyncSession, jwt: CreateTokenHandler
+    data: AuthRequest,
+    config: Config,
+    db_session: AsyncSession,
+    jwt: CreateTokenHandler,
+    strava_token_mgr: StravaTokenManager,
 ) -> AuthResponse:
-    sar = await authenticate(data.code, config)
-    assert sar is not None
-    user_id: int | None = sar.athlete.get("id")
+    atr = await strava_token_mgr.authenticate(data.code)
+    # sar = await authenticate(data.code, config)
+    assert atr is not None
+    user_id: int | None = atr.athlete.get("id")
     assert user_id is not None
 
     user = await db_session.get(User, user_id)
     if user:
-        user.access_token = sar.access_token
-        user.refresh_token = sar.refresh_token
-        user.expires_at = sar.expires_at
+        user.access_token = atr.access_token
+        user.refresh_token = atr.refresh_token
+        user.expires_at = atr.expires_at
         user.last_login = datetime.now(UTC)
-        user.name = make_username(sar)
+        user.name = make_username(atr)
         await db_session.refresh(user)
     else:
         user = User(
             id=user_id,
-            access_token=sar.access_token,
-            refresh_token=sar.refresh_token,
-            expires_at=sar.expires_at,
-            name=make_username(sar),
+            access_token=atr.access_token,
+            refresh_token=atr.refresh_token,
+            expires_at=atr.expires_at,
+            name=make_username(atr),
         )
         db_session.add(user)
         await db_session.commit()
