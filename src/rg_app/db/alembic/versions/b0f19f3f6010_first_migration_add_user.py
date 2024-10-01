@@ -25,7 +25,7 @@ def upgrade() -> None:
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("access_token", sa.String(length=40), nullable=False),
         sa.Column("refresh_token", sa.String(length=40), nullable=False),
-        sa.Column("expires_at", sa.BigInteger(), nullable=False),
+        sa.Column("expires_at", sa.DateTime(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
