@@ -173,5 +173,3 @@ config.*.yaml
 #secrets
 secrets/
 
-#generated files
-generated/strava-api/

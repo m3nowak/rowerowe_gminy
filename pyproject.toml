@@ -54,8 +54,6 @@ includes = ["src/rg_app/"]
 dev = [
     "ruff>=0.6.3",
     "pyright>=1.1.382.post1",
-    "openapi-python-client>=0.21.5",
-    "-e strava_api @ file:///${PROJECT_ROOT}/generated/strava-api"
 ]
 
 [tool.pdm.scripts]
@@ -75,10 +73,6 @@ migrate-db = { cmd = "rg-db migrate postgresql+psycopg://postgres:postgres@local
 
 start-nats = { cmd = "docker run --name rg-app-nats -p 4222:4222 -v rg-nats:/nats-data -v ./data/nats/nats-server.conf:/etc/nats/nats-server.conf -d docker.io/library/nats:2.10 -c /etc/nats/nats-server.conf" }
 resume-nats = { cmd = "docker start rg-app-nats" }
-
-openapi-strava = {cmd = "openapi-python-client generate --meta pdm --output-path generated/strava-api --path strava.openapi.yaml --config strava.openapi.config.yaml --overwrite"}
-
-pre_build = {composite = ["openapi-strava"]}
 
 [project.scripts]
 rg-scrapping = "rg_app.scrapping:__main__.main"
