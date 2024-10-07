@@ -70,8 +70,7 @@ async def main(config: Config):
             
             # Check if the token is expired or missing
             now = datetime.now(UTC)
-            expires_at = user.expires_at.replace(tzinfo=UTC)
-            if user.access_token is None or expires_at < now + timedelta(minutes=5):
+            if user.access_token is None or user.expires_at < now + timedelta(minutes=5):
                 logging.info(f"Owner {owner_id} missing refresh token or token expired")
                 async with stm.begin():
                     new_token = await stm.refresh(user.refresh_token)
