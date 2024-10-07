@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, AsyncGenerator, Literal, Self
 
 import httpx
@@ -58,7 +58,7 @@ class StravaTokenManager:
         data = resp.json()
         return TokenResponse(
             access_token=data["access_token"],
-            expires_at=data["expires_at"],
+            expires_at=datetime.fromtimestamp(data["expires_at"], UTC),
             refresh_token=data["refresh_token"],
         )
 
