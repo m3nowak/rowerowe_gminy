@@ -1,6 +1,6 @@
 import msgspec
 
-from rg_app.common.config import BaseConfigStruct, SecretReference
+from rg_app.common.config import BaseConfigStruct, SecretReference, BaseDbConfig
 
 
 class Config(BaseConfigStruct):
@@ -8,7 +8,7 @@ class Config(BaseConfigStruct):
     strava_client_secret: str | SecretReference
     jwt_secret: str | SecretReference
     frontend_url: str
-    db_url: str | SecretReference
+    db: BaseDbConfig
 
     def get_strava_client_secret(self) -> str:
         if isinstance(self.strava_client_secret, SecretReference):
@@ -19,11 +19,6 @@ class Config(BaseConfigStruct):
         if isinstance(self.jwt_secret, SecretReference):
             return self.jwt_secret.value
         return self.jwt_secret
-
-    def get_db_url(self) -> str:
-        if isinstance(self.db_url, SecretReference):
-            return self.db_url.value
-        return self.db_url
 
     @classmethod
     def from_file(cls, path: str) -> "Config":
@@ -37,5 +32,11 @@ class Config(BaseConfigStruct):
             strava_client_secret="dummy",
             jwt_secret="dummy",
             frontend_url="http://localhost:3000",
-            db_url="sqlite+aiosqlite:///async.sqlite",
+            db=BaseDbConfig(
+                host="localhost",
+                port=5432,
+                database="rg",
+                user="rg",
+                password="rg",
+            ),
         )

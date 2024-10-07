@@ -53,5 +53,21 @@ class BaseNatsConfig(BaseConfigStruct):
     creds_path: str | None = None
     inbox_prefix: str = "_inbox"
 
+class BaseDbConfig(BaseConfigStruct):
+    host: str
+    port: int
+    user: str
+    password: str | SecretReference
+    database: str
 
-__all__ = ["BaseConfigStruct", "SecretReference", "BaseNatsConfig"]
+    def get_password(self) -> str:
+        if isinstance(self.password, SecretReference):
+            return self.password.value
+        else:
+            return self.password
+    
+    def get_url(self, scheme:str = "postgresql+psycopg") -> str:
+        return f"{scheme}://{self.user}:{self.get_password()}@{self.host}:{self.port}/{self.database}"
+
+
+__all__ = ["BaseConfigStruct", "SecretReference", "BaseNatsConfig", "BaseDbConfig"]
