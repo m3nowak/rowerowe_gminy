@@ -1,6 +1,6 @@
 import msgspec
 
-from rg_app.common.config import BaseConfigStruct, SecretReference, BaseDbConfig
+from rg_app.common.config import BaseConfigStruct, BaseDbConfig, SecretReference
 
 
 class Config(BaseConfigStruct):
