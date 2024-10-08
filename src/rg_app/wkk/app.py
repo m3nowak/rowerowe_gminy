@@ -1,17 +1,17 @@
 import asyncio
 import logging
-import tempfile
+import random
+import urllib.parse
 from datetime import UTC, datetime, timedelta
 
-import geopandas as gpd
+import bs4
 import httpx
 import msgspec.json
 import nats.js.errors
 import polyline
-import shapely.geometry as sg
 import sqlalchemy as sa
-
-# import strava_api
+from lxml import etree as ET
+from lxml.builder import E
 from nats import connect as nats_connect
 from nats.aio.msg import Msg
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -20,10 +20,49 @@ from rg_app.common.strava import StravaTokenManager
 from rg_app.db.models import User
 
 from .config import Config
-from .models import ActivityPartial, LoginData
+from .models import ActivityPartial, ActivityStreamSet, LoginData
 from .strava_auth import StravaAuth
 
 logging.basicConfig(level=logging.INFO)
+
+
+def ass_to_gpx(ass: ActivityStreamSet, start_time: datetime) -> str:
+    trak_points = []
+    for latlng, altitude, time in zip(ass.latlng.data, ass.altitude.data, ass.time.data):
+        dt = start_time + timedelta(seconds=time)
+        trak_points.append(
+            E.trkpt(
+                E.ele(str(altitude)), E.time(dt.isoformat(timespec="seconds")), lat=str(latlng[0]), lon=str(latlng[1])
+            )
+        )
+    gpx = E.gpx(
+        E.trk(
+            E.type("cycling"),
+            E.trkseg(*trak_points),
+        )
+    )
+    return ET.tostring(gpx).decode("utf-8")
+
+
+def polyline_to_gpx(polyline_str: str) -> str:
+    decoded_polyline = polyline.decode(polyline_str, geojson=True)
+    gpx = E.gpx(
+        E.trk(
+            E.type("cycling"),
+            E.trkseg(*[E.trkpt(lat=str(p[1]), lon=str(p[0])) for p in decoded_polyline]),
+        )
+    )
+    return ET.tostring(gpx).decode("utf-8")
+
+
+def extract_form_token(html: bytes) -> str:
+    soup = bs4.BeautifulSoup(html, "html.parser")
+    token = soup.select_one('head > meta[name="csrf-token"]')
+    assert token is not None
+    token_val = token["content"]
+    assert isinstance(token_val, str)
+    return token_val
+
 
 async def main(config: Config):
     nc = await nats_connect(
@@ -67,7 +106,7 @@ async def main(config: Config):
                 logging.info(f"Owner {owner_id} not found in DB")
                 await msg.respond(b"")
                 return
-            
+
             # Check if the token is expired or missing
             now = datetime.now(UTC)
             if user.access_token is None or user.expires_at < now + timedelta(minutes=5):
@@ -78,13 +117,11 @@ async def main(config: Config):
                     user.expires_at = new_token.expires_at
                     await session.commit()
             user_access_token = user.access_token
-        
+
         assert user_access_token is not None
 
         auth = StravaAuth(user_access_token)
-        # client = httpx.AsyncClient(auth=auth)
-        # strava = strava_api.AuthenticatedClient('https://www.strava.com/api/v3', token=user_access_token)
-        
+
         # Get activity detail
         da = None
         async with httpx.AsyncClient(auth=auth) as strava:
@@ -96,36 +133,69 @@ async def main(config: Config):
                 await msg.respond(b"")
                 return
 
-        # Check if activity is a Ride
-        if da is None:
-            logging.info(f"Activity {activity_id} not found")
-            await msg.respond(b"")
-            return
-        if da.type != "Ride":
-            logging.info(f"Activity {activity_id} is not a Ride")
-            await msg.respond(b"")
-            return
-        if not da.map or not da.map.polyline:
-            logging.info(f"Activity {activity_id} has no map or polyline")
-            await msg.respond(b"")
-            return
-        
+            # Check if activity is a Ride
+            if da is None:
+                logging.info(f"Activity {activity_id} not found")
+                await msg.respond(b"")
+                return
+            if da.type != "Ride":
+                logging.info(f"Activity {activity_id} is not a Ride")
+                await msg.respond(b"")
+                return
+            if not da.map or not da.map.polyline:
+                logging.info(f"Activity {activity_id} has no map or polyline")
+                await msg.respond(b"")
+                return
+
+            streams = ["time", "latlng", "altitude", "distance"]
+            resp = await strava.get(
+                f"https://www.strava.com/api/v3/activities/{activity_id}/streams",
+                params={"keys": ",".join(streams), "key_by_type": "true"},
+            )
+            if resp.status_code == 200:
+                ass = msgspec.json.decode(resp.text, type=ActivityStreamSet)
+            else:
+                logging.info(f"Failed to get activity stream {activity_id}, status code {resp.status_code}")
+                await msg.respond(b"")
+                return
+
         # Decode polyline and save as GPX
-        decoded_polyline = polyline.decode(da.map.polyline, geojson=True)
-        gdf = gpd.GeoDataFrame({'geometry':[sg.LineString(decoded_polyline)]})
-        gdf.to_file("data/decoded_polyline.gpx", driver="GPX")
-        gpx_string = None
-        #TODO Change to aiofiles
-        with tempfile.NamedTemporaryFile(delete=True, suffix='.gpx') as temp_file:
-            gdf.to_file(temp_file.name, driver="GPX")
-            gpx_string = temp_file.read()
-        assert gpx_string is not None
+        gpx_string = ass_to_gpx(ass, da.start_date)
+        open("temp.gpx", "w").write(gpx_string)
 
         # generate strava url
         strava_url = f"https://www.strava.com/activities/{activity_id}"
 
-        #TODO implement the rest
+        async with httpx.AsyncClient() as client:
+            # get login page
+            resp = await client.get("https://wkolkokrece.pl/login")
+            token = extract_form_token(resp.read())
+            await asyncio.sleep(random.random() * 2 + 1)
+            login_data = {"email": owner_login_data.login, "password": owner_login_data.password, "_token": token}
+            # post login data
+            resp = await client.post("https://wkolkokrece.pl/login", data=login_data, follow_redirects=False)
+            location = resp.headers.get("location")
+            assert location is not None and location.endswith("/home")
+            await asyncio.sleep(random.random() * 2 + 1)
+            # navigate to add activity page
+            resp = await client.get("https://wkolkokrece.pl/routes-traveled/import-route")
+            await asyncio.sleep(random.random() * 4 + 3)
+
+            # send data
+            files = {"gpxFile": ("activity.gpx", gpx_string, "application/gpx+xml")}
+            data = {"routeUrl": strava_url}
+            headers = {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-XSRF-TOKEN": urllib.parse.unquote(client.cookies["XSRF-TOKEN"]),
+            }
+            resp = await client.post(
+                "https://wkolkokrece.pl/routes-traveled/import-route", files=files, data=data, headers=headers
+            )
+            resp.raise_for_status()
+            logging.info(f"Activity {activity_id} added to wkk!")
+
         await msg.respond(b"")
+
     await nc.subscribe(config.nats.consumer_deliver_subject, cb=handle_update)
 
     logging.info(f"Subscribed to {config.nats.consumer_deliver_subject}")
