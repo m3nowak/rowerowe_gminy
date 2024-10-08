@@ -7,7 +7,7 @@ from sqlalchemy.types import TypeDecorator
 # Custom TypeDecorator for DateTime
 class UTCDateTime(TypeDecorator):
     """Custom DateTime type that assumes naive datetime is UTC when loaded from DB."""
-    
+
     impl = DateTime  # Underlying column type is DateTime
 
     # Customize how Python datetime objects are bound to the DB

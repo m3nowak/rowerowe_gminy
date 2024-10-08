@@ -15,5 +15,9 @@ class User(Base):
     refresh_token: Mapped[str] = mapped_column(String(40))
     expires_at: Mapped[datetime] = mapped_column(UTCDateTime)
     name: Mapped[str] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=lambda: datetime.now(UTC), server_default=func.now())
-    last_login: Mapped[datetime] = mapped_column(UTCDateTime, default=lambda: datetime.now(UTC), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        UTCDateTime, default=lambda: datetime.now(UTC), server_default=func.now()
+    )
+    last_login: Mapped[datetime] = mapped_column(
+        UTCDateTime, default=lambda: datetime.now(UTC), server_default=func.now()
+    )

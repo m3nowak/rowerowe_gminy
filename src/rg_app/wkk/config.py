@@ -18,4 +18,3 @@ class Config(BaseConfigStruct):
             return self.strava_client_secret.value
         else:
             return self.strava_client_secret
-    

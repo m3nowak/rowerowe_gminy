@@ -16,6 +16,7 @@ async def activities(body: str, broker: NatsBroker = Context(), reply_to: str = 
     print(f"message Got in consume4 with reply {reply_to}: {body}")
     await broker.publish("", reply_to)
 
+
 # # This does not work, delivery subject is replaced
 # @webhook_router.subscriber(stream=stream, config=CONSUMER_ACTIVITIES)
 # async def consume(body: str):
