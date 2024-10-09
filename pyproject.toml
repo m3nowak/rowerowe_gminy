@@ -17,7 +17,7 @@ license = { text = "Apache-2.0" }
 
 [project.optional-dependencies]
 scrap = ["pandas>=2.2.2", "lxml>=5.3.0", "beautifulsoup4>=4.12.3"]
-db_common = ["SQLAlchemy>=2.0.34", "psycopg>=3.2.1"]
+db_common = ["SQLAlchemy>=2.0.34", "psycopg[binary]>=3.2.1"]
 all = ["rowerowe_gminy[scrap,geo]"]
 geo = ["geojson>=3.1.0", "geopandas>=1.0.1", "topojson>=1.9"]
 api = [
