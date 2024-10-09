@@ -160,7 +160,7 @@ async def main(config: Config):
                 return
 
         # Decode polyline and save as GPX
-        gpx_string = ass_to_gpx(ass, da.start_date) 
+        gpx_string = ass_to_gpx(ass, da.start_date)
 
         # generate strava url
         strava_url = f"https://www.strava.com/activities/{activity_id}"
