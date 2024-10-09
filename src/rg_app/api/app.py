@@ -1,4 +1,5 @@
 from litestar import Litestar
+from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.plugins import SwaggerRenderPlugin
 from litestar.plugins.problem_details import ProblemDetailsConfig, ProblemDetailsPlugin
@@ -13,6 +14,7 @@ from .jwt import SimpleJwtPlugin
 
 
 def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
+    cors_config = CORSConfig(allow_origins=[config.frontend_url.strip("/")])
     sa_config = SQLAlchemyAsyncConfig(connection_string=config.db.get_url())
     sa_plugin = SQLAlchemyInitPlugin(config=sa_config)
     problem_details_plugin = ProblemDetailsPlugin(ProblemDetailsConfig())
@@ -36,5 +38,6 @@ def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
             path="/docs",
         ),
         plugins=[problem_details_plugin, config_plugin, sa_plugin, jwt_plugin, strava_plugin],
+        cors_config=cors_config,
     )
     return app
