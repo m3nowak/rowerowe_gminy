@@ -66,10 +66,12 @@ def extract_form_token(html: bytes) -> str:
 
 async def main(config: Config):
     nc = await nats_connect(
-        config.nats.url, user_credentials=config.nats.creds_path, inbox_prefix=config.nats.inbox_prefix
+        config.nats.url,
+        user_credentials=config.nats.creds_path,
+        inbox_prefix=config.nats.inbox_prefix,
     )
     js = nc.jetstream(domain=config.nats.js_domain)
-
+    logging.info(f"Connected to NATS at {config.nats.url}")
     sa_engine = create_async_engine(
         config.db.get_url(),
     )
