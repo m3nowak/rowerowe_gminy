@@ -81,10 +81,15 @@ async def main(config: Config):
 
     async def handle_update(msg: Msg):
         msg_loaded: dict[str, str | int | dict] = msgspec.json.decode(msg.data)
+        aspect_type = msg_loaded.get("aspect_type")
         activity_id = msg_loaded.get("object_id")
         owner_id = msg_loaded.get("owner_id")
         assert isinstance(owner_id, int) and isinstance(activity_id, int)
-        logging.info(f"Received update for activity {activity_id} for owner {owner_id}")
+        logging.info(f"Received {aspect_type} for activity {activity_id} for owner {owner_id}")
+        if aspect_type == "delete":
+            logging.info(f"Activity {activity_id} deleted, skipping")
+            await msg.ack()
+            return
         try:
             owner_in_kv = await kv.get(str(owner_id))
         except nats.js.errors.KeyNotFoundError:
@@ -92,7 +97,7 @@ async def main(config: Config):
 
         if owner_in_kv is None or owner_in_kv.value is None:
             logging.info(f"Owner {owner_id} not found in KV")
-            await msg.respond(b"")
+            await msg.ack()
             return
 
         owner_login_data = msgspec.json.decode(owner_in_kv.value, type=LoginData)
@@ -104,7 +109,7 @@ async def main(config: Config):
             user = result.scalars().one_or_none()
             if user is None:
                 logging.info(f"Owner {owner_id} not found in DB")
-                await msg.respond(b"")
+                await msg.ack()
                 return
 
             # Check if the token is expired or missing
@@ -130,21 +135,21 @@ async def main(config: Config):
                 da = msgspec.json.decode(resp.text, type=ActivityPartial)
             else:
                 logging.info(f"Failed to get activity {activity_id}, status code {resp.status_code}")
-                await msg.respond(b"")
+                await msg.ack()
                 return
 
             # Check if activity is a Ride
             if da is None:
                 logging.info(f"Activity {activity_id} not found")
-                await msg.respond(b"")
+                await msg.ack()
                 return
             if da.type != "Ride":
                 logging.info(f"Activity {activity_id} is not a Ride")
-                await msg.respond(b"")
+                await msg.ack()
                 return
             if not da.map or not da.map.polyline:
                 logging.info(f"Activity {activity_id} has no map or polyline")
-                await msg.respond(b"")
+                await msg.ack()
                 return
 
             streams = ["time", "latlng", "altitude", "distance"]
@@ -156,7 +161,7 @@ async def main(config: Config):
                 ass = msgspec.json.decode(resp.text, type=ActivityStreamSet)
             else:
                 logging.info(f"Failed to get activity stream {activity_id}, status code {resp.status_code}")
-                await msg.respond(b"")
+                await msg.ack()
                 return
 
         # Decode polyline and save as GPX
@@ -193,10 +198,20 @@ async def main(config: Config):
             resp.raise_for_status()
             logging.info(f"Activity {activity_id} added to wkk!")
 
-        await msg.respond(b"")
+        await msg.ack()
 
-    await nc.subscribe(config.nats.consumer_deliver_subject, cb=handle_update)
+    logging.info(f"Starting consumer {config.nats.consumer_name} for stream {config.nats.stream_name}")
 
-    logging.info(f"Subscribed to {config.nats.consumer_deliver_subject}")
-    while True:
-        await asyncio.sleep(1)
+    ps_inbox = (config.nats.inbox_prefix + ".").encode()
+    sub = await js.pull_subscribe_bind(config.nats.consumer_name, config.nats.stream_name, inbox_prefix=ps_inbox)
+    has_msgs = True
+    while has_msgs:
+        try:
+            msgs = await sub.fetch(1)
+        except asyncio.TimeoutError:
+            has_msgs = False
+            break
+        for msg in msgs:
+            await handle_update(msg)
+
+    logging.info(f"Emptied consumer {config.nats.consumer_name} for stream {config.nats.stream_name}")

@@ -16,7 +16,7 @@
             ]
         },
         {
-            "name": "WKK Worker",
+            "name": "WKK Job",
             "type": "debugpy",
             "request": "launch",
             "module": "rg_app.wkk",

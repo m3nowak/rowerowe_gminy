@@ -2,7 +2,8 @@ from rg_app.common.config import BaseConfigStruct, BaseDbConfig, BaseNatsConfig,
 
 
 class NATSConfig(BaseNatsConfig):
-    consumer_deliver_subject: str = "rg.consumer.wkk"
+    stream_name: str = "incoming-wha"
+    consumer_name: str = "wkk"
     inbox_prefix: str = "_inbox.wkk"
     login_kv = "wkk-auth"
 
