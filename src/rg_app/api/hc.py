@@ -4,7 +4,7 @@ from litestar.exceptions import ServiceUnavailableException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-@get("/hc")
+@get("/hc", tags=["internals"], raises=[ServiceUnavailableException])
 async def hc_handler(db_session: AsyncSession) -> str:
     """Health check handler"""
     try:

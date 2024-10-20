@@ -9,6 +9,7 @@ class Config(BaseConfigStruct):
     jwt_secret: str | SecretReference
     frontend_url: str
     db: BaseDbConfig
+    login_url: str = "/authenticate/login"
 
     def get_strava_client_secret(self) -> str:
         if isinstance(self.strava_client_secret, SecretReference):

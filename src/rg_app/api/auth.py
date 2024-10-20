@@ -2,7 +2,8 @@ import typing as ty
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 
-from litestar import post
+from litestar import Response, post
+from litestar.security.jwt import OAuth2Login
 from litestar.status_codes import HTTP_200_OK
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,8 +11,7 @@ from rg_app.common.msg import BaseStruct
 from rg_app.common.strava import AthleteTokenResponse, StravaTokenManager
 from rg_app.db import User
 
-from .config import Config
-from .jwt import CreateTokenHandler, MinimalUser
+from .jwt import CreateTokenHandler
 
 
 def make_username(atr: AthleteTokenResponse) -> str:
@@ -74,23 +74,19 @@ class AuthRequest(BaseStruct):
     remember_longer: bool = False
 
 
-class AuthResponse(BaseStruct):
-    token: str
-    user: MinimalUser
-
-
 @post(
-    "/authenticate", tags=["auth"], description="Authenticate with Strava with provided code", status_code=HTTP_200_OK
+    "/authenticate/login",
+    tags=["auth"],
+    description="Authenticate with Strava with provided code",
+    status_code=HTTP_200_OK,
 )
 async def authenticate_handler(
     data: AuthRequest,
-    config: Config,
     db_session: AsyncSession,
-    jwt: CreateTokenHandler,
+    o2a: CreateTokenHandler,
     strava_token_mgr: StravaTokenManager,
-) -> AuthResponse:
+) -> Response[OAuth2Login]:
     atr = await strava_token_mgr.authenticate(data.code)
-    # sar = await authenticate(data.code, config)
     assert atr is not None
     user_id: int | None = atr.athlete.get("id")
     assert user_id is not None
@@ -114,6 +110,8 @@ async def authenticate_handler(
         db_session.add(user)
         await db_session.commit()
 
+    extras = {"username": user.name, "scopes": data.scopes}
+
     expiration = timedelta(days=30) if data.remember_longer else timedelta(days=1)
-    token = jwt.create_token(identifier=str(user_id), token_expiration=expiration)
-    return AuthResponse(token=token, user=MinimalUser(id=user_id))
+    resp = o2a.create_response(identifier=str(user_id), token_expiration=expiration, token_extras=extras)
+    return resp

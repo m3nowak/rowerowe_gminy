@@ -26,7 +26,9 @@ def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
     )
     strava_plugin = StravaPlugin(strava_plugin_config)
 
-    jwt_plugin = SimpleJwtPlugin(secret=config.get_jwt_secret(), exclude=["/authenticate", "/docs", "/hc"])
+    jwt_plugin = SimpleJwtPlugin(
+        secret=config.get_jwt_secret(), exclude=["/authenticate", "/docs", "/hc"], token_url=config.login_url
+    )
 
     app = Litestar(
         debug=debug_mode,
