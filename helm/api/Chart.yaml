@@ -1,5 +1,0 @@
-apiVersion: v2
-appVersion: "0.0.1"
-description: API Helm chart - rowerowe gminy
-name: rg-api
-version: "0.0.1"
