@@ -1,4 +1,4 @@
-from nats.js import JetStreamManager
+from nats.js import JetStreamContext
 from nats.js.api import StreamConfig
 
 from .utils import add_or_update_stream
@@ -12,5 +12,6 @@ STREAM_INCOMING_WHA = StreamConfig(
 )
 
 
-async def setup(jsm: JetStreamManager):
+async def setup(js: JetStreamContext):
+    jsm = js._jsm
     await add_or_update_stream(jsm, STREAM_INCOMING_WHA)

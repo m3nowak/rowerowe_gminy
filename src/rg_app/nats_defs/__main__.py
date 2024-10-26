@@ -14,24 +14,30 @@ from .local import setup as setup_local
 @click.option("--creds", type=str, default=None, help="Credentials file")
 @click.option("--domain", type=str, default="", help="JetStream domain")
 @click.option("--inbox", type=str, default="_INBOX", help="Inbox prefix")
-def setup(url: str, creds: str | None, domain: str, inbox: str, mode: ty.Literal["local", "cloud"]):
-    asyncio.run(a_setup(url, creds, domain, inbox, mode))
+@click.option("--dev", is_flag=True, default=True, help="Development mode")
+def setup(url: str, creds: str | None, domain: str, inbox: str, mode: ty.Literal["local", "cloud"], dev: bool):
+    asyncio.run(a_setup(url, creds, domain, inbox, mode, dev))
 
 
-async def a_setup(url: str, creds: str | None, domain: str, inbox: str, mode: ty.Literal["local", "cloud"]):
+async def a_setup(url: str, creds: str | None, domain: str, inbox: str, mode: ty.Literal["local", "cloud"], dev: bool):
     nc = await nats.connect(url, user_credentials=creds, inbox_prefix=inbox)
     if domain:
         js = nc.jetstream(domain=domain)
     else:
         js = nc.jetstream()
-    jsm = js._jsm
     if mode == "local":
-        await setup_local(jsm)
+        await setup_local(js, dev=dev)
     elif mode == "cloud":
-        await setup_cloud(jsm)
+        if dev:
+            raise ValueError("Cannot use dev mode with cloud")
+        await setup_cloud(js)
     else:
         raise ValueError("Invalid mode")
     await nc.close()
+
+
+def main():
+    setup()
 
 
 if __name__ == "__main__":

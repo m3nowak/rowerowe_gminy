@@ -1,7 +1,16 @@
 import typing as ty
 
-from nats.js import JetStreamManager
-from nats.js.api import AckPolicy, ConsumerConfig, DeliverPolicy, ExternalStream, StreamConfig, StreamSource
+from nats.js import JetStreamContext
+from nats.js.api import (
+    AckPolicy,
+    ConsumerConfig,
+    DeliverPolicy,
+    ExternalStream,
+    KeyValueConfig,
+    StorageType,
+    StreamConfig,
+    StreamSource,
+)
 
 from .cloud import STREAM_INCOMING_WHA
 from .utils import add_or_update_stream, make_durable
@@ -11,7 +20,7 @@ NAME_INCOMING_WHA_MIRROR = STREAM_INCOMING_WHA.name
 
 def mk_stream_incoming_wha_mirror(cloud_domain: str) -> StreamConfig:
     cfg = StreamConfig(
-        name=NAME_INCOMING_WHA_MIRROR,
+        name=str(NAME_INCOMING_WHA_MIRROR),
         description="Strava incoming webhooks - cloud replication",
         mirror=StreamSource(
             name=ty.cast(str, STREAM_INCOMING_WHA.name),
@@ -52,10 +61,30 @@ CONSUMER_REVOCATIONS = make_durable(
     )
 )
 
+KV_WKK_AUTH = KeyValueConfig(
+    bucket="wkk-auth",
+    description="WKK Auth info",
+    storage=StorageType.FILE,
+    max_bytes=20 * (1024**2),  # 20MB
+)
 
-async def setup(jsm: JetStreamManager, cloud_domain: str = "ngs"):
-    wha_mirror_stream = mk_stream_incoming_wha_mirror(cloud_domain)
+KV_RATE_LIMITS = KeyValueConfig(
+    bucket="rate-limits",
+    description="Strava rate limits",
+    storage=StorageType.MEMORY,
+    max_bytes=10 * (1024**1),  # 10kB
+)
+
+
+async def setup(js: JetStreamContext, cloud_domain: str = "ngs", dev: bool = False):
+    jsm = js._jsm
+    if dev:
+        wha_mirror_stream = mk_stream_incoming_wha_mirror(cloud_domain)
+    else:
+        wha_mirror_stream = STREAM_INCOMING_WHA
     await add_or_update_stream(jsm, wha_mirror_stream)
     await jsm.add_consumer(ty.cast(str, wha_mirror_stream.name), CONSUMER_WKK)
     await jsm.add_consumer(ty.cast(str, wha_mirror_stream.name), CONSUMER_ACTIVITIES)
     await jsm.add_consumer(ty.cast(str, wha_mirror_stream.name), CONSUMER_REVOCATIONS)
+    await js.create_key_value(KV_WKK_AUTH)
+    await js.create_key_value(KV_RATE_LIMITS)

@@ -2,6 +2,7 @@ import asyncio
 import logging
 import random
 import urllib.parse
+from contextlib import AsyncExitStack
 from datetime import UTC, datetime, timedelta
 
 import bs4
@@ -16,7 +17,7 @@ from nats import connect as nats_connect
 from nats.aio.msg import Msg
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from rg_app.common.strava import StravaTokenManager
+from rg_app.common.strava import RateLimitManager, RLNatsConfig, StravaTokenManager
 from rg_app.db.models import User
 
 from .config import Config
@@ -65,80 +66,94 @@ def extract_form_token(html: bytes) -> str:
 
 
 async def main(config: Config):
-    nc = await nats_connect(
-        config.nats.url,
-        user_credentials=config.nats.creds_path,
-        inbox_prefix=config.nats.inbox_prefix,
-    )
-    js = nc.jetstream(domain=config.nats.js_domain)
-    logging.info(f"Connected to NATS at {config.nats.url}")
-    sa_engine = create_async_engine(
-        config.db.get_url(),
-    )
-    sa_sm = async_sessionmaker(sa_engine, expire_on_commit=False)
+    async with AsyncExitStack() as ae_stack:
+        nc = await nats_connect(
+            config.nats.url,
+            user_credentials=config.nats.creds_path,
+            inbox_prefix=config.nats.inbox_prefix,
+        )
+        ae_stack.push_async_callback(nc.close)
+        js = nc.jetstream(domain=config.nats.js_domain)
+        logging.info(f"Connected to NATS at {config.nats.url}")
+        login_kv = await js.key_value(config.nats.login_kv)
+        logging.info(f"Connected to JetStream at {config.nats.js_domain}")
 
-    stm = StravaTokenManager(config.strava_client_id, config.get_strava_client_secret())
+        sa_engine = create_async_engine(
+            config.db.get_url(),
+        )
+        ae_stack.push_async_callback(sa_engine.dispose)
+        sa_sm = async_sessionmaker(sa_engine, expire_on_commit=False)
 
-    kv = await js.key_value(config.nats.login_kv)
+        stm = StravaTokenManager(config.strava_client_id, config.get_strava_client_secret())
+        stm = await ae_stack.enter_async_context(stm.begin())
 
-    async def handle_update(msg: Msg):
-        msg_loaded: dict[str, str | int | dict] = msgspec.json.decode(msg.data)
-        aspect_type = msg_loaded.get("aspect_type")
-        activity_id = msg_loaded.get("object_id")
-        owner_id = msg_loaded.get("owner_id")
-        assert isinstance(owner_id, int) and isinstance(activity_id, int)
-        logging.info(f"Received {aspect_type} for activity {activity_id} for owner {owner_id}")
-        if aspect_type == "delete":
-            logging.info(f"Activity {activity_id} deleted, skipping")
-            await msg.ack()
-            return
-        try:
-            owner_in_kv = await kv.get(str(owner_id))
-        except nats.js.errors.KeyNotFoundError:
-            owner_in_kv = None
+        rlm = RateLimitManager(RLNatsConfig(nc, config.nats.rate_limits_kv, config.nats.js_domain))
+        rlm = await ae_stack.enter_async_context(rlm.begin())
 
-        if owner_in_kv is None or owner_in_kv.value is None:
-            logging.info(f"Owner {owner_id} not found in KV")
-            await msg.ack()
-            return
+        common_http_client = await ae_stack.enter_async_context(httpx.AsyncClient())
 
-        owner_login_data = msgspec.json.decode(owner_in_kv.value, type=LoginData)
+        async def handle_update(msg: Msg):
+            msg_loaded: dict[str, str | int | dict] = msgspec.json.decode(msg.data)
+            aspect_type = msg_loaded.get("aspect_type")
+            activity_id = msg_loaded.get("object_id")
+            owner_id = msg_loaded.get("owner_id")
+            assert isinstance(owner_id, int) and isinstance(activity_id, int)
+            logging.info(f"Received {aspect_type} for activity {activity_id} for owner {owner_id}")
+            if aspect_type == "delete":
+                logging.info(f"Activity {activity_id} deleted, skipping")
+                await msg.ack()
+                return
+            try:
+                owner_in_kv = await login_kv.get(str(owner_id))
+            except nats.js.errors.KeyNotFoundError:
+                owner_in_kv = None
 
-        user_access_token = None
-
-        async with sa_sm() as session:
-            result = await session.execute(sa.select(User).filter(User.id == owner_id))
-            user = result.scalars().one_or_none()
-            if user is None:
-                logging.info(f"Owner {owner_id} not found in DB")
+            if owner_in_kv is None or owner_in_kv.value is None:
+                logging.info(f"Owner {owner_id} not found in KV")
                 await msg.ack()
                 return
 
-            # Check if the token is expired or missing
-            now = datetime.now(UTC)
-            if user.access_token is None or user.expires_at < now + timedelta(minutes=5):
-                logging.info(f"Owner {owner_id} missing refresh token or token expired")
-                async with stm.begin():
+            owner_login_data = msgspec.json.decode(owner_in_kv.value, type=LoginData)
+
+            user_access_token = None
+
+            async with sa_sm() as session:
+                result = await session.execute(sa.select(User).filter(User.id == owner_id))
+                user = result.scalars().one_or_none()
+                if user is None:
+                    logging.info(f"Owner {owner_id} not found in DB")
+                    await msg.ack()
+                    return
+
+                # Check if the token is expired or missing
+                now = datetime.now(UTC)
+                if user.access_token is None or user.expires_at < now + timedelta(minutes=5):
+                    logging.info(f"Owner {owner_id} missing refresh token or token expired")
+
                     new_token = await stm.refresh(user.refresh_token)
                     user.access_token = new_token.access_token
                     user.expires_at = new_token.expires_at
                     await session.commit()
-            user_access_token = user.access_token
 
-        assert user_access_token is not None
+                user_access_token = user.access_token
 
-        auth = StravaAuth(user_access_token)
+            assert user_access_token is not None
 
-        # Get activity detail
-        da = None
-        async with httpx.AsyncClient(auth=auth) as strava:
-            resp = await strava.get(f"https://www.strava.com/api/v3/activities/{activity_id}")
+            auth = StravaAuth(user_access_token)
+
+            # Get activity detail
+            da = None
+
+            resp = await common_http_client.get(f"https://www.strava.com/api/v3/activities/{activity_id}", auth=auth)
             if resp.status_code == 200:
                 da = msgspec.json.decode(resp.text, type=ActivityPartial)
             else:
                 logging.info(f"Failed to get activity {activity_id}, status code {resp.status_code}")
                 await msg.ack()
                 return
+
+            # extract limits
+            await rlm.feed_headers(resp.headers)
 
             # Check if activity is a Ride
             if da is None:
@@ -155,9 +170,10 @@ async def main(config: Config):
                 return
 
             streams = ["time", "latlng", "altitude", "distance"]
-            resp = await strava.get(
+            resp = await common_http_client.get(
                 f"https://www.strava.com/api/v3/activities/{activity_id}/streams",
                 params={"keys": ",".join(streams), "key_by_type": "true"},
+                auth=auth,
             )
             if resp.status_code == 200:
                 ass = msgspec.json.decode(resp.text, type=ActivityStreamSet)
@@ -166,54 +182,63 @@ async def main(config: Config):
                 await msg.ack()
                 return
 
-        # Decode polyline and save as GPX
-        gpx_string = ass_to_gpx(ass, da.start_date)
+            # Decode polyline and save as GPX
+            gpx_string = ass_to_gpx(ass, da.start_date)
 
-        # generate strava url
-        strava_url = f"https://www.strava.com/activities/{activity_id}"
+            # generate strava url
+            strava_url = f"https://www.strava.com/activities/{activity_id}"
 
-        async with httpx.AsyncClient() as client:
-            # get login page
-            resp = await client.get("https://wkolkokrece.pl/login")
-            token = extract_form_token(resp.read())
-            await asyncio.sleep(random.random() * 2 + 1)
-            login_data = {"email": owner_login_data.login, "password": owner_login_data.password, "_token": token}
-            # post login data
-            resp = await client.post("https://wkolkokrece.pl/login", data=login_data, follow_redirects=False)
-            location = resp.headers.get("location")
-            assert location is not None and location.endswith("/home")
-            await asyncio.sleep(random.random() * 2 + 1)
-            # navigate to add activity page
-            resp = await client.get("https://wkolkokrece.pl/routes-traveled/import-route")
-            await asyncio.sleep(random.random() * 4 + 3)
+            async with httpx.AsyncClient() as client:
+                # get login page
+                resp = await client.get("https://wkolkokrece.pl/login")
+                token = extract_form_token(resp.read())
+                await asyncio.sleep(random.random() * 2 + 1)
+                login_data = {"email": owner_login_data.login, "password": owner_login_data.password, "_token": token}
+                # post login data
+                resp = await client.post("https://wkolkokrece.pl/login", data=login_data, follow_redirects=False)
+                location = resp.headers.get("location")
+                assert location is not None and location.endswith("/home")
+                await asyncio.sleep(random.random() * 2 + 1)
+                # navigate to add activity page
+                resp = await client.get("https://wkolkokrece.pl/routes-traveled/import-route")
+                await asyncio.sleep(random.random() * 4 + 3)
 
-            # send data
-            files = {"gpxFile": ("activity.gpx", gpx_string, "application/gpx+xml")}
-            data = {"routeUrl": strava_url}
-            headers = {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-XSRF-TOKEN": urllib.parse.unquote(client.cookies["XSRF-TOKEN"]),
-            }
-            resp = await client.post(
-                "https://wkolkokrece.pl/routes-traveled/import-route", files=files, data=data, headers=headers
-            )
-            resp.raise_for_status()
-            logging.info(f"Activity {activity_id} added to wkk!")
+                # send data
+                files = {"gpxFile": ("activity.gpx", gpx_string, "application/gpx+xml")}
+                data = {"routeUrl": strava_url}
+                headers = {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-XSRF-TOKEN": urllib.parse.unquote(client.cookies["XSRF-TOKEN"]),
+                }
+                if config.dry_run:
+                    logging.info(f"Would have added activity {activity_id} to wkk")
+                else:
+                    resp = await client.post(
+                        "https://wkolkokrece.pl/routes-traveled/import-route", files=files, data=data, headers=headers
+                    )
+                    resp.raise_for_status()
+                    logging.info(f"Activity {activity_id} added to wkk!")
 
-        await msg.ack()
+            await msg.ack()
 
-    logging.info(f"Starting consumer {config.nats.consumer_name} for stream {config.nats.stream_name}")
+        limits = await rlm.get_limits()
 
-    ps_inbox = (config.nats.inbox_prefix + ".").encode()
-    sub = await js.pull_subscribe_bind(config.nats.consumer_name, config.nats.stream_name, inbox_prefix=ps_inbox)
-    has_msgs = True
-    while has_msgs:
-        try:
-            msgs = await sub.fetch(1)
-        except asyncio.TimeoutError:
-            has_msgs = False
-            break
-        for msg in msgs:
-            await handle_update(msg)
+        if limits and limits.current_read_percent > config.rate_limit_teshold:
+            logging.error(f"Rate limit reached {limits.current_read_percent} > {config.rate_limit_teshold}")
+            return
 
-    logging.info(f"Emptied consumer {config.nats.consumer_name} for stream {config.nats.stream_name}")
+        logging.info(f"Starting consumer {config.nats.consumer_name} for stream {config.nats.stream_name}")
+
+        ps_inbox = (config.nats.inbox_prefix + ".").encode()
+        sub = await js.pull_subscribe_bind(config.nats.consumer_name, config.nats.stream_name, inbox_prefix=ps_inbox)
+        has_msgs = True
+        while has_msgs:
+            try:
+                msgs = await sub.fetch(1)
+            except asyncio.TimeoutError:
+                has_msgs = False
+                break
+            for msg in msgs:
+                await handle_update(msg)
+
+        logging.info(f"Emptied consumer {config.nats.consumer_name} for stream {config.nats.stream_name}")

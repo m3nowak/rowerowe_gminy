@@ -46,6 +46,7 @@ wkk = [
     "beautifulsoup4>=4.12.3",
     "rowerowe_gminy[db_common]",
     "lxml>=5.3.0",
+    "types-lxml>=2024.9.16",
 ]
 
 
@@ -79,10 +80,11 @@ types = {cmd = "pyright"}
 
 mk-data = { composite = ["scripts/download_gml.py", "scripts/gml_to_json.py"] }
 openapi = { cmd = "rg-api openapi -j -o openapi.json" }
-db-revision = { cmd = "alembic revision --autogenerate", working_dir = "src/rg_app/db" }
+db-revision = { cmd = "cd src/rg_app/db && alembic revision --autogenerate" }
 start-db = { cmd = "docker run --name rg-app-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -v rg-app-db:/var/lib/postgresql -d docker.io/library/postgres:16" }
 resume-db = { cmd = "docker start rg-app-db" }
 migrate-db = { cmd = "rg-db migrate postgresql+psycopg://postgres:postgres@localhost/postgres"}
+migrate-nats = { cmd = "rg-nats-defs  nats://localhost local --dev"}
 
 start-nats = { cmd = "docker run --name rg-app-nats -p 4222:4222 -v rg-nats:/nats-data -v ./data/nats/nats-server.conf:/etc/nats/nats-server.conf -d docker.io/library/nats:2.10 -c /etc/nats/nats-server.conf" }
 resume-nats = { cmd = "docker start rg-app-nats" }
@@ -93,6 +95,7 @@ rg-api = "rg_app.api:__main__.main"
 rg-db = "rg_app.db:__main__.main"
 rg-wha = "rg_app.wha:__main__.main"
 rg-wkk = "rg_app.wkk:__main__.main"
+rg-nats-defs = "rg_app.nats_defs:__main__.main"
 
 
 [tool.ruff]
