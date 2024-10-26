@@ -3,12 +3,12 @@ import typing as ty
 from faststream import Context
 from faststream.nats import JStream, NatsBroker, NatsRouter
 
-from rg_app.nats_defs.cloud import CONSUMER_ACTIVITIES, STREAM_INCOMING_WHA
+from rg_app.nats_defs.local import CONSUMER_ACTIVITIES, NAME_INCOMING_WHA_MIRROR
 
 webhook_router = NatsRouter()
 
 
-stream = JStream(name=ty.cast(str, STREAM_INCOMING_WHA.name), declare=False)
+stream = JStream(name=ty.cast(str, NAME_INCOMING_WHA_MIRROR), declare=False)
 
 
 @webhook_router.subscriber(ty.cast(str, CONSUMER_ACTIVITIES.deliver_subject), no_reply=True)
