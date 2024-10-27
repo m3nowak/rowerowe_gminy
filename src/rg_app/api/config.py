@@ -1,6 +1,10 @@
 import msgspec
 
-from rg_app.common.config import BaseConfigStruct, BaseDbConfig, SecretReference
+from rg_app.common.config import BaseConfigStruct, BaseDbConfig, BaseNatsConfig, SecretReference
+
+
+class NatsConfig(BaseNatsConfig):
+    rate_limits_kv = "rate-limits"
 
 
 class Config(BaseConfigStruct):
@@ -9,6 +13,7 @@ class Config(BaseConfigStruct):
     jwt_secret: str | SecretReference
     frontend_url: str
     db: BaseDbConfig
+    nats: NatsConfig
     login_url: str = "/authenticate/login"
 
     def get_strava_client_secret(self) -> str:
@@ -40,4 +45,5 @@ class Config(BaseConfigStruct):
                 user="rg",
                 password="rg",
             ),
+            nats=NatsConfig(url="nats://localhost"),
         )

@@ -37,7 +37,7 @@ CONSUMER_WKK = make_durable(
         description="Process incoming activities",
         ack_policy=AckPolicy.EXPLICIT,
         deliver_policy=DeliverPolicy.NEW,
-        filter_subject="rg.incoming.wha.activitiy.*",
+        filter_subject="rg.incoming.wha.activity.*",
     )
 )
 
@@ -46,7 +46,7 @@ CONSUMER_ACTIVITIES = make_durable(
         "activities",
         description="Process incoming activities",
         ack_policy=AckPolicy.ALL,
-        filter_subject="rg.incoming.wha.activitiy.*",
+        filter_subject="rg.incoming.wha.activity.*",
         deliver_subject="rg.consumer.activities",
     )
 )

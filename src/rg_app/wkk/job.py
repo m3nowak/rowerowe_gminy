@@ -84,11 +84,11 @@ async def main(config: Config):
         ae_stack.push_async_callback(sa_engine.dispose)
         sa_sm = async_sessionmaker(sa_engine, expire_on_commit=False)
 
-        stm = StravaTokenManager(config.strava_client_id, config.get_strava_client_secret())
-        stm = await ae_stack.enter_async_context(stm.begin())
-
         rlm = RateLimitManager(RLNatsConfig(nc, config.nats.rate_limits_kv, config.nats.js_domain))
         rlm = await ae_stack.enter_async_context(rlm.begin())
+
+        stm = StravaTokenManager(config.strava_client_id, config.get_strava_client_secret(), rlm)
+        stm = await ae_stack.enter_async_context(stm.begin())
 
         common_http_client = await ae_stack.enter_async_context(httpx.AsyncClient())
 

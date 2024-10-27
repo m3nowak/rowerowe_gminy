@@ -4,12 +4,14 @@ from litestar.openapi import OpenAPIConfig
 from litestar.openapi.plugins import SwaggerRenderPlugin
 from litestar.plugins.problem_details import ProblemDetailsConfig, ProblemDetailsPlugin
 from litestar.plugins.sqlalchemy import SQLAlchemyAsyncConfig, SQLAlchemyInitPlugin
+from litestar.stores.memory import MemoryStore
 
-from rg_app.common.litestar.plugins import ConfigPlugin, StravaPlugin, StravaPluginConfig
+from rg_app.common.litestar.plugins import ConfigPlugin, NatsPlugin, NatsPluginConfig, StravaPlugin, StravaPluginConfig
+from rg_app.common.litestar.plugins.async_exit_stack_plugin import AsyncExitStackPlugin
 
 from .auth import authenticate_handler
 from .config import Config
-from .hc import hc_handler
+from .internals import hc_handler, rate_limits_handler
 from .jwt import SimpleJwtPlugin
 
 
@@ -26,20 +28,33 @@ def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
     )
     strava_plugin = StravaPlugin(strava_plugin_config)
 
-    jwt_plugin = SimpleJwtPlugin(
-        secret=config.get_jwt_secret(), exclude=["/authenticate", "/docs", "/hc"], token_url=config.login_url
+    nats_plugin_config = NatsPluginConfig(
+        url=config.nats.url,
+        js=True,
+        user_credentials=config.nats.creds_path,
+        inbox_prefix=config.nats.inbox_prefix.encode(),
     )
+    nats_plugin = NatsPlugin(nats_plugin_config)
+
+    jwt_plugin = SimpleJwtPlugin(
+        secret=config.get_jwt_secret(),
+        exclude=["/authenticate", "/docs", "/hc", "/rate-limits"],
+        token_url=config.login_url,
+    )
+
+    aes_plugin = AsyncExitStackPlugin()
 
     app = Litestar(
         debug=debug_mode,
-        route_handlers=[authenticate_handler, hc_handler],
+        route_handlers=[authenticate_handler, hc_handler, rate_limits_handler],
         openapi_config=OpenAPIConfig(
             title="Rowerowe Gminy API",
             version="0.0.1",
             render_plugins=[SwaggerRenderPlugin()],
             path="/docs",
         ),
-        plugins=[problem_details_plugin, config_plugin, sa_plugin, jwt_plugin, strava_plugin],
+        stores={"memory": MemoryStore()},
+        plugins=[problem_details_plugin, config_plugin, sa_plugin, jwt_plugin, strava_plugin, nats_plugin, aes_plugin],
         cors_config=cors_config,
     )
     return app

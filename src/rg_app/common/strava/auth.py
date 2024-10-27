@@ -6,6 +6,8 @@ from typing import Any, AsyncGenerator, Literal, Self
 import httpx
 import msgspec
 
+from rg_app.common.strava.rate_limits import RateLimitManager
+
 _URL = "https://www.strava.com/oauth/token"
 
 
@@ -31,10 +33,11 @@ class AthleteTokenResponse(TokenResponse):
 
 
 class StravaTokenManager:
-    def __init__(self, client_id, client_secret):
+    def __init__(self, client_id: str, client_secret: str, rate_limit_mgr: RateLimitManager):
         self._client_id = client_id
         self._client_secret = client_secret
         self._client = None
+        self._rate_limit_mgr = rate_limit_mgr
 
     @asynccontextmanager
     async def begin(self) -> AsyncGenerator[Self, None]:
@@ -55,6 +58,7 @@ class StravaTokenManager:
         }
         resp = await self._client.post(_URL, data=request)
         resp.raise_for_status()
+        await self._rate_limit_mgr.feed_headers(resp.headers)
         data = resp.json()
         return TokenResponse(
             access_token=data["access_token"],
@@ -71,6 +75,7 @@ class StravaTokenManager:
             "grant_type": "authorization_code",
         }
         resp = await self._client.post(_URL, data=request)
+        await self._rate_limit_mgr.feed_headers(resp.headers)
         resp.raise_for_status()
         data = resp.json()
         return AthleteTokenResponse(
