@@ -73,7 +73,7 @@ KV_WKK_AUTH = KeyValueConfig(
 KV_RATE_LIMITS = KeyValueConfig(
     bucket="rate-limits",
     description="Strava rate limits",
-    storage=StorageType.MEMORY,
+    storage=StorageType.FILE,
     max_bytes=10 * (1024**1),  # 10kB
 )
 
