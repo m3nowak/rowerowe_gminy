@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -118,7 +119,19 @@ class RateLimitManager:
         self._js = None
         self._kv = None
         self.limits_set = ContextVar[RateLimitSet | None]("limits_set", default=None)
-        self._sub = None
+        self._refresh_task = None
+
+    async def refresh_task(self):
+        assert self._kv is not None
+        assert self._kv_name is not None
+        while True:
+            await asyncio.sleep(60)
+            try:
+                limits_raw = await self._kv.get(self._kv_name)
+                if limits_raw.value is not None:
+                    self.limits_set.set(msgspec.json.decode(limits_raw.value, type=RateLimitSet))
+            except nats.js.errors.KeyNotFoundError:
+                pass
 
     @asynccontextmanager
     async def begin(self) -> AsyncGenerator[Self, None]:
@@ -133,18 +146,15 @@ class RateLimitManager:
             except nats.js.errors.KeyNotFoundError:
                 pass
 
+            self._refresh_task = asyncio.create_task(self.refresh_task())
+
             self._sub = await self._kv.watch(self._kv_name)
-            async for msg in self._sub:
-                if msg.value is not None:
-                    self.limits_set.set(msgspec.json.decode(msg.value, type=RateLimitSet))
-                else:
-                    self.limits_set.set(None)
             try:
                 yield self
             finally:
-                if self._sub is not None:
-                    await self._sub.stop()
-                self._sub = None
+                if self._refresh_task is not None:
+                    self._refresh_task.cancel()
+                self._refresh_task = None
                 self._kv = None
                 self._js = None
 
@@ -161,5 +171,4 @@ class RateLimitManager:
             if self._kv is not None:
                 assert self._kv_name is not None
                 await self._kv.put(self._kv_name, msgspec.json.encode(limits))
-            else:
-                self.limits_set.set(limits)
+            self.limits_set.set(limits)
