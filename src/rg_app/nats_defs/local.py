@@ -1,3 +1,4 @@
+import logging
 import typing as ty
 
 from nats.js import JetStreamContext
@@ -11,6 +12,7 @@ from nats.js.api import (
     StreamConfig,
     StreamSource,
 )
+from nats.js.errors import BadRequestError
 
 from .cloud import STREAM_INCOMING_WHA
 from .utils import add_or_update_stream, make_durable
@@ -82,7 +84,10 @@ async def setup(js: JetStreamContext, cloud_domain: str = "ngs", dev: bool = Fal
         wha_mirror_stream = mk_stream_incoming_wha_mirror(cloud_domain)
     else:
         wha_mirror_stream = STREAM_INCOMING_WHA
-    await add_or_update_stream(jsm, wha_mirror_stream)
+    try:
+        await add_or_update_stream(jsm, wha_mirror_stream)
+    except BadRequestError as e:
+        logging.warning("Could not update or create stream: %s", e)
     await jsm.add_consumer(ty.cast(str, wha_mirror_stream.name), CONSUMER_WKK)
     await jsm.add_consumer(ty.cast(str, wha_mirror_stream.name), CONSUMER_ACTIVITIES)
     await jsm.add_consumer(ty.cast(str, wha_mirror_stream.name), CONSUMER_REVOCATIONS)
