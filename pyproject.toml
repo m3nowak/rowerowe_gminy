@@ -95,6 +95,7 @@ rg-api = "rg_app.api:__main__.main"
 rg-db = "rg_app.db:__main__.main"
 rg-wha = "rg_app.wha:__main__.main"
 rg-wkk = "rg_app.wkk:__main__.main"
+rg-worker = "rg_app.worker:__main__.main"
 rg-nats-defs = "rg_app.nats_defs:__main__.main"
 
 

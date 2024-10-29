@@ -1,6 +1,7 @@
 import logging
 
 from faststream import FastStream
+from faststream.asyncapi import get_app_schema
 from faststream.nats import NatsBroker
 
 from .config import Config
@@ -24,5 +25,8 @@ def app_factory(config: Config, debug: bool) -> FastStream:
         after_startup=[after_startup],  # type: ignore
         lifespan=lifespan,
     )
-    app.logger
     return app
+
+
+def app_schema(config: Config, debug: bool) -> str:
+    return get_app_schema(app_factory(config, debug)).to_yaml()
