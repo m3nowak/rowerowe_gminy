@@ -77,6 +77,15 @@ KV_RATE_LIMITS = KeyValueConfig(
     max_bytes=10 * (1024**1),  # 10kB
 )
 
+# rg.internal.ride.{type}.{athlete_id}.{ride_id}
+# type: "fresh", "delete", "refresh", "backlog", "update"
+STREAM_INTERNAL_RIDE = StreamConfig(
+    name="internal-ride",
+    description="Internal rides",
+    subjects=["rg.internal.ride.*.*.*"],
+    max_bytes=2 * (1024**3),  # 2GB
+)
+
 
 async def setup(js: JetStreamContext, cloud_domain: str = "ngs", dev: bool = False):
     jsm = js._jsm

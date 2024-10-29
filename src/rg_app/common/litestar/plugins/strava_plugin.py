@@ -6,6 +6,7 @@ from litestar.config.app import AppConfig
 from litestar.di import Provide
 from litestar.plugins import InitPluginProtocol
 from nats.aio.client import Client as NatsClient
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from rg_app.common.strava import RateLimitManager, RLNatsConfig, StravaTokenManager
 
@@ -38,10 +39,10 @@ class StravaPlugin(InitPluginProtocol):
         # app_config.lifespan.append(self._token_mgr.begin())
 
         async def provide_token_mgr(
-            rate_limits: RateLimitManager, async_exit_stack: AsyncExitStack
+            rate_limits: RateLimitManager, async_exit_stack: AsyncExitStack, db_engine: AsyncEngine
         ) -> StravaTokenManager:
             if self._token_mgr is None:
-                tm = StravaTokenManager(self.cfg.client_id, self.cfg.client_secret, rate_limits)
+                tm = StravaTokenManager(self.cfg.client_id, self.cfg.client_secret, rate_limits, db_engine)
                 self._token_mgr = await async_exit_stack.enter_async_context(tm.begin())
             return self._token_mgr
 

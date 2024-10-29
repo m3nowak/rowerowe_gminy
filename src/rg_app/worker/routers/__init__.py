@@ -1,5 +1,3 @@
-# from .echo import echo_router
-# from .stream import stream_router
-from .webhook_processing import webhook_router
+from .incoming_wha import incoming_wha_router
 
-__all__ = ["webhook_router"]
+__all__ = ["incoming_wha_router"]

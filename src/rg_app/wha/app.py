@@ -5,7 +5,8 @@ from litestar.params import Parameter
 from nats.js import JetStreamContext
 from typing_extensions import Annotated
 
-from rg_app.common.litestar.plugins import ConfigPlugin, NatsPlugin, NatsPluginConfig
+from rg_app.common.litestar.plugins import AsyncExitStackPlugin, ConfigPlugin, NatsPlugin, NatsPluginConfig
+from rg_app.common.litestar.plugins.nats import JetStreamPlugin
 from rg_app.nats_util.client import NatsClient
 
 from .common import LOCAL_WH_URL
@@ -51,7 +52,6 @@ def app_factory(config: Config, debug_mode: bool = False, no_register: bool = Fa
     nats_plugin = NatsPlugin(
         NatsPluginConfig(
             url=config.nats.url,
-            js=True,
             user_credentials=config.nats.creds_path,
             inbox_prefix=config.nats.inbox_prefix.encode(),
         )
@@ -60,10 +60,13 @@ def app_factory(config: Config, debug_mode: bool = False, no_register: bool = Fa
     on_startup = []
     if not no_register:
         on_startup.append(register_sub_hook_factory(config, 5))
+    else:
+        print("Skipping webhook registration")
+        print(f"Webhook URL path: /{LOCAL_WH_URL}/{config.get_verify_token()}")
 
     app = Litestar(
         [index, webhook_validation, webhook_handler],
-        plugins=[nats_plugin, config_plugin],
+        plugins=[nats_plugin, config_plugin, AsyncExitStackPlugin(), JetStreamPlugin(config.nats.js_domain)],
         debug=debug_mode,
         on_startup=on_startup,
     )

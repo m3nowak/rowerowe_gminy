@@ -47,6 +47,17 @@ class SecretReference(BaseConfigStruct):
         return self._value
 
 
+class BaseStravaConfig(BaseConfigStruct):
+    client_id: str
+    client_secret: str | SecretReference
+
+    def get_client_secret(self) -> str:
+        if isinstance(self.client_secret, SecretReference):
+            return self.client_secret.value
+        else:
+            return self.client_secret
+
+
 class BaseNatsConfig(BaseConfigStruct):
     url: str | list[str]
     js_domain: str | None = None

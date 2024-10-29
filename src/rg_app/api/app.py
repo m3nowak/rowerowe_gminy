@@ -30,7 +30,6 @@ def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
 
     nats_plugin_config = NatsPluginConfig(
         url=config.nats.url,
-        js=True,
         user_credentials=config.nats.creds_path,
         inbox_prefix=config.nats.inbox_prefix.encode(),
     )

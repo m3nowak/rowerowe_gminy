@@ -11,6 +11,8 @@ from nats.js import JetStreamContext
 from rg_app.nats_util.client import NatsClient
 from rg_app.nats_util.client import connect as nats_connect
 
+NATS_STATE_KEY = "nats"
+
 
 @dataclass
 class NatsPluginConfig:
@@ -19,12 +21,8 @@ class NatsPluginConfig:
     ----------
     url: str | list[str]
         URL(s) of the NATS server(s)
-    js: bool | list[str] = False
-        If True, JetStream will be enabled, if list of strings, will enable JetStream with the provided domains
     nats_kwarg: str = "nats"
         Name of the key in the DI container for the NATS client
-    js_kwarg: str = "js"
-        Name of the key in the DI container for the JetStream client
     user_credentials: str | None = None
         Path to the user credentials file
     inbox_prefix: bytes | None = b"_INBOX"
@@ -40,9 +38,7 @@ class NatsPluginConfig:
     """
 
     url: str | list[str]
-    js: bool | list[str] = False
-    nats_kwarg: str = "nats"
-    js_kwarg: str = "js"
+    nats_kwarg: str = NATS_STATE_KEY
     user_credentials: str | None = None
     inbox_prefix: bytes | None = b"_INBOX"
     user: str | None = None
@@ -51,7 +47,20 @@ class NatsPluginConfig:
     conn_kwargs: dict[str, str] | None = None
 
 
-_STATE_KEY = "nats"
+class JetStreamPlugin(InitPluginProtocol):
+    def __init__(self, js_domain: str | None, kwarg: str = "js") -> None:
+        self.js_domain = js_domain
+        self.kwarg = kwarg
+
+    def on_app_init(self, app_config: AppConfig) -> AppConfig:
+        def jetstream_provide_fn() -> JetStreamContext:
+            if NATS_STATE_KEY in app_config.state:
+                return app_config.state[NATS_STATE_KEY].jetstream(domain=self.js_domain)
+            else:
+                raise ValueError("NATS client not found in app state. Is the NatsPlugin configured?")
+
+        app_config.dependencies[self.kwarg] = Provide(jetstream_provide_fn, sync_to_thread=False)
+        return app_config
 
 
 class NatsPlugin(InitPluginProtocol):
@@ -65,7 +74,7 @@ class NatsPlugin(InitPluginProtocol):
         @asynccontextmanager
         async def nats_ctx(app: Litestar) -> AsyncGenerator[None, None]:
             try:
-                nc = app.state[_STATE_KEY]
+                nc = app.state[NATS_STATE_KEY]
             except KeyError:
                 conn_kwargs = self.cfg.conn_kwargs or {}
                 nc = await nats_connect(
@@ -77,7 +86,7 @@ class NatsPlugin(InitPluginProtocol):
                     token=self.cfg.token,
                     **conn_kwargs,
                 )
-                app.state[_STATE_KEY] = nc
+                app.state[NATS_STATE_KEY] = nc
             try:
                 yield
             finally:
@@ -89,18 +98,8 @@ class NatsPlugin(InitPluginProtocol):
         app_config.lifespan.append(self.context_manager_factory())
 
         def nats_provide_fn() -> NatsClient:
-            return app_config.state[_STATE_KEY]
-
-        def jetstream_provide_fn(domain: str | None = None) -> JetStreamContext:
-            return app_config.state[_STATE_KEY].jetstream(domain=domain)
+            return app_config.state[NATS_STATE_KEY]
 
         app_config.dependencies[self.cfg.nats_kwarg] = Provide(nats_provide_fn, sync_to_thread=False)
-        if self.cfg.js:
-            app_config.dependencies[self.cfg.js_kwarg] = Provide(lambda: jetstream_provide_fn(), sync_to_thread=False)
-            if isinstance(self.cfg.js, list):
-                for domain in self.cfg.js:
-                    domain_kwarg = f"{self.cfg.js_kwarg}_{domain}"
-                    app_config.dependencies[domain_kwarg] = Provide(
-                        lambda: jetstream_provide_fn(domain), sync_to_thread=False
-                    )
+
         return app_config

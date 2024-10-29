@@ -1,23 +1,16 @@
 from datetime import datetime
 from typing import TypeVar
 
-from msgspec import Struct
-
-from rg_app.common.msg import BaseStruct
+from .base import BaseStravaModel
 
 
-class LoginData(BaseStruct):
-    login: str
-    password: str
-
-
-class ActivityMap(Struct):
+class ActivityMap(BaseStravaModel):
     id: str | None
     polyline: str | None
     summary_polyline: str | None
 
 
-class ActivityPartial(Struct):
+class ActivityPartial(BaseStravaModel):
     type: str
     map: ActivityMap | None
     start_date: datetime
@@ -26,14 +19,14 @@ class ActivityPartial(Struct):
 T = TypeVar("T")
 
 
-class ActivityStreamData[T](Struct):
+class ActivityStreamData[T](BaseStravaModel):
     data: list[T]
     series_type: str
     original_size: int
     resolution: str
 
 
-class ActivityStreamSet(Struct):
+class ActivityStreamSet(BaseStravaModel):
     latlng: ActivityStreamData[tuple[float, float]]
     altitude: ActivityStreamData[float]
     time: ActivityStreamData[int]

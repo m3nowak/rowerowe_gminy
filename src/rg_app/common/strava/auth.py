@@ -1,14 +1,26 @@
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, AsyncGenerator, Literal, Self
 
 import httpx
 import msgspec
+import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
 from rg_app.common.strava.rate_limits import RateLimitManager
+from rg_app.db import User
 
 _URL = "https://www.strava.com/oauth/token"
+
+
+class StravaAuth(httpx.Auth):
+    def __init__(self, token: str):
+        self.token = token
+
+    def auth_flow(self, request: httpx.Request):
+        request.headers["Authorization"] = f"Bearer {self.token}"
+        yield request
 
 
 class StravaAuthResponse(msgspec.Struct):
@@ -33,11 +45,15 @@ class AthleteTokenResponse(TokenResponse):
 
 
 class StravaTokenManager:
-    def __init__(self, client_id: str, client_secret: str, rate_limit_mgr: RateLimitManager):
+    def __init__(
+        self, client_id: str, client_secret: str, rate_limit_mgr: RateLimitManager, async_engine: AsyncEngine
+    ) -> None:
         self._client_id = client_id
         self._client_secret = client_secret
         self._client = None
         self._rate_limit_mgr = rate_limit_mgr
+        self._async_engine = async_engine
+        self._sa_sm = async_sessionmaker(self._async_engine, expire_on_commit=False)
 
     @asynccontextmanager
     async def begin(self) -> AsyncGenerator[Self, None]:
@@ -47,6 +63,25 @@ class StravaTokenManager:
                 yield self
             finally:
                 pass
+
+    async def get_token(self, athlete_id: int) -> str:
+        assert self._client is not None, "You must call this in async with begin() block"
+        async with self._sa_sm() as session:
+            result = await session.execute(sa.select(User).filter(User.id == athlete_id))
+            user = result.scalars().one_or_none()
+            if user is None:
+                raise ValueError(f"User with id {athlete_id} not found")
+            now = datetime.now(UTC)
+            if user.access_token is None or user.expires_at < now + timedelta(minutes=5):
+                new_token = await self.refresh(user.refresh_token)
+                user.access_token = new_token.access_token
+                user.expires_at = new_token.expires_at
+                await session.commit()
+            return user.access_token
+
+    async def get_httpx_auth(self, athlete_id: int) -> StravaAuth:
+        token = await self.get_token(athlete_id)
+        return StravaAuth(token)
 
     async def refresh(self, refresh_token: str) -> TokenResponse:
         assert self._client is not None, "You must call this in async with begin() block"
