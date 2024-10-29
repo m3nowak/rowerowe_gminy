@@ -1,4 +1,3 @@
-import msgspec
 from litestar import Litestar, get, post
 from litestar.exceptions import PermissionDeniedException, ServiceUnavailableException
 from litestar.params import Parameter
@@ -7,11 +6,13 @@ from typing_extensions import Annotated
 
 from rg_app.common.litestar.plugins import AsyncExitStackPlugin, ConfigPlugin, NatsPlugin, NatsPluginConfig
 from rg_app.common.litestar.plugins.nats import JetStreamPlugin
+from rg_app.common.strava.models.webhook import WebhookUnion
 from rg_app.nats_util.client import NatsClient
 
 from .common import LOCAL_WH_URL
 from .config import Config
-from .models import StravaEvent
+
+# from .models import StravaEvent
 from .register_sub import register_sub_hook_factory
 
 
@@ -32,11 +33,14 @@ async def webhook_validation(
 
 
 @post(f"/{LOCAL_WH_URL}/{{path_token:str}}", status_code=200)
-async def webhook_handler(path_token: str, data: StravaEvent, js: JetStreamContext, config: Config) -> dict[str, str]:
+async def webhook_handler(path_token: str, data: WebhookUnion, js: JetStreamContext, config: Config) -> dict[str, str]:
     if path_token != config.get_verify_token():
         raise PermissionDeniedException("Invalid path token")
-    topic = ".".join([config.nats.subject_prefix, data.object_type, str(data.object_id)])
-    await js.publish(topic, msgspec.json.encode(data), stream=config.nats.stream)
+    data_root = data.root
+    topic = ".".join(
+        [config.nats.subject_prefix, data_root.object_type, str(data_root.owner_id), str(data_root.object_id)]
+    )
+    await js.publish(topic, data_root.model_dump_json().encode(), stream=config.nats.stream)
     return {"status": "ok"}
 
 

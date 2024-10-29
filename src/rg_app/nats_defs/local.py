@@ -39,7 +39,7 @@ CONSUMER_WKK = make_durable(
         description="Process incoming activities",
         ack_policy=AckPolicy.EXPLICIT,
         deliver_policy=DeliverPolicy.NEW,
-        filter_subject="rg.incoming.wha.activity.*",
+        filter_subject="rg.incoming.wha.activity.*.*",
     )
 )
 
@@ -48,7 +48,7 @@ CONSUMER_ACTIVITIES = make_durable(
         "activities",
         description="Process incoming activities",
         ack_policy=AckPolicy.ALL,
-        filter_subject="rg.incoming.wha.activity.*",
+        filter_subject="rg.incoming.wha.activity.*.*",
         deliver_subject="rg.consumer.activities",
     )
 )
@@ -58,7 +58,7 @@ CONSUMER_REVOCATIONS = make_durable(
         "revocations",
         description="Process incoming revocations",
         ack_policy=AckPolicy.ALL,
-        filter_subject="rg.incoming.wha.athlete.*",
+        filter_subject="rg.incoming.wha.athlete.*.*",
         deliver_subject="rg.consumer.revocations",
     )
 )

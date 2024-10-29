@@ -3,11 +3,11 @@ from nats.js.api import StreamConfig
 
 from .utils import add_or_update_stream
 
+# rg.incoming.wha.{type}.{athlete_id}.{activity_id}
 STREAM_INCOMING_WHA = StreamConfig(
     name="incoming-wha",
     description="Strava incoming webhooks",
-    subjects=["rg.incoming.wha.*.*"],
-    # max_msgs_per_subject=1,
+    subjects=["rg.incoming.wha.*.*.*"],
     max_bytes=1 * (1024**3),  # 1GB
 )
 
