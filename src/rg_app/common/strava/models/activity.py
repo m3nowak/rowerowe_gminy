@@ -13,8 +13,16 @@ class ActivityMap(BaseStravaModel):
 class ActivityPartial(BaseStravaModel):
     type: str
     sport_type: str
+    name: str
+    moving_time: int
+    elapsed_time: int
+    total_elevation_gain: float
     map: ActivityMap | None
     start_date: datetime
+    manual: bool
+    distance: float
+    calories: float
+    average_speed: float
 
 
 T = TypeVar("T")
