@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from rg_app.common.msg import BaseStruct
 from rg_app.common.strava import RateLimitManager, RLNatsConfig, StravaTokenManager
 from rg_app.common.strava.activities import get_activity, get_activity_streams
+from rg_app.common.strava.helpers import RIDE_LIKE_TYPES
 from rg_app.common.strava.models.activity import ActivityStreamSet
 
 from .config import Config
@@ -108,8 +109,6 @@ def hadnle_update_factory(
             await msg.ack()
             return
 
-        strava_auth
-
         # Get activity detail
         try:
             da = await get_activity(common_http_client, activity_id, strava_auth, rlm)
@@ -123,8 +122,8 @@ def hadnle_update_factory(
             logging.info(f"Activity {activity_id} not found")
             await msg.ack()
             return
-        if da.type != "Ride":
-            logging.info(f"Activity {activity_id} is not a Ride")
+        if da.type not in RIDE_LIKE_TYPES:
+            logging.info(f"Activity {activity_id} is not a Ride-Like activity")
             await msg.ack()
             return
         if not da.map or not da.map.polyline:

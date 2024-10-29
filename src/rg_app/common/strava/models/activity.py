@@ -12,6 +12,7 @@ class ActivityMap(BaseStravaModel):
 
 class ActivityPartial(BaseStravaModel):
     type: str
+    sport_type: str
     map: ActivityMap | None
     start_date: datetime
 
