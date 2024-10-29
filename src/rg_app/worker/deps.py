@@ -23,7 +23,6 @@ async def lifespan(context: ContextRepo):
 def on_startup_factory(config: Config):
     async def on_startup(context: ContextRepo):
         context.set_global("config", config)
-        print(context)
         aes: AsyncExitStack = context.get("exit_stack")
 
         http_client = AsyncClient()
