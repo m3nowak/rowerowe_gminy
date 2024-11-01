@@ -38,7 +38,7 @@ wha = [
     "rowerowe_gminy[db_common]",
 ]
 worker = [
-    "faststream[nats]>=0.5.25",
+    "faststream[nats, otel]>=0.5.25",
     "click>=8.1.7",
     "nats-py[nkeys,aiohttp]>=2.9.0",
 ]

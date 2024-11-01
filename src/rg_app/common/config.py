@@ -47,6 +47,13 @@ class SecretReference(BaseConfigStruct):
         return self._value
 
 
+class BaseOtelConfig(BaseConfigStruct):
+    enabled: bool = False
+    endpoint: str = "http://localhost:4318"
+    svc_name: str | None = None
+    svc_ns: str | None = None
+
+
 class BaseStravaConfig(BaseConfigStruct):
     client_id: str
     client_secret: str | SecretReference

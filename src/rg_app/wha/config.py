@@ -1,4 +1,6 @@
-from rg_app.common.config import BaseConfigStruct, BaseNatsConfig, SecretReference
+from msgspec import field
+
+from rg_app.common.config import BaseConfigStruct, BaseNatsConfig, BaseOtelConfig, SecretReference
 
 
 class NATSConfig(BaseNatsConfig):
@@ -13,6 +15,7 @@ class Config(BaseConfigStruct):
     self_url: str
     verify_token: str | SecretReference
     nats: NATSConfig
+    otel: BaseOtelConfig = field(default_factory=lambda: BaseOtelConfig())
 
     def get_strava_client_secret(self) -> str:
         if isinstance(self.strava_client_secret, SecretReference):

@@ -1,7 +1,14 @@
+from logging import Logger
+
 from litestar import Litestar, get, post
+from litestar.datastructures import State
+from litestar.di import Provide
 from litestar.exceptions import PermissionDeniedException, ServiceUnavailableException
 from litestar.params import Parameter
 from nats.js import JetStreamContext
+from opentelemetry.metrics import Counter, Meter
+from opentelemetry.propagate import inject
+from opentelemetry.trace import Tracer
 from typing_extensions import Annotated
 
 from rg_app.common.litestar.plugins import AsyncExitStackPlugin, ConfigPlugin, NatsPlugin, NatsPluginConfig
@@ -11,9 +18,16 @@ from rg_app.nats_util.client import NatsClient
 
 from .common import LOCAL_WH_URL
 from .config import Config
-
-# from .models import StravaEvent
+from .otel import prepare_plugins
 from .register_sub import register_sub_hook_factory
+
+
+def counter_dependency(meter: Meter, state: State) -> Counter:
+    if "webhook_publish_counter" not in state:
+        state["webhook_publish_counter"] = meter.create_counter(
+            "webhook_publish", description="Number of webhooks published"
+        )
+    return state["webhook_publish_counter"]
 
 
 @get(f"/{LOCAL_WH_URL}/{{path_token:str}}")
@@ -32,15 +46,33 @@ async def webhook_validation(
     return {"hub.challenge": challenge}
 
 
-@post(f"/{LOCAL_WH_URL}/{{path_token:str}}", status_code=200)
-async def webhook_handler(path_token: str, data: WebhookUnion, js: JetStreamContext, config: Config) -> dict[str, str]:
+@post(
+    f"/{LOCAL_WH_URL}/{{path_token:str}}",
+    status_code=200,
+    dependencies={"counter": Provide(counter_dependency, sync_to_thread=False)},
+)
+async def webhook_handler(
+    path_token: str,
+    data: WebhookUnion,
+    js: JetStreamContext,
+    config: Config,
+    tracer: Tracer,
+    counter: Counter,
+    otel_logger: Logger,
+) -> dict[str, str]:
     if path_token != config.get_verify_token():
         raise PermissionDeniedException("Invalid path token")
     data_root = data.root
-    topic = ".".join(
+    subject = ".".join(
         [config.nats.subject_prefix, data_root.object_type, str(data_root.owner_id), str(data_root.object_id)]
     )
-    await js.publish(topic, data_root.model_dump_json().encode(), stream=config.nats.stream)
+    headers = {}
+    inject(headers)
+    with tracer.start_as_current_span("nats-publish") as re:
+        re.set_attribute("subject", subject)
+        await js.publish(subject, data_root.model_dump_json().encode(), stream=config.nats.stream, headers=headers)
+    counter.add(1)
+    otel_logger.info(data_root.model_dump_json())
     return {"status": "ok"}
 
 
@@ -60,6 +92,7 @@ def app_factory(config: Config, debug_mode: bool = False, no_register: bool = Fa
             inbox_prefix=config.nats.inbox_prefix.encode(),
         )
     )
+    otel_plugin = prepare_plugins(config.otel)
     config_plugin = ConfigPlugin(config)
     on_startup = []
     if not no_register:
@@ -70,7 +103,13 @@ def app_factory(config: Config, debug_mode: bool = False, no_register: bool = Fa
 
     app = Litestar(
         [index, webhook_validation, webhook_handler],
-        plugins=[nats_plugin, config_plugin, AsyncExitStackPlugin(), JetStreamPlugin(config.nats.js_domain)],
+        plugins=[
+            nats_plugin,
+            config_plugin,
+            AsyncExitStackPlugin(),
+            JetStreamPlugin(config.nats.js_domain),
+            *otel_plugin,
+        ],
         debug=debug_mode,
         on_startup=on_startup,
     )
