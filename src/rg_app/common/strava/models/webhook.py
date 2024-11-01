@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Union
 
 import pydantic
 
@@ -39,3 +39,7 @@ class WebhookAthlete(BaseStravaModel):
     @pydantic.field_serializer("event_time")
     def serialize_event_time(self, event_time: datetime, _info):
         return int(event_time.timestamp())
+
+
+class WebhookUnion(pydantic.RootModel):
+    root: Union[WebhookAthlete, WebhookActivity] = pydantic.Field(discriminator="object_type")
