@@ -10,7 +10,13 @@ class ActivityMap(BaseStravaModel):
     summary_polyline: str | None
 
 
+class AthleteReference(BaseStravaModel):
+    id: int
+
+
 class ActivityPartial(BaseStravaModel):
+    id: int
+    athlete: AthleteReference
     type: str
     sport_type: str
     name: str
