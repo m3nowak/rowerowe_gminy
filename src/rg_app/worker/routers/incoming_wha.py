@@ -6,13 +6,13 @@ from faststream.opentelemetry import CurrentSpan
 from httpx import AsyncClient
 from opentelemetry import trace
 
+from rg_app.common.faststream.otel import otel_logger, tracer_fn
 from rg_app.common.strava.activities import get_activity
 from rg_app.common.strava.auth import StravaTokenManager
 from rg_app.common.strava.models.webhook import WebhookActivity
 from rg_app.common.strava.rate_limits import RateLimitManager
 from rg_app.nats_defs.local import CONSUMER_ACTIVITIES, NAME_INCOMING_WHA_MIRROR
 from rg_app.worker.deps import http_client, rate_limit_mgr, token_mgr
-from rg_app.worker.otel import otel_logger, tracer_fn
 
 incoming_wha_router = NatsRouter()
 

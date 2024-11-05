@@ -1,0 +1,47 @@
+version:  '3.8'
+services:
+  nats:
+    image: docker.io/library/nats:2.10
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - rg-nats:/nats-data
+      - ./compose/nats-server.conf:/etc/nats/nats-server.conf
+    command: -c /etc/nats/nats-server.conf
+
+  db:
+    image: docker.io/library/postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - rg-app-db:/var/lib/postgresql
+
+  lgtm:
+    image: docker.io/grafana/otel-lgtm:latest
+    ports:
+      - "3000:3000"
+      - "4317:4317"
+      - "4318:4318"
+
+  prometheus-nats-exporter:
+    image: docker.io/natsio/prometheus-nats-exporter:0.15.0
+    command: ["-varz", "-jsz", "all", "http://nats:8222"]
+    depends_on:
+      - nats
+
+  alloy:
+    image: docker.io/grafana/alloy:latest
+    ports:
+      - "12345:12345"
+    volumes:
+      - ./compose/config.alloy:/etc/alloy/config.alloy
+    command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy"]
+
+volumes:
+  rg-nats:
+    external: true
+  rg-app-db:
+    external: true

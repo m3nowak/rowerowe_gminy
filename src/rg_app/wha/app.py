@@ -8,17 +8,17 @@ from litestar.params import Parameter
 from nats.js import JetStreamContext
 from opentelemetry.metrics import Counter, Meter
 from opentelemetry.propagate import inject
-from opentelemetry.trace import Tracer
+from opentelemetry.trace import StatusCode, Tracer
 from typing_extensions import Annotated
 
 from rg_app.common.litestar.plugins import AsyncExitStackPlugin, ConfigPlugin, NatsPlugin, NatsPluginConfig
 from rg_app.common.litestar.plugins.nats import JetStreamPlugin
+from rg_app.common.litestar.plugins.otel import prepare_plugins
 from rg_app.common.strava.models.webhook import WebhookUnion
 from rg_app.nats_util.client import NatsClient
 
 from .common import LOCAL_WH_URL
 from .config import Config
-from .otel import prepare_plugins
 from .register_sub import register_sub_hook_factory
 
 
@@ -70,9 +70,11 @@ async def webhook_handler(
     inject(headers)
     with tracer.start_as_current_span("nats-publish") as re:
         re.set_attribute("subject", subject)
+        re.add_event("Publishing webhook data", {"comment": ":)"})
+        re.set_status(StatusCode.OK)
         await js.publish(subject, data_root.model_dump_json().encode(), stream=config.nats.stream, headers=headers)
+        otel_logger.info(data_root.model_dump_json())
     counter.add(1)
-    otel_logger.info(data_root.model_dump_json())
     return {"status": "ok"}
 
 

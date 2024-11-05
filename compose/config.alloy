@@ -1,0 +1,22 @@
+prometheus.scrape "nats" {
+  targets    = [
+    {"__address__" = "prometheus-nats-exporter:7777"},
+  ]
+  scrape_interval = "15s"
+  forward_to = [otelcol.receiver.prometheus.nats.receiver]
+}
+
+otelcol.receiver.prometheus "nats" {
+  output {
+    metrics = [otelcol.exporter.otlp.lgtm.input]
+  }
+}
+
+otelcol.exporter.otlp "lgtm" {
+  client {
+    endpoint = "lgtm:4317"
+    tls {
+      insecure = true
+    }
+  }
+}

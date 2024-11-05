@@ -5,9 +5,10 @@ from faststream import FastStream
 from faststream.asyncapi import get_app_schema
 from faststream.nats import NatsBroker
 
+from rg_app.common.faststream.otel import prepare_bundle
+
 from .config import Config
 from .deps import after_startup, lifespan, on_startup_factory
-from .otel import prepare_bundle
 from .routers import incoming_wha_router
 
 
