@@ -49,7 +49,6 @@ CONSUMER_ACTIVITIES = make_durable(
         description="Process incoming activities",
         ack_policy=AckPolicy.ALL,
         filter_subject="rg.incoming.wha.activity.*.*",
-        deliver_subject="rg.consumer.activities",
     )
 )
 
@@ -59,7 +58,6 @@ CONSUMER_REVOCATIONS = make_durable(
         description="Process incoming revocations",
         ack_policy=AckPolicy.ALL,
         filter_subject="rg.incoming.wha.athlete.*.*",
-        deliver_subject="rg.consumer.revocations",
     )
 )
 
@@ -75,6 +73,16 @@ KV_RATE_LIMITS = KeyValueConfig(
     description="Strava rate limits",
     storage=StorageType.FILE,
     max_bytes=10 * (1024**1),  # 10kB
+)
+
+# rg.internal.cmd.activity.{type}.{athlete_id}.{activity_id?}
+# type: "create", "update", "delete", "backlog"
+# activity_id token does not exist in backlog
+STREAM_ACTIVITY_CMD = StreamConfig(
+    name="activity-cmd",
+    description="Activity commands",
+    subjects=["rg.internal.cmd.activity.>"],
+    max_bytes=1 * (1024**3),  # 1GB
 )
 
 # rg.internal.ride.{type}.{athlete_id}.{ride_id}
@@ -100,5 +108,8 @@ async def setup(js: JetStreamContext, cloud_domain: str = "ngs", dev: bool = Fal
     await jsm.add_consumer(ty.cast(str, wha_mirror_stream.name), CONSUMER_WKK)
     await jsm.add_consumer(ty.cast(str, wha_mirror_stream.name), CONSUMER_ACTIVITIES)
     await jsm.add_consumer(ty.cast(str, wha_mirror_stream.name), CONSUMER_REVOCATIONS)
+
+    await add_or_update_stream(jsm, STREAM_ACTIVITY_CMD)
+
     await js.create_key_value(KV_WKK_AUTH)
     await js.create_key_value(KV_RATE_LIMITS)

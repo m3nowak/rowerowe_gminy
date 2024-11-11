@@ -72,8 +72,10 @@ async def webhook_handler(
         re.set_attribute("subject", subject)
         re.add_event("Publishing webhook data", {"comment": ":)"})
         re.set_status(StatusCode.OK)
-        await js.publish(subject, data_root.model_dump_json().encode(), stream=config.nats.stream, headers=headers)
-        otel_logger.info(data_root.model_dump_json())
+        await js.publish(
+            subject, data_root.model_dump_json(by_alias=True).encode(), stream=config.nats.stream, headers=headers
+        )
+        otel_logger.info(data_root.model_dump_json(by_alias=True))
     counter.add(1)
     return {"status": "ok"}
 
