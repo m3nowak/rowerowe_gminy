@@ -17,7 +17,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - rg-app-db:/var/lib/postgresql
+      - rg-app-db:/var/lib/postgresql/data
 
   lgtm:
     image: docker.io/grafana/otel-lgtm:latest
