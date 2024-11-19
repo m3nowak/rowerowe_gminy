@@ -3,7 +3,7 @@ import typing as ty
 from faststream.nats import JStream, NatsRouter, PullSub
 from faststream.nats.annotations import NatsBroker, NatsMessage
 
-from rg_app.common.msg.cmd import CreateActivityCmd, DeleteActivityCmd, UpdateActivityCmd
+from rg_app.common.msg.cmd import StdActivityCmd
 from rg_app.common.strava.models.webhook import WebhookActivity
 from rg_app.nats_defs.local import CONSUMER_ACTIVITIES, NAME_INCOMING_WHA_MIRROR, STREAM_ACTIVITY_CMD
 from rg_app.nats_defs.subjects import internal_cmd_activity_subject
@@ -12,6 +12,8 @@ incoming_wha_router = NatsRouter()
 
 wha_stream = JStream(name=ty.cast(str, NAME_INCOMING_WHA_MIRROR), declare=False)
 activity_cmd_stream = JStream(name=ty.cast(str, STREAM_ACTIVITY_CMD.name), declare=False)
+
+publisher = incoming_wha_router.publisher("rg.internal.cmd.activity.*.*.*", stream=activity_cmd_stream.name)
 
 
 @incoming_wha_router.subscriber(
@@ -27,18 +29,14 @@ async def activities_handle(
     nats_msg: NatsMessage,
 ):
     print("Got activity: ", body)
-    if body.aspect_type == "create":
-        msg = CreateActivityCmd(owner_id=body.owner_id, activity_id=body.object_id, type="create")
-    elif body.aspect_type == "update":
-        msg = UpdateActivityCmd(owner_id=body.owner_id, activity_id=body.object_id, type="update")
-    elif body.aspect_type == "delete":
-        msg = DeleteActivityCmd(owner_id=body.owner_id, activity_id=body.object_id, type="delete")
+    if body.aspect_type in ["create", "update", "delete"]:
+        msg = StdActivityCmd(owner_id=body.owner_id, activity_id=body.object_id, type=body.aspect_type)
     else:
         raise ValueError("Unknown aspect type")
-    # raise ValueError("OOOPS!")
-    msg_serialized = msg.model_dump_json(by_alias=True)
+    # msg_serialized = msg.model_dump_json(by_alias=True)
     subject = internal_cmd_activity_subject(msg.type, msg.owner_id, msg.activity_id)
-    await broker.publish(msg_serialized, subject, stream=activity_cmd_stream.name)
+    await publisher.publish(msg, subject)
+    # await broker.publish(msg_serialized, subject, stream=activity_cmd_stream.name)
     await nats_msg.ack()
 
 

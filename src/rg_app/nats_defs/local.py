@@ -85,6 +85,33 @@ STREAM_ACTIVITY_CMD = StreamConfig(
     max_bytes=1 * (1024**3),  # 1GB
 )
 
+CONSUMER_ACTIVITY_CMD_STD = make_durable(
+    ConsumerConfig(
+        "std",
+        description="Process standard activitiy commands",
+        ack_policy=AckPolicy.EXPLICIT,
+        deliver_policy=DeliverPolicy.NEW,
+        filter_subjects=[
+            "rg.internal.cmd.activity.create.>",
+            "rg.internal.cmd.activity.update.>",
+            "rg.internal.cmd.activity.delete.>",
+        ],
+    )
+)
+
+CONSUMER_ACTIVITY_CMD_BACKLOG = make_durable(
+    ConsumerConfig(
+        "backlog",
+        description="Process standard activitiy commands",
+        ack_policy=AckPolicy.EXPLICIT,
+        deliver_policy=DeliverPolicy.NEW,
+        filter_subjects=[
+            "rg.internal.cmd.activity.backlog.>",
+        ],
+    )
+)
+
+
 # rg.internal.ride.{type}.{athlete_id}.{ride_id}
 # type: "fresh", "delete", "refresh", "backlog", "update"
 STREAM_INTERNAL_RIDE = StreamConfig(
@@ -110,6 +137,8 @@ async def setup(js: JetStreamContext, cloud_domain: str = "ngs", dev: bool = Fal
     await jsm.add_consumer(ty.cast(str, wha_mirror_stream.name), CONSUMER_REVOCATIONS)
 
     await add_or_update_stream(jsm, STREAM_ACTIVITY_CMD)
+    await jsm.add_consumer(ty.cast(str, STREAM_ACTIVITY_CMD.name), CONSUMER_ACTIVITY_CMD_STD)
+    await jsm.add_consumer(ty.cast(str, STREAM_ACTIVITY_CMD.name), CONSUMER_ACTIVITY_CMD_BACKLOG)
 
     await js.create_key_value(KV_WKK_AUTH)
     await js.create_key_value(KV_RATE_LIMITS)

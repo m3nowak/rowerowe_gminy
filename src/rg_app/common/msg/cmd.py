@@ -6,22 +6,10 @@ from pydantic import Field
 from .base_model import BaseModel
 
 
-class CreateActivityCmd(BaseModel):
+class StdActivityCmd(BaseModel):
     owner_id: int
     activity_id: int
-    type: Literal["create"] = Field("create")
-
-
-class UpdateActivityCmd(BaseModel):
-    owner_id: int
-    activity_id: int
-    type: Literal["update"] = Field("update")
-
-
-class DeleteActivityCmd(BaseModel):
-    owner_id: int
-    activity_id: int
-    type: Literal["delete"] = Field("delete")
+    type: Literal["create", "update", "delete"]
 
 
 class BacklogActivityCmd(BaseModel):
