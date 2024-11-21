@@ -13,7 +13,9 @@ incoming_wha_router = NatsRouter()
 wha_stream = JStream(name=ty.cast(str, NAME_INCOMING_WHA_MIRROR), declare=False)
 activity_cmd_stream = JStream(name=ty.cast(str, STREAM_ACTIVITY_CMD.name), declare=False)
 
-publisher = incoming_wha_router.publisher("rg.internal.cmd.activity.*.*.*", stream=activity_cmd_stream.name)
+publisher = incoming_wha_router.publisher(
+    "rg.internal.cmd.activity.*.*.*", stream=activity_cmd_stream.name, schema=StdActivityCmd
+)
 
 
 @incoming_wha_router.subscriber(
@@ -22,6 +24,7 @@ publisher = incoming_wha_router.publisher("rg.internal.cmd.activity.*.*.*", stre
     durable=CONSUMER_ACTIVITIES.durable_name,
     pull_sub=PullSub(),
     no_ack=True,
+    title=f"{wha_stream.name}/{CONSUMER_ACTIVITIES.durable_name}",
 )
 async def activities_handle(
     body: WebhookActivity,
