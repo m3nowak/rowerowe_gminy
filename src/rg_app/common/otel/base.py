@@ -1,6 +1,7 @@
 from logging import INFO, Formatter, Logger, getLogger
 from urllib.parse import urljoin
 
+from opentelemetry import metrics, trace
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter as GRPCLogExporter
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter as GRPCMetricExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter as GRPCSpanExporter
@@ -80,4 +81,8 @@ def prepare_utils(config: BaseOtelConfig) -> tuple[MeterProvider, TracerProvider
         logger = getLogger(LIBRARY_NAME)
         logger.propagate = False
         logger.setLevel(INFO)  # I do nothing!
+
+    if config.use_global_context:
+        trace.set_tracer_provider(tracer_prov)
+        metrics.set_meter_provider(meter_prov)
     return meter_prov, tracer_prov, logger

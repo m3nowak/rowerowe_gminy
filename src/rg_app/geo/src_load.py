@@ -30,9 +30,24 @@ def _reformat_metadata(fc: geopandas.GeoDataFrame) -> geopandas.GeoDataFrame:
     return fc
 
 
-def _extend_region_data(fc: geopandas.GeoDataFrame) -> geopandas.GeoDataFrame:
-    fc["COU_ID"] = fc.index.str.slice(0, 4)
-    fc["VOI_ID"] = fc.index.str.slice(0, 2)
+# def _extend_region_data(fc: geopandas.GeoDataFrame) -> geopandas.GeoDataFrame:
+#     # fc["COU_ID"] = fc.index.str.slice(0, 4)
+#     fc.loc[fc["type"] not in ["WOJ", "PAN"], "VOI_ID"] = fc.loc[fc["type"] not in ["WOJ", "PAN"]].index.str.slice(0, 4)
+
+#     # Before: Sets VOI_ID for all rows
+#     fc.loc[fc["type"] not in ["PAN"], "VOI_ID"] = fc.loc[fc["type"] not in ["PAN"]].index.str.slice(0, 2)
+#     return fc
+
+
+def _add_parent_id(fc: geopandas.GeoDataFrame) -> geopandas.GeoDataFrame:
+    # PAN
+    fc["parent_id"] = None
+    # WOJ
+    fc.loc[fc["type"] == "WOJ", "parent_id"] = 0  # type: ignore
+    # POW
+    fc.loc[fc["type"] == "POW", "parent_id"] = fc.loc[fc["type"] == "POW"].index.str.slice(0, 2)  # type: ignore
+    # GMI
+    fc.loc[fc["type"] == "GMI", "parent_id"] = fc.loc[fc["type"] == "GMI"].index.str.slice(0, 4)  # type: ignore
     return fc
 
 
@@ -55,7 +70,8 @@ def load_gml_files(src_dir: str) -> GdfBundle:
             len(dir_contents_suitable) == 1
         ), f"Expected 1 file with prefix {prefix} and extension {ext}, got {len(dir_contents_suitable)}"
         path = os.path.join(src_dir, dir_contents_suitable[0])
-        result[fctype] = _extend_region_data(_reformat_metadata(geopandas.read_file(path)))
+        result[fctype] = _add_parent_id(_reformat_metadata(geopandas.read_file(path)))
+
     return GdfBundle(**result)
 
 

@@ -3,6 +3,7 @@ from rg_app.common._config_base import BaseConfigStruct
 
 class BaseOtelConfig(BaseConfigStruct):
     enabled: bool = True
+    use_global_context: bool = True
     endpoint: str | None = None
     use_grpc: bool = True
     svc_name: str | None = None
