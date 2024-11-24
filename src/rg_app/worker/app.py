@@ -10,7 +10,7 @@ from rg_app.common.faststream.otel import prepare_bundle
 from .config import Config
 from .deps import after_startup, lifespan, on_startup_factory
 from .duck_deps import after_startup as duck_after_startup
-from .routers import activity_cmd_router, geo_svc_router, incoming_wha_router
+from .routers import activity_cmd_router, activity_svc_router, geo_svc_router, incoming_wha_router, user_svc_router
 
 
 def app_factory(config: Config, debug: bool) -> FastStream:
@@ -23,7 +23,13 @@ def app_factory(config: Config, debug: bool) -> FastStream:
         user_credentials=config.nats.creds_path,
         middlewares=(otel_bundle.middeware,) if otel_bundle else [],
     )
-    broker.include_routers(incoming_wha_router, activity_cmd_router, geo_svc_router)
+    broker.include_routers(
+        incoming_wha_router,
+        activity_cmd_router,
+        geo_svc_router,
+        activity_svc_router,
+        user_svc_router,
+    )
 
     on_startup: list[Callable[..., Awaitable[Any]]] = [on_startup_factory(config)]
     if otel_bundle:

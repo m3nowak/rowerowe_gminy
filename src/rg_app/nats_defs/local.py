@@ -91,6 +91,7 @@ CONSUMER_ACTIVITY_CMD_STD = make_durable(
         description="Process standard activitiy commands",
         ack_policy=AckPolicy.EXPLICIT,
         deliver_policy=DeliverPolicy.NEW,
+        ack_wait=60,
         filter_subjects=[
             "rg.internal.cmd.activity.create.>",
             "rg.internal.cmd.activity.update.>",
@@ -105,6 +106,7 @@ CONSUMER_ACTIVITY_CMD_BACKLOG = make_durable(
         description="Process standard activitiy commands",
         ack_policy=AckPolicy.EXPLICIT,
         deliver_policy=DeliverPolicy.NEW,
+        ack_wait=120,
         filter_subjects=[
             "rg.internal.cmd.activity.backlog.>",
         ],

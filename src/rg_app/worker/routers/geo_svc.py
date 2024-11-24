@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import aiofiles
@@ -42,31 +43,41 @@ async def check(
     return await _check(line_string, conn, tracer)
 
 
+def run_query(conn: duckdb.DuckDBPyConnection, filename: str) -> list[tuple[str, str]]:
+    return conn.execute(
+        """
+        WITH shp as (
+            SELECT
+            geom
+            FROM ST_Read(?)
+        )
+        SELECT borders.ID, borders.type
+        FROM borders
+        INNER JOIN shp ON ST_Intersects(shape, geom)
+        """,
+        [filename],
+    ).fetchall()
+
+
+async def _aio_run_query(conn: duckdb.DuckDBPyConnection, filename: str):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, run_query, conn, filename)
+
+
 async def _check(
     line_string: geojson.LineString,
-    conn: duckdb.DuckDBPyConnection = Depends(duck_conn),
-    tracer: trace.Tracer = Depends(tracer_fn),
+    conn: duckdb.DuckDBPyConnection,
+    tracer: trace.Tracer,
 ) -> GeoSvcCheckResponse:
     async with aiofiles.tempfile.NamedTemporaryFile("wb", suffix=".json") as ntf:
         await ntf.write(json.dumps(line_string).encode("utf-8"))
         with tracer.start_as_current_span("geo_svc_check") as span:
-            result = conn.execute(
-                """
-                WITH shp as (
-                    SELECT
-                    geom
-                    FROM ST_Read(?)
-                )
-                SELECT borders.ID, borders.type
-                FROM borders
-                INNER JOIN shp ON ST_Intersects(shape, geom)
-                """,
-                [ntf.name],
-            ).fetchall()
+            filename = str(ntf.name)
+            result = await _aio_run_query(conn, filename)
             span.set_attribute("result_count", len(result))
-            span.set_status(trace.Status(trace.StatusCode.OK, "Query executed"))
+            span.set_status(trace.Status(trace.StatusCode.OK))
 
-    resp = GeoSvcCheckResponse(items=[GeoSvcCheckResponseItem(id=row[0], type=row[1]) for row in result])
-    trace.get_current_span().set_status(trace.Status(trace.StatusCode.OK, "Response generated"))
+    resp = GeoSvcCheckResponse(items=[GeoSvcCheckResponseItem(id=row[0], type=row[1]) for row in result])  # type: ignore
+    trace.get_current_span().set_status(trace.Status(trace.StatusCode.OK))
 
     return resp

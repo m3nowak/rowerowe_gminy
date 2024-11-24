@@ -11,6 +11,7 @@ from rg_app.common.litestar.plugins.async_exit_stack_plugin import AsyncExitStac
 
 from .auth import authenticate_handler
 from .config import Config
+from .controllers.router import api_router
 from .internals import hc_handler, rate_limits_handler
 from .jwt import SimpleJwtPlugin
 
@@ -45,7 +46,7 @@ def app_factory(config: Config, debug_mode: bool = False) -> Litestar:
 
     app = Litestar(
         debug=debug_mode,
-        route_handlers=[authenticate_handler, hc_handler, rate_limits_handler],
+        route_handlers=[authenticate_handler, hc_handler, rate_limits_handler, api_router],
         openapi_config=OpenAPIConfig(
             title="Rowerowe Gminy API",
             version="0.0.1",

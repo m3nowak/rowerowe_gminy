@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import TypeVar
 
 from .base import BaseStravaModel
@@ -22,13 +23,15 @@ class ActivityPartial(BaseStravaModel):
     name: str
     moving_time: int
     elapsed_time: int
-    total_elevation_gain: float
-    map: ActivityMap | None
+    total_elevation_gain: Decimal | None = None
+    map: ActivityMap | None = None
     start_date: datetime
     manual: bool
-    distance: float
-    calories: float
-    average_speed: float
+    trainer: bool
+    distance: Decimal | None = None
+    elev_high: Decimal | None = None
+    elev_low: Decimal | None = None
+    gear_id: str | None = None
 
 
 T = TypeVar("T")
