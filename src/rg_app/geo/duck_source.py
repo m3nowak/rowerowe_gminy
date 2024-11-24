@@ -1,8 +1,12 @@
+import asyncio
+
 import duckdb
 
 
-def create_db(json_dir: str):
-    conn = duckdb.connect("data/geo.db")
+def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb.DuckDBPyConnection:
+    json_dir = json_dir or "data/gml"
+    db_path = db_path or "data/geo.db"
+    conn = duckdb.connect(db_path)
     conn.install_extension("spatial")
     conn.load_extension("spatial")
 
@@ -17,12 +21,6 @@ def create_db(json_dir: str):
         type VARCHAR,
         parent_id VARCHAR NULL
     )""")
-
-    # conn.sql("""
-    # ALTER TABLE borders
-    #     ADD CONSTRAINT fk_parent
-    #     FOREIGN KEY (parent_id) REFERENCES borders(ID);
-    #          """)
 
     communes_json = f"{json_dir}/A03_Granice_gmin.json"
     conn.sql(
@@ -71,6 +69,12 @@ def create_db(json_dir: str):
     conn.sql("""
     UPDATE borders
     SET parent_id = 'PL'
+    WHERE type = 'PAN'
+    """)
+
+    conn.sql("""
+    UPDATE borders
+    SET parent_id = 'PL'
     WHERE type = 'WOJ'
     """)
 
@@ -83,19 +87,16 @@ def create_db(json_dir: str):
     conn.sql("""
     UPDATE borders
     SET parent_id = substr(ID, 1, 6)
-    WHERE type = 'POW'
+    WHERE type = 'GMI'
     """)
 
+    return conn
 
-#     WITH shp as (
-# SELECT
-#   name, geom AS geom
-# FROM ST_Read('~/Downloads/output2.shp/tracks.shp')
-# )
-# SELECT borders.ID, borders.type , ST_AsGeoJSON(borders.shape), ST_AsGeoJSON(geom)
-# FROM borders
-# INNER JOIN shp ON ST_Intersects(shape, geom)
+
+async def aio_create_db(json_dir: str | None = None) -> duckdb.DuckDBPyConnection:
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, create_db, json_dir)
 
 
 if __name__ == "__main__":
-    create_db("data/gml")
+    create_db()
