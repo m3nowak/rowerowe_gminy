@@ -8,4 +8,5 @@ class Config(BaseConfigStruct):
     strava: BaseStravaConfig
     nats: BaseNatsConfig
     db: BaseDbConfig
+    duck_db_path: str = field(default="data/geo.db")
     otel: BaseOtelConfig = field(default_factory=lambda: BaseOtelConfig())

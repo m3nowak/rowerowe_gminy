@@ -9,6 +9,7 @@ from rg_app.common.faststream.otel import prepare_bundle
 
 from .config import Config
 from .deps import after_startup, lifespan, on_startup_factory
+from .duck_deps import after_startup as duck_after_startup
 from .routers import activity_cmd_router, geo_svc_router, incoming_wha_router
 
 
@@ -31,7 +32,7 @@ def app_factory(config: Config, debug: bool) -> FastStream:
     app = FastStream(
         broker,
         on_startup=on_startup,
-        after_startup=[after_startup],  # type: ignore
+        after_startup=[after_startup, duck_after_startup],  # type: ignore
         lifespan=lifespan,
     )
     return app
