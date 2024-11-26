@@ -68,7 +68,7 @@ def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb
 
     conn.sql("""
     UPDATE borders
-    SET parent_id = 'PL'
+    SET parent_id = NULL
     WHERE type = 'PAN'
     """)
 
