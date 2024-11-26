@@ -1,7 +1,7 @@
 import typing as ty
 from datetime import timedelta
 
-from litestar import Response
+from litestar import Request, Response
 from litestar.config.app import AppConfig
 from litestar.connection import ASGIConnection
 from litestar.datastructures import State
@@ -78,7 +78,15 @@ class SimpleJwtPlugin(InitPluginProtocol):
         def get_jwt(state: State) -> CreateTokenHandler:
             return state[_STATE_KEY]
 
+        def get_user(request: Request[MinimalUser, Token, ty.Any]) -> MinimalUser:
+            return request.user
+
+        def get_token(request: Request[MinimalUser, Token, ty.Any]) -> Token:
+            return request.auth
+
         app_config.state[_STATE_KEY] = CreateTokenHandler(self.jwt_auth)
         app_config.dependencies["o2a"] = Provide(get_jwt, sync_to_thread=False)
+        app_config.dependencies["user"] = Provide(get_user, sync_to_thread=False)
+        app_config.dependencies["token"] = Provide(get_token, sync_to_thread=False)
         app_config = self.jwt_auth.on_app_init(app_config)
         return app_config
