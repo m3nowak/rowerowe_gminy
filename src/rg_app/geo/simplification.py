@@ -21,7 +21,7 @@ def toposimplify_duckdb(path: str, toposimplify: float) -> str:
 
         topo = tp.Topology(
             gdf,
-            prequantize=1e6,  # type: ignore
+            prequantize=2.5e6,  # type: ignore
             presimplify=False,
             toposimplify=toposimplify,  # type: ignore
             simplify_algorithm="dp",
