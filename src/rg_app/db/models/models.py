@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Optional
 
 from sqlalchemy import BigInteger, Boolean, ForeignKey, Numeric, String, func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from rg_app.db.decorators import UTCDateTime
@@ -56,3 +56,11 @@ class Activity(Base):
     visited_regions_additional: Mapped[list[str]] = mapped_column(JSONB)
 
     user: Mapped[User] = relationship("User", back_populates="activities")
+
+
+class Region(Base):
+    __tablename__ = "region"
+
+    id: Mapped[int] = mapped_column(String(16), primary_key=True)
+    type: Mapped[str] = mapped_column(String(8), index=True)
+    ancestors: Mapped[list[str]] = mapped_column(ARRAY(String(16), dimensions=1))
