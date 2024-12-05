@@ -1,4 +1,4 @@
-from rg_app.common.config import BaseConfigStruct, BaseDbConfig, BaseNatsConfig, SecretReference
+from rg_app.common.config import BaseConfigModel, BaseDbConfig, BaseNatsConfig, BaseStravaConfig
 
 
 class NATSConfig(BaseNatsConfig):
@@ -9,16 +9,9 @@ class NATSConfig(BaseNatsConfig):
     rate_limits_kv = "rate-limits"
 
 
-class Config(BaseConfigStruct):
-    strava_client_id: str
-    strava_client_secret: str | SecretReference
+class Config(BaseConfigModel):
+    strava: BaseStravaConfig
     nats: NATSConfig
     db: BaseDbConfig
     rate_limit_teshold: float = 0.8
     dry_run: bool = False
-
-    def get_strava_client_secret(self) -> str:
-        if isinstance(self.strava_client_secret, SecretReference):
-            return self.strava_client_secret.value
-        else:
-            return self.strava_client_secret

@@ -1,9 +1,25 @@
-import os.path
+import os
+from typing import TypeVar
 
-from ._config_base import BaseConfigStruct
+from pydantic import SecretStr
+
+from ._config_base import BaseConfigModel
+
+SN = TypeVar("SN", bound=str | None)
 
 
-class SecretReference(BaseConfigStruct):
+class EnvReference(BaseConfigModel):
+    """
+    EnvReference is a structure that holds a reference to an environment variable.
+    """
+
+    env: str
+
+    def get_value(self, default: SN = None) -> str | SN:
+        return os.environ.get(self.env, default)
+
+
+class SecretReference(BaseConfigModel):
     """
     SecretReference is a structure that holds a reference to a secret.
     """
@@ -11,54 +27,68 @@ class SecretReference(BaseConfigStruct):
     secret_mount_path: str
     secret_key: str
 
-    _value: str | None = None
-
-    @property
-    def value(self) -> str:
-        """Returns the value of the secret.
-
-        Returns:
-            str: The value of the secret.
-        """
-        if self._value is None:
+    def get_value(self, default: SN = None) -> str | SN:
+        if os.path.exists(os.path.join(self.secret_mount_path, self.secret_key)):
             with open(os.path.join(self.secret_mount_path, self.secret_key)) as f:
-                self._value = f.read().strip()
-        return self._value
-
-
-class BaseStravaConfig(BaseConfigStruct):
-    client_id: str
-    client_secret: str | SecretReference
-
-    def get_client_secret(self) -> str:
-        if isinstance(self.client_secret, SecretReference):
-            return self.client_secret.value
+                return f.read().strip()
         else:
-            return self.client_secret
+            return default
 
 
-class BaseNatsConfig(BaseConfigStruct):
+CommonSecretType = SecretStr | SecretReference | EnvReference
+
+
+def unpack(value: str | SecretStr | SecretReference | EnvReference, default: SN = None) -> str | SN:
+    if isinstance(value, (SecretReference, EnvReference)):
+        return value.get_value(default)
+    elif isinstance(value, SecretStr):
+        return value.get_secret_value()
+    else:
+        return value
+
+
+class BaseStravaConfig(BaseConfigModel):
+    client_id: str
+    client_secret: SecretStr | SecretReference | EnvReference
+
+    def get_client_secret(self) -> str | None:
+        return unpack(self.client_secret)
+
+
+class BaseNatsConfig(BaseConfigModel):
     url: str | list[str]
     js_domain: str | None = None
     creds_path: str | None = None
     inbox_prefix: str = "_inbox"
 
 
-class BaseDbConfig(BaseConfigStruct):
+class BaseHttpConfig(BaseConfigModel):
+    host: str = "0.0.0.0"
+    port: int = 8000
+
+
+class BaseDbConfig(BaseConfigModel):
     host: str
     port: int
     user: str
-    password: str | SecretReference
+    password: SecretStr | SecretReference | EnvReference
     database: str
 
-    def get_password(self) -> str:
-        if isinstance(self.password, SecretReference):
-            return self.password.value
-        else:
-            return self.password
+    def get_password(self) -> str | None:
+        return unpack(self.password)
 
     def get_url(self, scheme: str = "postgresql+psycopg") -> str:
-        return f"{scheme}://{self.user}:{self.get_password()}@{self.host}:{self.port}/{self.database}"
+        password = self.get_password()
+        assert password, "Password is not set"
+        return f"{scheme}://{self.user}:{password}@{self.host}:{self.port}/{self.database}"
 
 
-__all__ = ["BaseConfigStruct", "SecretReference", "BaseNatsConfig", "BaseDbConfig"]
+__all__ = [
+    "SecretReference",
+    "BaseNatsConfig",
+    "BaseDbConfig",
+    "unpack",
+    "BaseStravaConfig",
+    "CommonSecretType",
+    "EnvReference",
+]

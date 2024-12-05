@@ -16,6 +16,17 @@
             ]
         },
         {
+            "name": "API WORKER",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rg_app.api_worker",
+            "args": [
+                "-c",
+                "config.api_worker.yaml",
+                "-d"
+            ]
+        },
+        {
             "name": "WKK Job",
             "type": "debugpy",
             "request": "launch",

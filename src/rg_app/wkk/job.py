@@ -201,7 +201,10 @@ async def main(config: Config):
         rlm = RateLimitManager(RLNatsConfig(nc, config.nats.rate_limits_kv, config.nats.js_domain))
         rlm = await ae_stack.enter_async_context(rlm.begin())
 
-        stm = StravaTokenManager(config.strava_client_id, config.get_strava_client_secret(), rlm, sa_engine)
+        client_secret = config.strava.get_client_secret()
+        assert client_secret is not None, "Strava client secret is not set"
+
+        stm = StravaTokenManager(config.strava.client_id, client_secret, rlm, sa_engine)
         stm = await ae_stack.enter_async_context(stm.begin())
 
         common_http_client = await ae_stack.enter_async_context(httpx.AsyncClient())

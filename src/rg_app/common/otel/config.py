@@ -1,7 +1,7 @@
-from rg_app.common._config_base import BaseConfigStruct
+from rg_app.common._config_base import BaseConfigModel
 
 
-class BaseOtelConfig(BaseConfigStruct):
+class BaseOtelConfig(BaseConfigModel):
     enabled: bool = True
     use_global_context: bool = True
     endpoint: str | None = None

@@ -64,6 +64,11 @@ geobase = [
     "geojson>=3.1.0",
     "aiofiles>=24.1.0",
 ]
+api-worker = [
+    "fastapi[standard]>=0.115.6",
+    "faststream[nats,otel]>=0.5.33",
+    "nats-py[aiohttp,nkeys]>=2.9.0",
+]
 
 
 [build-system]
@@ -107,6 +112,7 @@ start-compose = { composite = ["stop-compose", "_start-compose"] }
 [project.scripts]
 rg-scrapping = "rg_app.scrapping:__main__.main"
 rg-api = "rg_app.api:__main__.main"
+rg-api-worker = "rg_app.api_worker:__main__.main"
 rg-db = "rg_app.db:__main__.main"
 rg-wha = "rg_app.wha:__main__.main"
 rg-wkk = "rg_app.wkk:__main__.main"

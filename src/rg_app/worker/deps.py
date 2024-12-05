@@ -51,7 +51,10 @@ async def after_startup(context: ContextRepo, broker: NatsBroker):
     rlm = await aes.enter_async_context(rlm.begin())
     context.set_global("rate_limit_mgr", rlm)
 
-    stm = StravaTokenManager(config.strava.client_id, config.strava.get_client_secret(), rlm, sa_engine)
+    client_secret = config.strava.get_client_secret()
+    assert client_secret is not None, "Strava client secret is not set"
+
+    stm = StravaTokenManager(config.strava.client_id, client_secret, rlm, sa_engine)
     stm = await aes.enter_async_context(stm.begin())
     context.set_global("strava_token_mgr", stm)
 

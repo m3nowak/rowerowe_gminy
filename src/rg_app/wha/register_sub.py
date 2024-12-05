@@ -23,7 +23,7 @@ async def register_sub(config: Config, sleep: int = 5, app: Litestar | None = No
     async with httpx.AsyncClient() as client:
         current_subs = await client.get(
             STRAVA_SUB_URL,
-            params={"client_id": config.strava_client_id, "client_secret": config.get_strava_client_secret()},
+            params={"client_id": config.strava.client_id, "client_secret": config.strava.get_client_secret()},
         )
         current_subs.raise_for_status()
         sub_list = current_subs.json()
@@ -43,8 +43,8 @@ async def register_sub(config: Config, sleep: int = 5, app: Litestar | None = No
                 app.logger.info("Webhook already registered")
             return
         sub = {
-            "client_id": config.strava_client_id,
-            "client_secret": config.get_strava_client_secret(),
+            "client_id": config.strava.client_id,
+            "client_secret": config.strava.get_client_secret(),
             "callback_url": callback_url,
             "verify_token": config.get_verify_token(),
         }
