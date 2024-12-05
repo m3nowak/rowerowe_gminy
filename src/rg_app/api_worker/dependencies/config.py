@@ -16,6 +16,7 @@ def lifespan_factory(config: _Config):
         _STATE[_CONFIG_KEY] = config
         # For futurereference, we want to store state this way:
         # setattr(app.state, _CONFIG_KEY, config)
+        # https://github.com/airtai/faststream/discussions/1653
         yield
 
     return lifespan
