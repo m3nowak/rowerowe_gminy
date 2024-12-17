@@ -6,6 +6,7 @@ from typing import Any, AsyncGenerator, Literal, Self
 import httpx
 import msgspec
 import sqlalchemy as sa
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
 from rg_app.common.strava.rate_limits import RateLimitManager
@@ -42,6 +43,35 @@ class TokenResponse:
 @dataclass(frozen=True)
 class AthleteTokenResponse(TokenResponse):
     athlete: dict[str, Any]
+
+
+class StravaTokenResponseAthlete(BaseModel):
+    id: int
+    username: str | None
+    firstname: str | None
+    lastname: str | None
+
+
+class StravaTokenResponse(BaseModel):
+    access_token: str
+    expires_at: datetime
+    refresh_token: str
+    athlete: StravaTokenResponseAthlete
+
+    def friendly_name(self) -> str:
+        """
+        Returns a friendly name for the athlete.
+        First name, last name, or username if available.
+        As a last resort, the athlete's ID.
+        """
+        if self.athlete.firstname or self.athlete.lastname:
+            snc = [self.athlete.firstname, self.athlete.lastname]
+            snc = list(filter(lambda x: x is not None, snc))
+            return " ".join(snc)  # type: ignore
+        elif self.athlete.username:
+            return self.athlete.username
+        else:
+            return str(self.athlete.id)
 
 
 class StravaTokenManager:
@@ -101,7 +131,7 @@ class StravaTokenManager:
             refresh_token=data["refresh_token"],
         )
 
-    async def authenticate(self, code: str) -> AthleteTokenResponse:
+    async def authenticate(self, code: str) -> StravaTokenResponse:
         assert self._client is not None, "You must call this in async with begin() block"
         request = {
             "client_id": self._client_id,
@@ -112,10 +142,4 @@ class StravaTokenManager:
         resp = await self._client.post(_URL, data=request)
         await self._rate_limit_mgr.feed_headers(resp.headers)
         resp.raise_for_status()
-        data = resp.json()
-        return AthleteTokenResponse(
-            access_token=data["access_token"],
-            expires_at=datetime.fromtimestamp(data["expires_at"]),
-            refresh_token=data["refresh_token"],
-            athlete=data["athlete"],
-        )
+        return StravaTokenResponse.model_validate_json(resp.text)

@@ -47,9 +47,16 @@ def unpack(value: str | SecretStr | SecretReference | EnvReference, default: SN 
         return value
 
 
+def unpack_safe(value: str | SecretStr | SecretReference | EnvReference) -> str:
+    result = unpack(value)
+    if not result:
+        raise ValueError("Value is not set")
+    return result
+
+
 class BaseStravaConfig(BaseConfigModel):
     client_id: str
-    client_secret: SecretStr | SecretReference | EnvReference
+    client_secret: CommonSecretType
 
     def get_client_secret(self) -> str | None:
         return unpack(self.client_secret)

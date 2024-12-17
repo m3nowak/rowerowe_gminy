@@ -1,16 +1,26 @@
 import fastapi
 
 from .config import Config
-from .dependencies.config import lifespan_factory
-from .http import router as http_router
-from .nats import router_factory as nats_router_factory
+from .dependencies.broker import lifespan as broker_lifespan
+from .dependencies.config import lifespan_factory as config_lifespan_factory
+from .dependencies.db import lifespan as db_lifespan
+from .dependencies.http_client import lifespan as http_client_lifespan
+from .dependencies.strava import lifespan as strava_lifespan
+from .dependencies.util import combined_lifespans_factory
+from .routers import auth_router, health_router
 
 
 def app_factory(config: Config):
-    app = fastapi.FastAPI(title="Rowerowe Gminy API", lifespan=lifespan_factory(config))
+    lifespans = [
+        config_lifespan_factory(config),
+        db_lifespan,
+        broker_lifespan,
+        http_client_lifespan,
+        strava_lifespan,
+    ]
 
-    app.include_router(http_router)
-    if config.nats:
-        app.include_router(nats_router_factory(config.nats, app.state))
+    app = fastapi.FastAPI(title="Rowerowe Gminy API", lifespan=combined_lifespans_factory(*lifespans))
+    app.include_router(health_router)
+    app.include_router(auth_router)
 
     return app

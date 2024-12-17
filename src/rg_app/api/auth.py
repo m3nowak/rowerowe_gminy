@@ -88,7 +88,7 @@ async def authenticate_handler(
 ) -> Response[OAuth2Login]:
     atr = await strava_token_mgr.authenticate(data.code)
     assert atr is not None
-    user_id: int | None = atr.athlete.get("id")
+    user_id: int | None = atr.athlete.id
     assert user_id is not None
 
     user = await db_session.get(User, user_id)
@@ -97,7 +97,7 @@ async def authenticate_handler(
         user.refresh_token = atr.refresh_token
         user.expires_at = atr.expires_at
         user.last_login = datetime.now(UTC)
-        user.name = make_username(atr)
+        user.name = atr.friendly_name()
         await db_session.refresh(user)
     else:
         user = User(
@@ -105,7 +105,7 @@ async def authenticate_handler(
             access_token=atr.access_token,
             refresh_token=atr.refresh_token,
             expires_at=atr.expires_at,
-            name=make_username(atr),
+            name=atr.friendly_name(),
         )
         db_session.add(user)
         await db_session.commit()
