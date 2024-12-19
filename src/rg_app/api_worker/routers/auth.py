@@ -5,8 +5,10 @@ import jwt
 from httpx import HTTPStatusError
 
 from rg_app.api_worker.dependencies.config import Config
+from rg_app.api_worker.dependencies.db import AsyncSession
 from rg_app.api_worker.dependencies.strava import StravaTokenManager
 from rg_app.api_worker.models.auth import LoginRequest, LoginResponse
+from rg_app.db import User
 
 router = fastapi.APIRouter(tags=["auth"])
 
@@ -23,7 +25,9 @@ def create_token(user_id: str, expiry: timedelta, secret: str, username: str) ->
 
 
 @router.post("/login")
-async def login(login_data: LoginRequest, config: Config, stm: StravaTokenManager) -> LoginResponse:
+async def login(
+    login_data: LoginRequest, config: Config, stm: StravaTokenManager, session: AsyncSession
+) -> LoginResponse:
     try:
         atr = await stm.authenticate(login_data.code)
     except HTTPStatusError as hse:
@@ -36,6 +40,27 @@ async def login(login_data: LoginRequest, config: Config, stm: StravaTokenManage
             )
 
     assert atr is not None
+
+    # User is legit
+
+    user = await session.get(User, atr.athlete.id)
+    if user:
+        user.access_token = atr.access_token
+        user.refresh_token = atr.refresh_token
+        user.expires_at = atr.expires_at
+        user.last_login = datetime.now(UTC)
+        user.name = atr.friendly_name()
+    else:
+        user = User(
+            id=atr.athlete.id,
+            access_token=atr.access_token,
+            refresh_token=atr.refresh_token,
+            expires_at=atr.expires_at,
+            last_login=datetime.now(UTC),
+            name=atr.friendly_name(),
+        )
+        session.add(user)
+    await session.commit()
 
     expiry = (
         timedelta(hours=config.auth.long_expiry_hours)
