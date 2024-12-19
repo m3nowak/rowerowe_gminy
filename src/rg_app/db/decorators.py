@@ -9,7 +9,7 @@ class UTCDateTime(TypeDecorator):
     """Custom DateTime type that assumes naive datetime is UTC when loaded from DB."""
 
     impl = DateTime  # Underlying column type is DateTime
-    cache_ok = True  # Tell SQLAlchemy that this type is immutable
+    cache_ok = False  # Tell SQLAlchemy that this type is mutable
 
     # Customize how Python datetime objects are bound to the DB
     def process_bind_param(self, value, dialect):
