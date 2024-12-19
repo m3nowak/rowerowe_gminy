@@ -17,8 +17,8 @@ class UnlockedRegion(BaseModel):
 
 
 class UnlockedRegionDetail(UnlockedRegion):
-    last_visited: datetime
-    first_visited: datetime
+    last_visited: datetime | None = None
+    first_visited: datetime | None = None
     visited_count: int
 
 
@@ -40,7 +40,6 @@ async def unlocked(session: AsyncSession, user_info: UserInfoRequired) -> list[U
     )
 
     result = await session.execute(query)
-
     return [UnlockedRegion(region_id=row.element) for row in result]
 
 
@@ -77,7 +76,7 @@ async def unlocked_detail(region_id: str, session: AsyncSession, user_info: User
     row = result.fetchone()
 
     if row is None or row.first_visited is None:
-        raise fastapi.HTTPException(status_code=404, detail="Region not unlocked")
+        return UnlockedRegionDetail(region_id=region_id, visited_count=0)
     else:
         return UnlockedRegionDetail(
             region_id=region_id,
