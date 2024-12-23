@@ -2,10 +2,10 @@
 # It is not intended for manual editing.
 
 [metadata]
-groups = ["default", "api", "api-worker", "db", "db_common", "dev", "geo", "geobase", "otel", "scrap", "wha", "wkk", "worker"]
+groups = ["default", "api", "api-worker", "db", "db-common", "dev", "geo", "geobase", "otel", "scrap", "wha", "wkk", "worker"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:fe686503d5e6c4531933dbbd3b9a17481ea30d2659bce9e8c179bd096ac3226f"
+content_hash = "sha256:2cea32bbb29f7bb8933154a1b7ab7319de974f0c79454f85f28d8f581c3052db"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
@@ -684,7 +684,7 @@ name = "greenlet"
 version = "3.1.1"
 requires_python = ">=3.7"
 summary = "Lightweight in-process concurrent programming"
-groups = ["api", "db", "db_common", "wha", "wkk"]
+groups = ["api", "db", "db-common", "wha", "wkk"]
 marker = "(platform_machine == \"win32\" or platform_machine == \"WIN32\" or platform_machine == \"AMD64\" or platform_machine == \"amd64\" or platform_machine == \"x86_64\" or platform_machine == \"ppc64le\" or platform_machine == \"aarch64\") and python_version < \"3.13\" or sys_platform == \"darwin\""
 files = [
     {file = "greenlet-3.1.1-cp312-cp312-macosx_11_0_universal2.whl", hash = "sha256:4afe7ea89de619adc868e087b4d2359282058479d7cfb94970adf4b55284574d"},
@@ -1566,7 +1566,7 @@ name = "psycopg"
 version = "3.2.3"
 requires_python = ">=3.8"
 summary = "PostgreSQL database adapter for Python"
-groups = ["api", "db", "db_common", "wha", "wkk"]
+groups = ["api", "db", "db-common", "wha", "wkk"]
 dependencies = [
     "backports-zoneinfo>=0.2.0; python_version < \"3.9\"",
     "typing-extensions>=4.6; python_version < \"3.13\"",
@@ -1582,7 +1582,7 @@ name = "psycopg-binary"
 version = "3.2.3"
 requires_python = ">=3.8"
 summary = "PostgreSQL database adapter for Python -- C optimisation distribution"
-groups = ["api", "db", "db_common", "wha", "wkk"]
+groups = ["api", "db", "db-common", "wha", "wkk"]
 marker = "implementation_name != \"pypy\""
 files = [
     {file = "psycopg_binary-3.2.3-cp312-cp312-macosx_12_0_x86_64.whl", hash = "sha256:48f8ca6ee8939bab760225b2ab82934d54330eec10afe4394a92d3f2a0c37dd6"},
@@ -1615,7 +1615,7 @@ version = "3.2.3"
 extras = ["binary"]
 requires_python = ">=3.8"
 summary = "PostgreSQL database adapter for Python"
-groups = ["api", "db", "db_common", "wha", "wkk"]
+groups = ["api", "db", "db-common", "wha", "wkk"]
 dependencies = [
     "psycopg-binary==3.2.3; implementation_name != \"pypy\"",
     "psycopg==3.2.3",
@@ -2045,7 +2045,7 @@ name = "sqlalchemy"
 version = "2.0.36"
 requires_python = ">=3.7"
 summary = "Database Abstraction Library"
-groups = ["api", "db", "db_common", "wha", "wkk"]
+groups = ["api", "db", "db-common", "wha", "wkk"]
 dependencies = [
     "greenlet!=0.4.17; (platform_machine == \"win32\" or platform_machine == \"WIN32\" or platform_machine == \"AMD64\" or platform_machine == \"amd64\" or platform_machine == \"x86_64\" or platform_machine == \"ppc64le\" or platform_machine == \"aarch64\") and python_version < \"3.13\"",
     "importlib-metadata; python_version < \"3.8\"",
@@ -2166,7 +2166,7 @@ name = "typing-extensions"
 version = "4.12.2"
 requires_python = ">=3.8"
 summary = "Backported and Experimental Type Hints for Python 3.8+"
-groups = ["default", "api", "api-worker", "db", "db_common", "dev", "otel", "wha", "wkk", "worker"]
+groups = ["default", "api", "api-worker", "db", "db-common", "dev", "otel", "wha", "wkk", "worker"]
 files = [
     {file = "typing_extensions-4.12.2-py3-none-any.whl", hash = "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d"},
     {file = "typing_extensions-4.12.2.tar.gz", hash = "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8"},
@@ -2177,7 +2177,7 @@ name = "tzdata"
 version = "2024.2"
 requires_python = ">=2"
 summary = "Provider of IANA time zone data"
-groups = ["api", "db", "db_common", "geo", "scrap", "wha", "wkk"]
+groups = ["api", "db", "db-common", "geo", "scrap", "wha", "wkk"]
 files = [
     {file = "tzdata-2024.2-py2.py3-none-any.whl", hash = "sha256:a48093786cdcde33cad18c2555e8532f34422074448fbc874186f0abd79565cd"},
     {file = "tzdata-2024.2.tar.gz", hash = "sha256:7d85cc416e9382e69095b7bdf4afd9e3880418a2413feec7069d533d6b4e31cc"},
