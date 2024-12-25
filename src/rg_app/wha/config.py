@@ -1,4 +1,4 @@
-from msgspec import field
+from pydantic import Field
 
 from rg_app.common.config import BaseConfigModel, BaseNatsConfig, BaseStravaConfig, CommonSecretType, unpack
 from rg_app.common.otel.config import BaseOtelConfig
@@ -15,7 +15,7 @@ class Config(BaseConfigModel):
     self_url: str
     verify_token: CommonSecretType
     nats: NATSConfig
-    otel: BaseOtelConfig = field(default_factory=lambda: BaseOtelConfig())
+    otel: BaseOtelConfig = Field(default_factory=lambda: BaseOtelConfig())
 
     def get_verify_token(self) -> str:
         value = unpack(self.verify_token)
