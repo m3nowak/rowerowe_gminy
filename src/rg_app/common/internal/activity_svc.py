@@ -5,6 +5,11 @@ from typing import Optional
 from rg_app.common.msg.base_model import BaseModel
 
 
+class DeleteModel(BaseModel):
+    id: int
+    user_id: int
+
+
 class UpsertModel(BaseModel):
     id: int
     user_id: int

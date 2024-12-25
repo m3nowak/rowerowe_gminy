@@ -5,7 +5,7 @@ from faststream.nats import NatsRouter
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from rg_app.common.internal.activity_svc import UpsertModel
+from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel
 from rg_app.db.models import Activity
 from rg_app.worker.common import DEFAULT_QUEUE
 from rg_app.worker.deps import db_session
@@ -29,5 +29,17 @@ async def upsert(
         for k, v in dct.items():
             setattr(activity, k, v)
     session.add(activity)
+    await session.commit()
+    return "OK"
+
+
+@activity_svc_router.subscriber("delete", DEFAULT_QUEUE)
+async def delete(
+    body: DeleteModel,
+    session: AsyncSession = Depends(db_session),
+) -> Literal["OK"]:
+    activity = await session.get_one(Activity, body.id)
+    assert activity.user_id == body.user_id
+    await session.delete(activity)
     await session.commit()
     return "OK"

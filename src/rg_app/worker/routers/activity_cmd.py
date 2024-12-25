@@ -11,13 +11,13 @@ from opentelemetry import trace
 
 from rg_app.common.faststream.otel import otel_logger, tracer_fn
 from rg_app.common.internal import activity_filter
-from rg_app.common.internal.activity_svc import UpsertModel
+from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel
 from rg_app.common.internal.geo_svc import GeoSvcCheckRequest, GeoSvcCheckResponse
-from rg_app.common.msg.cmd import StdActivityCmd
+from rg_app.common.msg.cmd import BacklogActivityCmd, StdActivityCmd
 from rg_app.common.strava.activities import get_activity
 from rg_app.common.strava.auth import StravaTokenManager
 from rg_app.common.strava.rate_limits import RateLimitManager
-from rg_app.nats_defs.local import CONSUMER_ACTIVITY_CMD_STD, STREAM_ACTIVITY_CMD
+from rg_app.nats_defs.local import CONSUMER_ACTIVITY_CMD_BACKLOG, CONSUMER_ACTIVITY_CMD_STD, STREAM_ACTIVITY_CMD
 from rg_app.worker.deps import http_client, rate_limit_mgr, token_mgr
 
 router = NatsRouter()
@@ -25,7 +25,28 @@ router = NatsRouter()
 stream = JStream(name=ty.cast(str, STREAM_ACTIVITY_CMD.name), declare=False)
 
 req_upsert = router.publisher("rg.svc.activity.upsert", schema=UpsertModel)
+req_delete = router.publisher("rg.svc.activity.delete", schema=DeleteModel)
 req_check = router.publisher("rg.svc.geo.check", schema=GeoSvcCheckRequest)
+
+
+@router.subscriber(
+    config=CONSUMER_ACTIVITY_CMD_BACKLOG,
+    stream=stream,
+    durable=CONSUMER_ACTIVITY_CMD_BACKLOG.durable_name,
+    pull_sub=PullSub(),
+    no_ack=True,
+)
+async def backlog_handle(
+    body: BacklogActivityCmd,
+    broker: NatsBroker,
+    nats_msg: NatsMessage,
+    http_client: AsyncClient = Depends(http_client),
+    rlm: RateLimitManager = Depends(rate_limit_mgr),
+    stm: StravaTokenManager = Depends(token_mgr),
+    tracer: trace.Tracer = Depends(tracer_fn),
+    otel_logger: Logger = Depends(otel_logger),
+):
+    raise NotImplementedError("Backlog processing is not implemented yet")
 
 
 @router.subscriber(
@@ -104,5 +125,8 @@ async def std_handle(
         span.set_attribute("activity_id", activity_model.id)
         print(f"Activity {body.activity_id} processed!")
     elif body.type == "delete":
-        pass  # TODO
+        resp = await req_delete.request(DeleteModel(id=body.activity_id, user_id=body.owner_id), timeout=30)
+        resp_parsed = resp.body.decode()
+        assert resp_parsed == "OK"
+        print(f"Activity {body.activity_id} deleted!")
     await nats_msg.ack()
