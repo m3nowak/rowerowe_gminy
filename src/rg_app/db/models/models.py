@@ -48,8 +48,7 @@ class Activity(Base):
     elevation_low: Mapped[Optional[Decimal]] = mapped_column(Numeric(5, 1), nullable=True)
     elevation_high: Mapped[Optional[Decimal]] = mapped_column(Numeric(5, 1), nullable=True)
 
-    type: Mapped[str] = mapped_column(String(32))
-    sport_type: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    sport_type: Mapped[str] = mapped_column(String(32))
     gear_id: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
 
     visited_regions: Mapped[list[str]] = mapped_column(JSONB)
