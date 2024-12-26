@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Literal
 
 import fastapi
 
@@ -17,11 +18,24 @@ class BacklogRequest(BaseModel):
 
 
 @router.post("/backlog")
-async def backlog(backlog_request: BacklogRequest, user_info: UserInfoRequired, broker: NatsBroker):
-    msg = BacklogActivityCmd(
-        owner_id=user_info.user_id,
-        period_from=backlog_request.period_from,
-        period_to=backlog_request.period_to,
-        type="backlog",
-    )
-    await broker.publish(msg, f"rg.internal.cmd.activity.backlog.{user_info.user_id}", stream=STREAM_ACTIVITY_CMD.name)
+async def backlog(backlog_request: BacklogRequest, user_info: UserInfoRequired, broker: NatsBroker) -> Literal["OK"]:
+    period_from = backlog_request.period_from
+    period_to = period_from + timedelta(days=30)
+    should_continue = True
+    while should_continue:
+        msg = BacklogActivityCmd(
+            owner_id=user_info.user_id,
+            period_from=period_from,
+            period_to=min(period_to, backlog_request.period_to),
+            type="backlog",
+        )
+        await broker.publish(
+            msg, f"rg.internal.cmd.activity.backlog.{user_info.user_id}", stream=STREAM_ACTIVITY_CMD.name
+        )
+        if period_to > backlog_request.period_to:
+            should_continue = False
+        else:
+            period_from = period_to
+            period_to += timedelta(days=30)
+        pass
+    return "OK"
