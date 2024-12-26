@@ -2,6 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TypeVar
 
+from pydantic import AliasChoices, Field
+
 from .base import BaseStravaModel
 
 
@@ -18,8 +20,7 @@ class AthleteReference(BaseStravaModel):
 class ActivityPartial(BaseStravaModel):
     id: int
     athlete: AthleteReference
-    type: str
-    sport_type: str
+    sport_type: str = Field(validation_alias=AliasChoices("sport_type", "type"))
     name: str
     moving_time: int
     elapsed_time: int

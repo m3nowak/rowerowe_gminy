@@ -2,7 +2,6 @@ import typing as ty
 from decimal import Decimal
 from logging import Logger
 
-import polyline
 from faststream import Depends
 from faststream.nats import JStream, NatsRouter, PullSub
 from faststream.nats.annotations import NatsBroker, NatsMessage
@@ -12,9 +11,8 @@ from opentelemetry import trace
 from rg_app.common.faststream.otel import otel_logger, tracer_fn
 from rg_app.common.internal import activity_filter
 from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel
-from rg_app.common.internal.geo_svc import GeoSvcCheckRequest, GeoSvcCheckResponse
 from rg_app.common.msg.cmd import BacklogActivityCmd, StdActivityCmd
-from rg_app.common.strava.activities import get_activity
+from rg_app.common.strava.activities import get_activity, get_activity_range
 from rg_app.common.strava.auth import StravaTokenManager
 from rg_app.common.strava.rate_limits import RateLimitManager
 from rg_app.nats_defs.local import CONSUMER_ACTIVITY_CMD_BACKLOG, CONSUMER_ACTIVITY_CMD_STD, STREAM_ACTIVITY_CMD
@@ -26,7 +24,6 @@ stream = JStream(name=ty.cast(str, STREAM_ACTIVITY_CMD.name), declare=False)
 
 req_upsert = router.publisher("rg.svc.activity.upsert", schema=UpsertModel)
 req_delete = router.publisher("rg.svc.activity.delete", schema=DeleteModel)
-req_check = router.publisher("rg.svc.geo.check", schema=GeoSvcCheckRequest)
 
 
 @router.subscriber(
@@ -46,6 +43,19 @@ async def backlog_handle(
     tracer: trace.Tracer = Depends(tracer_fn),
     otel_logger: Logger = Depends(otel_logger),
 ):
+    with tracer.start_as_current_span("get_auth") as auth_span:
+        auth = await stm.get_httpx_auth(body.owner_id)
+        auth_span.add_event("auth", {"owner_id": body.owner_id})
+    has_more = True
+    page = 0
+    while has_more:
+        activity_range = await get_activity_range(http_client, body.perioid_from, body.perioid_to, 0, auth, rlm)
+        if activity_range.has_more:
+            has_more = True
+            page += 1
+        for activity in activity_range.items:
+            pass
+
     raise NotImplementedError("Backlog processing is not implemented yet")
 
 
@@ -89,15 +99,6 @@ async def std_handle(
         )
         assert polyline_str is not None
 
-        geojson_list = polyline.decode(polyline_str, precision=5, geojson=True)
-
-        resp = await req_check.request(GeoSvcCheckRequest(coordinates=geojson_list), timeout=30)
-        resp_parsed = GeoSvcCheckResponse.model_validate_json(resp.body)
-        main_regions = [x.id for x in resp_parsed.items if x.type == "GMI"]
-        additional_regions = [x.id for x in resp_parsed.items if x.type != "GMI"]
-        span.set_attribute("main_regions", len(main_regions))
-        span.set_attribute("additional_regions", len(additional_regions))
-
         activity_model = UpsertModel(
             id=activity_expanded.id,
             user_id=activity_expanded.athlete.id,
@@ -107,16 +108,13 @@ async def std_handle(
             moving_time=activity_expanded.moving_time,
             elapsed_time=activity_expanded.elapsed_time,
             distance=ty.cast(Decimal, activity_expanded.distance),
-            track=geojson_list,
             track_is_detailed=body.type == "update",
             elevation_gain=activity_expanded.total_elevation_gain,
             elevation_high=activity_expanded.elev_high,
             elevation_low=activity_expanded.elev_low,
-            type=activity_expanded.type,
             sport_type=activity_expanded.sport_type,
             gear_id=activity_expanded.gear_id,
-            visited_regions=main_regions,
-            visited_regions_additional=additional_regions,
+            polyline=polyline_str,
         )
 
         resp = await req_upsert.request(activity_model, timeout=30)

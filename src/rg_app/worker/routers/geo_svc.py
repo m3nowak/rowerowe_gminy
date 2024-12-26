@@ -22,6 +22,11 @@ from rg_app.worker.duck_deps import duck_conn
 geo_svc_router = NatsRouter("rg.svc.geo.")
 
 
+@geo_svc_router.subscriber("ping", DEFAULT_QUEUE)
+async def ping() -> str:
+    return "pong"
+
+
 @geo_svc_router.subscriber("check-polyline", DEFAULT_QUEUE)
 async def check_polyline(
     body: GeoSvcCheckPolylineRequest,

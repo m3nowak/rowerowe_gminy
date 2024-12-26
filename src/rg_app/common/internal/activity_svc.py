@@ -21,16 +21,13 @@ class UpsertModel(BaseModel):
     elapsed_time: int
     distance: Decimal
 
-    track: list[tuple[float, float]]
     track_is_detailed: bool
 
     elevation_gain: Optional[Decimal] = None
     elevation_low: Optional[Decimal] = None
     elevation_high: Optional[Decimal] = None
 
-    type: str
-    sport_type: Optional[str] = None
+    sport_type: str
     gear_id: Optional[str] = None
 
-    visited_regions: list[str]
-    visited_regions_additional: list[str]
+    polyline: str
