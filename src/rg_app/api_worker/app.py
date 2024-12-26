@@ -8,7 +8,7 @@ from .dependencies.db import lifespan as db_lifespan
 from .dependencies.http_client import lifespan as http_client_lifespan
 from .dependencies.strava import lifespan as strava_lifespan
 from .dependencies.util import combined_lifespans_factory
-from .routers import auth_router, health_router, regions_router
+from .routers import activities_router, auth_router, health_router, regions_router
 
 
 def app_factory(config: Config):
@@ -24,6 +24,7 @@ def app_factory(config: Config):
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(regions_router)
+    app.include_router(activities_router)
 
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
