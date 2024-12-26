@@ -1,3 +1,4 @@
+import asyncio
 import typing as ty
 from decimal import Decimal
 from logging import Logger
@@ -43,20 +44,51 @@ async def backlog_handle(
     tracer: trace.Tracer = Depends(tracer_fn),
     otel_logger: Logger = Depends(otel_logger),
 ):
+    span = trace.get_current_span()
     with tracer.start_as_current_span("get_auth") as auth_span:
         auth = await stm.get_httpx_auth(body.owner_id)
         auth_span.add_event("auth", {"owner_id": body.owner_id})
     has_more = True
     page = 0
+    awaitables = []
     while has_more:
-        activity_range = await get_activity_range(http_client, body.perioid_from, body.perioid_to, 0, auth, rlm)
-        if activity_range.has_more:
-            has_more = True
-            page += 1
+        activity_range = await get_activity_range(http_client, body.perioid_from, body.perioid_to, page, auth, rlm)
+        has_more = activity_range.has_more
+        page += 1
+        if page >= 20:
+            print("Too many pages!")
+            break
         for activity in activity_range.items:
-            pass
-
-    raise NotImplementedError("Backlog processing is not implemented yet")
+            # filter out activities
+            is_ok, reason = activity_filter(activity)
+            if not is_ok:
+                reason = reason or "Unknown"
+                span.add_event("activity_filter_failed", {"reason": reason, "activity_id": activity.id})
+                print(f"Activity {activity.id} filtered out: {reason}")
+                continue
+            assert activity.map is not None
+            polyline_str = activity.map.summary_polyline
+            assert polyline_str is not None
+            activity_model = UpsertModel(
+                id=activity.id,
+                user_id=activity.athlete.id,
+                name=activity.name,
+                manual=activity.manual,
+                start=activity.start_date,
+                moving_time=activity.moving_time,
+                elapsed_time=activity.elapsed_time,
+                distance=ty.cast(Decimal, activity.distance),
+                track_is_detailed=body.type == "update",
+                elevation_gain=activity.total_elevation_gain,
+                elevation_high=activity.elev_high,
+                elevation_low=activity.elev_low,
+                sport_type=activity.sport_type,
+                gear_id=activity.gear_id,
+                polyline=polyline_str,
+            )
+            awaitables.append(req_upsert.request(activity_model, timeout=30))
+    asyncio.gather(*awaitables)
+    await nats_msg.ack()
 
 
 @router.subscriber(
@@ -88,7 +120,7 @@ async def std_handle(
         is_ok, reason = activity_filter(activity_expanded)
         if not is_ok:
             reason = reason or "Unknown"
-            span.add_event("activity_filter_failed", {"reason": reason})
+            span.add_event("activity_filter_failed", {"reason": reason, "activity_id": body.activity_id})
             print(f"Activity {body.activity_id} filtered out: {reason}")
             await nats_msg.ack()
             return

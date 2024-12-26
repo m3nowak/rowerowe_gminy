@@ -8,9 +8,9 @@ from .base import BaseStravaModel
 
 
 class ActivityMap(BaseStravaModel):
-    id: str | None
-    polyline: str | None
-    summary_polyline: str | None
+    id: str | None = None
+    polyline: str | None = None
+    summary_polyline: str | None = None
 
 
 class AthleteReference(BaseStravaModel):

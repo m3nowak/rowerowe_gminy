@@ -24,4 +24,4 @@ async def backlog(backlog_request: BacklogRequest, user_info: UserInfoRequired, 
         perioid_to=backlog_request.perioid_to,
         type="backlog",
     )
-    await broker.publish(msg, "rg.cmd.activity.backlog", stream=STREAM_ACTIVITY_CMD.name)
+    await broker.publish(msg, f"rg.internal.cmd.activity.backlog.{user_info.user_id}", stream=STREAM_ACTIVITY_CMD.name)
