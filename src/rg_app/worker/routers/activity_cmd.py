@@ -87,7 +87,7 @@ async def backlog_handle(
                 polyline=polyline_str,
             )
             awaitables.append(req_upsert.request(activity_model, timeout=30))
-    asyncio.gather(*awaitables)
+    await asyncio.gather(*awaitables)
     await nats_msg.ack()
 
 
