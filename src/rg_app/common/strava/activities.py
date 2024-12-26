@@ -15,8 +15,8 @@ _activity_list_adapter = TypeAdapter(Sequence[ActivityPartial])
 
 async def get_activity_range(
     client: AsyncClient,
-    perioid_from: datetime,
-    perioid_to: datetime,
+    period_from: datetime,
+    period_to: datetime,
     page: int,
     auth: StravaAuth,
     rlm: RateLimitManager,
@@ -26,8 +26,8 @@ async def get_activity_range(
     page: 0-based
     """
     query = {
-        "before": int(perioid_to.timestamp()),
-        "after": int(perioid_from.timestamp()),
+        "before": int(period_to.timestamp()),
+        "after": int(period_from.timestamp()),
         "page": page + 1,
         "per_page": MAX_PAGE_SIZE,
     }

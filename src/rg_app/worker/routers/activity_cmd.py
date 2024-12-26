@@ -52,7 +52,7 @@ async def backlog_handle(
     page = 0
     awaitables = []
     while has_more:
-        activity_range = await get_activity_range(http_client, body.perioid_from, body.perioid_to, page, auth, rlm)
+        activity_range = await get_activity_range(http_client, body.period_from, body.period_to, page, auth, rlm)
         has_more = activity_range.has_more
         page += 1
         if page >= 20:

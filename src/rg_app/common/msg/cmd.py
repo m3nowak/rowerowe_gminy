@@ -14,6 +14,6 @@ class StdActivityCmd(BaseModel):
 
 class BacklogActivityCmd(BaseModel):
     owner_id: int
-    perioid_from: datetime
-    perioid_to: datetime
+    period_from: datetime
+    period_to: datetime
     type: Literal["backlog"] = Field("backlog")

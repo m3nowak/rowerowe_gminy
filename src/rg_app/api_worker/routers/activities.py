@@ -12,16 +12,16 @@ router = fastapi.APIRouter(tags=["activities"], prefix="/activities")
 
 
 class BacklogRequest(BaseModel):
-    perioid_from: datetime
-    perioid_to: datetime
+    period_from: datetime
+    period_to: datetime
 
 
 @router.post("/backlog")
 async def backlog(backlog_request: BacklogRequest, user_info: UserInfoRequired, broker: NatsBroker):
     msg = BacklogActivityCmd(
         owner_id=user_info.user_id,
-        perioid_from=backlog_request.perioid_from,
-        perioid_to=backlog_request.perioid_to,
+        period_from=backlog_request.period_from,
+        period_to=backlog_request.period_to,
         type="backlog",
     )
     await broker.publish(msg, f"rg.internal.cmd.activity.backlog.{user_info.user_id}", stream=STREAM_ACTIVITY_CMD.name)
