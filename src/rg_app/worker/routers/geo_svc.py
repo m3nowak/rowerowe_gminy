@@ -1,7 +1,6 @@
 import asyncio
 import json
 
-import aiofiles
 import duckdb
 import geojson
 import polyline
@@ -72,11 +71,16 @@ async def _check(
     conn: duckdb.DuckDBPyConnection,
     tracer: trace.Tracer,
 ) -> GeoSvcCheckResponse:
-    with tracer.start_as_current_span("geo_svc_check") as span:
-        result = await _aio_run_query(conn, json.dumps(line_string))
-        span.set_attribute("result_count", len(result))
-        span.set_status(trace.Status(trace.StatusCode.OK))
-
+    span = trace.get_current_span()
+    try:
+        with tracer.start_as_current_span("geo_svc_check") as span:
+            result = await _aio_run_query(conn, json.dumps(line_string))
+            span.set_attribute("result_count", len(result))
+            span.set_status(trace.Status(trace.StatusCode.OK))
+    except duckdb.Error as e:
+        span.record_exception(e)
+        span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+        result = []
     resp = GeoSvcCheckResponse(items=[GeoSvcCheckResponseItem(id=row[0], type=row[1]) for row in result])  # type: ignore
     trace.get_current_span().set_status(trace.Status(trace.StatusCode.OK))
 
