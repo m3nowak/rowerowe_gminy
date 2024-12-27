@@ -111,6 +111,7 @@ stop-compose = {cmd = "docker compose down"}
 rg-api = "rg_app.api:__main__.main"
 rg-api-worker = "rg_app.api_worker:__main__.main"
 rg-db = "rg_app.db:__main__.main"
+rg-geo = "rg_app.geo:__main__.main"
 rg-nats-defs = "rg_app.nats_defs:__main__.main"
 rg-scrapping = "rg_app.scrapping:__main__.main"
 rg-wha = "rg_app.wha:__main__.main"
