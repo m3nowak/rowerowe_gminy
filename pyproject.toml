@@ -47,12 +47,13 @@ geobase = [
 otel = [
   "opentelemetry-distro>=0.48b0",
   "opentelemetry-exporter-otlp>=1.27.0",
+  "opentelemetry-sdk>=1.28.2",
 ]
 scrap = ["pandas>=2.2.2", "lxml>=5.3.0", "beautifulsoup4>=4.12.3"]
 wha = [
   "litestar[standard, opentelemetry]>=2.11.0",
   "nats-py[nkeys]>=2.9.0",
-  "rowerowe_gminy[db-common]",
+  "rowerowe_gminy[db-common, otel]",
 ]
 wkk = [
   "polyline>=2.0.2",
@@ -65,7 +66,7 @@ worker = [
   "faststream[nats, otel]>=0.5.25",
   "click>=8.1.7",
   "nats-py[nkeys,aiohttp]>=2.9.0",
-  "rowerowe_gminy[geobase]",
+  "rowerowe_gminy[geobase, otel]",
 ]
 
 [build-system]
