@@ -21,15 +21,10 @@ version = "0.0.1"
 [project.optional-dependencies]
 all = ["rowerowe_gminy[scrap,geo]"]
 api = [
-  "litestar[jwt,sqlalchemy]>=2.11.0",
-  "uvicorn>=0.30.6",
-  "httpx>=0.27.2",
-  "rowerowe_gminy[db-common]",
-]
-api-worker = [
+  "pyjwt>=2.9.0",
   "fastapi[standard]>=0.115.6",
   "faststream[nats,otel]>=0.5.33",
-  "nats-py[aiohttp,nkeys]>=2.9.0",
+  "rowerowe_gminy[db-common]",
 ]
 db = ["alembic>=1.13.2", "rowerowe_gminy[db-common]"]
 db-common = ["SQLAlchemy>=2.0.34", "psycopg[binary]>=3.2.1"]
