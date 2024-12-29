@@ -24,7 +24,7 @@ api = [
   "pyjwt>=2.9.0",
   "fastapi[standard]>=0.115.6",
   "faststream[nats,otel]>=0.5.33",
-  "rowerowe_gminy[db-common]",
+  "rowerowe_gminy[db-common, otel]",
 ]
 db = ["alembic>=1.13.2", "rowerowe_gminy[db-common]"]
 db-common = ["SQLAlchemy>=2.0.34", "psycopg[binary]>=3.2.1"]
