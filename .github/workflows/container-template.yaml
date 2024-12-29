@@ -24,16 +24,20 @@ jobs:
         run: echo "date=$(date +%F)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.12'
+          python-version: "3.12"
       - name: install python + pdm
         run: |
           curl -sSL https://pdm-project.org/install-pdm.py | python3 -
           pdm self add pdm-version
-      - name: pdm install + version
-        id: pdm_install
+      - name: version
+        id: version
         run: |
-          pdm install
           echo "version=$(pdm version)" >> "$GITHUB_OUTPUT"
+      # - name: pdm install + version
+      #   id: pdm_install
+      #   run: |
+      #     pdm install
+      #     echo "version=$(pdm version)" >> "$GITHUB_OUTPUT"
       - name: Install Podman
         run: |
           sudo apt-get update
