@@ -29,15 +29,15 @@ jobs:
         run: |
           curl -sSL https://pdm-project.org/install-pdm.py | python3 -
           pdm self add pdm-version
-      - name: version
-        id: version
-        run: |
-          echo "version=$(pdm version)" >> "$GITHUB_OUTPUT"
-      # - name: pdm install + version
-      #   id: pdm_install
+      # - name: version
+      #   id: version
       #   run: |
-      #     pdm install
       #     echo "version=$(pdm version)" >> "$GITHUB_OUTPUT"
+      - name: pdm install + version
+        id: pdm_install
+        run: |
+          pdm install
+          echo "version=$(pdm version)" >> "$GITHUB_OUTPUT"
       - name: Install Podman
         run: |
           sudo apt-get update
