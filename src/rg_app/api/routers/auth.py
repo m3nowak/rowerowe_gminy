@@ -4,10 +4,10 @@ import fastapi
 import jwt
 from httpx import HTTPStatusError
 
-from rg_app.api_worker.dependencies.config import Config
-from rg_app.api_worker.dependencies.db import AsyncSession
-from rg_app.api_worker.dependencies.strava import StravaTokenManager
-from rg_app.api_worker.models.auth import LoginRequest, LoginResponse
+from rg_app.api.dependencies.config import Config
+from rg_app.api.dependencies.db import AsyncSession
+from rg_app.api.dependencies.strava import StravaTokenManager
+from rg_app.api.models.auth import LoginRequest, LoginResponse
 from rg_app.db import User
 
 router = fastapi.APIRouter(tags=["auth"])

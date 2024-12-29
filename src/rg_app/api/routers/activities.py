@@ -3,8 +3,8 @@ from typing import Literal
 
 import fastapi
 
-from rg_app.api_worker.dependencies.auth import UserInfoRequired
-from rg_app.api_worker.dependencies.broker import NatsBroker
+from rg_app.api.dependencies.auth import UserInfoRequired
+from rg_app.api.dependencies.broker import NatsBroker
 from rg_app.common.msg.base_model import BaseModel
 from rg_app.common.msg.cmd import BacklogActivityCmd
 from rg_app.nats_defs.local import STREAM_ACTIVITY_CMD

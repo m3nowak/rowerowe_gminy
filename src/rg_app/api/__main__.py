@@ -4,9 +4,6 @@ import uvicorn
 from .app import app_factory
 from .config import Config
 
-ENV_KEY = "API_WORKER_CFG"
-DEFAULT_CFG = "config.api_worker.yaml"
-
 
 @click.command()
 @click.option("-c", "--config", "cfg_path", type=str, help="Path to configuration file", required=True)
@@ -19,7 +16,7 @@ def start(cfg_path: str, debug: bool):
         config = get_debug_config()
 
         uvicorn.run(
-            "rg_app.api_worker.app_debug:debug_app_factory",
+            "rg_app.api.app_debug:debug_app_factory",
             host=config.http.host,
             port=config.http.port,
             reload=True,

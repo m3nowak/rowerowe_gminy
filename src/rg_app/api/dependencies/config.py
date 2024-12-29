@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, Request
 
-from rg_app.api_worker.config import Config as _Config
+from rg_app.api.config import Config as _Config
 
 _CONFIG_KEY = "config"
 

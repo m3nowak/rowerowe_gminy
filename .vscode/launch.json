@@ -16,13 +16,13 @@
             ]
         },
         {
-            "name": "API WORKER",
+            "name": "API",
             "type": "debugpy",
             "request": "launch",
-            "module": "rg_app.api_worker",
+            "module": "rg_app.api",
             "args": [
                 "-c",
-                "config.api_worker.yaml",
+                "config.api.yaml",
                 "-d"
             ]
         },
@@ -34,18 +34,6 @@
             "args": [
                 "-c",
                 "config.wkk.yaml",
-            ]
-        },
-        {
-            "name": "API",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "rg_app.api",
-            "args": [
-                "run",
-                "-c",
-                "config.api.yaml",
-                "--debug"
             ]
         },
         {

@@ -3,8 +3,8 @@ import os
 from .app import app_factory
 from .config import Config
 
-ENV_KEY = "API_WORKER_CFG"
-DEFAULT_CFG = "config.api_worker.yaml"
+ENV_KEY = "API_CFG"
+DEFAULT_CFG = "config.api.yaml"
 
 
 def get_debug_config():

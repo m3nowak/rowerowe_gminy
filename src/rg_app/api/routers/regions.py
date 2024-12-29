@@ -4,8 +4,8 @@ import fastapi
 from sqlalchemy import cast, func, select
 from sqlalchemy.dialects.postgresql import JSONB
 
-from rg_app.api_worker.dependencies.auth import UserInfoRequired
-from rg_app.api_worker.dependencies.db import AsyncSession
+from rg_app.api.dependencies.auth import UserInfoRequired
+from rg_app.api.dependencies.db import AsyncSession
 from rg_app.common.msg.base_model import BaseModel
 from rg_app.db import Activity, Region
 

@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Request
 from faststream.nats import NatsBroker as _NatsBroker
 
-from rg_app.api_worker.dependencies.config import get_config_from_app
+from rg_app.api.dependencies.config import get_config_from_app
 
 _BROKER_KEY = "broker"
 

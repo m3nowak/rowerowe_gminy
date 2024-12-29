@@ -5,7 +5,7 @@ import jwt
 from fastapi import Depends, Request
 from fastapi.exceptions import HTTPException
 
-from rg_app.api_worker.dependencies.config import Config
+from rg_app.api.dependencies.config import Config
 
 
 @dataclass
