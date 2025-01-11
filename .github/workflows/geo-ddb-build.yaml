@@ -1,16 +1,16 @@
 name: Create Geographical Data in DuckDB
 on: workflow_dispatch
 
+env:
+  GEO_DIR: geo-data
+  DDB_NAME: geo-data.db
+  RCLONE_CFG_NAME: rg
+  S3_BUCKET: rowerowegminy.pl
+  GML_PAK_URL: https://eu2.contabostorage.com/9556be5764414357ae3184b95da10055:rowerowegminy.pl/gml_pak.zip
+  ARTIFACT_NAME: geo-ddb
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      GEO_DIR: geo-data
-      DDB_NAME: geo-data.db
-      RCLONE_CFG_NAME: rg
-      S3_BUCKET: rowerowegminy.pl
-      GML_PAK_URL: https://eu2.contabostorage.com/9556be5764414357ae3184b95da10055:rowerowegminy.pl/gml_pak.zip
-      ARTIFACT_NAME: geo-ddb
     steps:
       - uses: actions/checkout@v4
       - name: install Rclone
@@ -60,5 +60,5 @@ jobs:
           echo ${{ secrets.RCLONE_CONFIG }} > rclone.conf
       
       - name: Upload DuckDB database to S3
-        run: rclone --config rclone.conf copy $DDB_NAME $RCLONE_CFG_NAME:$S3_BUCKET/$DDB_NAME
+        run: rclone --config rclone.conf copy $DDB_NAME $RCLONE_CFG_NAME:$S3_BUCKET
 
