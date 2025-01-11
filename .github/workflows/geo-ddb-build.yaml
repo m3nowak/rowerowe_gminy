@@ -16,13 +16,6 @@ jobs:
       - name: install Rclone
         run: |
           curl https://rclone.org/install.sh | sudo bash
-      - name: Set up S3cmd cli tool
-        uses: s3-actions/s3cmd@v1.9.0
-        with:
-          provider: aws # default is linode
-          region: 'eu-central-1'
-          access_key: ${{ secrets.S3_ACCESS_KEY }}
-          secret_key: ${{ secrets.S3_SECRET_KEY }}
       - name: Download GML files
         run: |
           wget $GML_PAK_URL
