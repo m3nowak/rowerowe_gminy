@@ -24,7 +24,7 @@ def cmd_mktopo(duckdb_path: str, tolerance: float):
     click.echo(f"Saved to {filename}")
 
 
-@cli.command(help="Create DuckDB database", name="create-db")
+@cli.command(help="Create DuckDB database", name="create-ddb")
 @click.option("--json_dir", help="Path to the directory with JSON files", default=None)
 @click.option("--db_path", help="Path to the DuckDB database file", default=None)
 def cmd_create_db(json_dir: str | None = None, db_path: str | None = None):
@@ -33,7 +33,7 @@ def cmd_create_db(json_dir: str | None = None, db_path: str | None = None):
 
 
 @cli.command(help="Preprocess GML file to geojson", name="preprocess")
-@click.option("--path", help="Path to the GML file", required=True)
+@click.option("--path", help="Path to the dir with GML files", required=True)
 def cmd_preprocess(path: str):
     print(f"Preprocessing {path}")
     preprocess_gml(path)

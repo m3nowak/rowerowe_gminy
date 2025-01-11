@@ -2,38 +2,20 @@
 # It is not intended for manual editing.
 
 [metadata]
-groups = ["default", "api", "api-worker", "db", "db-common", "dev", "geo", "geobase", "otel", "scrap", "wha", "wkk", "worker"]
+groups = ["default", "api", "db", "db-common", "dev", "geo", "geobase", "otel", "scrap", "wha", "wkk", "worker"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:958eb838472ec0f3f76b8c88ea846d82fb29359543b82f67a2fbd13eaa443e40"
+content_hash = "sha256:815c20d4046fe0d7236f7f695ddada172b5db4b7465dbe40ac6a397e7e6ad27e"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
-
-[[package]]
-name = "advanced-alchemy"
-version = "0.24.0"
-requires_python = ">=3.8"
-summary = "Ready-to-go SQLAlchemy concoctions."
-groups = ["api"]
-dependencies = [
-    "alembic>=1.12.0",
-    "eval-type-backport; python_version <= \"3.9\"",
-    "greenlet; sys_platform == \"darwin\"",
-    "sqlalchemy>=2.0.20",
-    "typing-extensions>=4.0.0",
-]
-files = [
-    {file = "advanced_alchemy-0.24.0-py3-none-any.whl", hash = "sha256:ab63a4e2b7bebfe4830f293c2449078eff6d871d9e19fa7c78092e5ef4cc6e2a"},
-    {file = "advanced_alchemy-0.24.0.tar.gz", hash = "sha256:851ef827da74971abd364f6709fc239a8c7583064068aa48336131f29bdd8dff"},
-]
 
 [[package]]
 name = "aiofiles"
 version = "24.1.0"
 requires_python = ">=3.8"
 summary = "File support for asyncio."
-groups = ["geobase"]
+groups = ["geo", "geobase", "worker"]
 files = [
     {file = "aiofiles-24.1.0-py3-none-any.whl", hash = "sha256:b4ec55f4195e3eb5d7abd1bf7e061763e864dd4954231fb8539a0ef8bb8260e5"},
     {file = "aiofiles-24.1.0.tar.gz", hash = "sha256:22a075c9e5a3810f0c2e48f3008c94d68c65d763b9b03857924c99e57355166c"},
@@ -44,7 +26,7 @@ name = "aiohappyeyeballs"
 version = "2.4.3"
 requires_python = ">=3.8"
 summary = "Happy Eyeballs for asyncio"
-groups = ["default", "api-worker", "worker"]
+groups = ["default", "worker"]
 files = [
     {file = "aiohappyeyeballs-2.4.3-py3-none-any.whl", hash = "sha256:8a7a83727b2756f394ab2895ea0765a0a8c475e3c71e98d43d76f22b4b435572"},
     {file = "aiohappyeyeballs-2.4.3.tar.gz", hash = "sha256:75cf88a15106a5002a8eb1dab212525c00d1f4c0fa96e551c9fbe6f09a621586"},
@@ -55,7 +37,7 @@ name = "aiohttp"
 version = "3.11.7"
 requires_python = ">=3.9"
 summary = "Async http client/server framework (asyncio)"
-groups = ["default", "api-worker", "worker"]
+groups = ["default", "worker"]
 dependencies = [
     "aiohappyeyeballs>=2.3.0",
     "aiosignal>=1.1.2",
@@ -105,7 +87,7 @@ name = "aiosignal"
 version = "1.3.1"
 requires_python = ">=3.7"
 summary = "aiosignal: a list of registered asynchronous callbacks"
-groups = ["default", "api-worker", "worker"]
+groups = ["default", "worker"]
 dependencies = [
     "frozenlist>=1.1.0",
 ]
@@ -119,7 +101,7 @@ name = "alembic"
 version = "1.14.0"
 requires_python = ">=3.8"
 summary = "A database migration tool for SQLAlchemy."
-groups = ["api", "db"]
+groups = ["db"]
 dependencies = [
     "Mako",
     "SQLAlchemy>=1.3.0",
@@ -137,7 +119,7 @@ name = "annotated-types"
 version = "0.7.0"
 requires_python = ">=3.8"
 summary = "Reusable constraint types to use with typing.Annotated"
-groups = ["default", "api-worker", "worker"]
+groups = ["default", "api", "worker"]
 dependencies = [
     "typing-extensions>=4.0.0; python_version < \"3.9\"",
 ]
@@ -151,7 +133,7 @@ name = "anyio"
 version = "4.6.2.post1"
 requires_python = ">=3.9"
 summary = "High level compatibility layer for multiple asynchronous event loop implementations"
-groups = ["default", "api", "api-worker", "wha", "worker"]
+groups = ["default", "api", "wha", "worker"]
 dependencies = [
     "exceptiongroup>=1.0.2; python_version < \"3.11\"",
     "idna>=2.8",
@@ -182,7 +164,7 @@ name = "attrs"
 version = "24.2.0"
 requires_python = ">=3.7"
 summary = "Classes Without Boilerplate"
-groups = ["default", "api-worker", "worker"]
+groups = ["default", "worker"]
 dependencies = [
     "importlib-metadata; python_version < \"3.8\"",
 ]
@@ -210,7 +192,7 @@ name = "certifi"
 version = "2024.8.30"
 requires_python = ">=3.6"
 summary = "Python package for providing Mozilla's CA Bundle."
-groups = ["default", "api", "api-worker", "geo", "otel", "wha"]
+groups = ["default", "api", "geo", "otel", "wha", "worker"]
 files = [
     {file = "certifi-2024.8.30-py3-none-any.whl", hash = "sha256:922820b53db7a7257ffbda3f597266d435245903d80737e34f8a45ff3e3230d8"},
     {file = "certifi-2024.8.30.tar.gz", hash = "sha256:bec941d2aa8195e248a60b31ff9f0558284cf01a52591ceda73ea9afffd69fd9"},
@@ -221,7 +203,7 @@ name = "cffi"
 version = "1.17.1"
 requires_python = ">=3.8"
 summary = "Foreign Function Interface for Python calling C code."
-groups = ["default", "api", "api-worker", "wha", "worker"]
+groups = ["default", "wha", "worker"]
 dependencies = [
     "pycparser",
 ]
@@ -256,7 +238,7 @@ name = "charset-normalizer"
 version = "3.4.0"
 requires_python = ">=3.7.0"
 summary = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 files = [
     {file = "charset_normalizer-3.4.0-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:0713f3adb9d03d49d365b70b84775d0a0d18e4ab08d12bc46baa6132ba78aaf6"},
     {file = "charset_normalizer-3.4.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:de7376c29d95d6719048c194a9cf1a1b0393fbe8488a22008610b0361d834ecf"},
@@ -297,7 +279,7 @@ name = "click"
 version = "8.1.7"
 requires_python = ">=3.7"
 summary = "Composable command line interface toolkit"
-groups = ["default", "api", "api-worker", "wha", "worker"]
+groups = ["default", "api", "wha", "worker"]
 dependencies = [
     "colorama; platform_system == \"Windows\"",
     "importlib-metadata; python_version < \"3.8\"",
@@ -312,42 +294,11 @@ name = "colorama"
 version = "0.4.6"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 summary = "Cross-platform colored terminal text."
-groups = ["default", "api", "api-worker", "wha", "worker"]
+groups = ["default", "api", "wha", "worker"]
 marker = "platform_system == \"Windows\" or sys_platform == \"win32\""
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
-]
-
-[[package]]
-name = "cryptography"
-version = "43.0.3"
-requires_python = ">=3.7"
-summary = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
-groups = ["api"]
-dependencies = [
-    "cffi>=1.12; platform_python_implementation != \"PyPy\"",
-]
-files = [
-    {file = "cryptography-43.0.3-cp37-abi3-macosx_10_9_universal2.whl", hash = "sha256:bf7a1932ac4176486eab36a19ed4c0492da5d97123f1406cf15e41b05e787d2e"},
-    {file = "cryptography-43.0.3-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:63efa177ff54aec6e1c0aefaa1a241232dcd37413835a9b674b6e3f0ae2bfd3e"},
-    {file = "cryptography-43.0.3-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7e1ce50266f4f70bf41a2c6dc4358afadae90e2a1e5342d3c08883df1675374f"},
-    {file = "cryptography-43.0.3-cp37-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:443c4a81bb10daed9a8f334365fe52542771f25aedaf889fd323a853ce7377d6"},
-    {file = "cryptography-43.0.3-cp37-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:74f57f24754fe349223792466a709f8e0c093205ff0dca557af51072ff47ab18"},
-    {file = "cryptography-43.0.3-cp37-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:9762ea51a8fc2a88b70cf2995e5675b38d93bf36bd67d91721c309df184f49bd"},
-    {file = "cryptography-43.0.3-cp37-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:81ef806b1fef6b06dcebad789f988d3b37ccaee225695cf3e07648eee0fc6b73"},
-    {file = "cryptography-43.0.3-cp37-abi3-win32.whl", hash = "sha256:cbeb489927bd7af4aa98d4b261af9a5bc025bd87f0e3547e11584be9e9427be2"},
-    {file = "cryptography-43.0.3-cp37-abi3-win_amd64.whl", hash = "sha256:f46304d6f0c6ab8e52770addfa2fc41e6629495548862279641972b6215451cd"},
-    {file = "cryptography-43.0.3-cp39-abi3-macosx_10_9_universal2.whl", hash = "sha256:8ac43ae87929a5982f5948ceda07001ee5e83227fd69cf55b109144938d96984"},
-    {file = "cryptography-43.0.3-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:846da004a5804145a5f441b8530b4bf35afbf7da70f82409f151695b127213d5"},
-    {file = "cryptography-43.0.3-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0f996e7268af62598f2fc1204afa98a3b5712313a55c4c9d434aef49cadc91d4"},
-    {file = "cryptography-43.0.3-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:f7b178f11ed3664fd0e995a47ed2b5ff0a12d893e41dd0494f406d1cf555cab7"},
-    {file = "cryptography-43.0.3-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:c2e6fc39c4ab499049df3bdf567f768a723a5e8464816e8f009f121a5a9f4405"},
-    {file = "cryptography-43.0.3-cp39-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:e1be4655c7ef6e1bbe6b5d0403526601323420bcf414598955968c9ef3eb7d16"},
-    {file = "cryptography-43.0.3-cp39-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:df6b6c6d742395dd77a23ea3728ab62f98379eff8fb61be2744d4679ab678f73"},
-    {file = "cryptography-43.0.3-cp39-abi3-win32.whl", hash = "sha256:d56e96520b1020449bbace2b78b603442e7e378a9b3bd68de65c782db1507995"},
-    {file = "cryptography-43.0.3-cp39-abi3-win_amd64.whl", hash = "sha256:0c580952eef9bf68c4747774cde7ec1d85a6e61de97281f2dba83c7d2c806362"},
-    {file = "cryptography-43.0.3.tar.gz", hash = "sha256:315b9001266a492a6ff443b61238f956b214dbec9910a081ba5b6646a055a805"},
 ]
 
 [[package]]
@@ -366,7 +317,7 @@ name = "deprecated"
 version = "1.2.15"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
 summary = "Python @deprecated decorator to deprecate old python classes, functions or methods."
-groups = ["api-worker", "otel", "wha", "worker"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "wrapt<2,>=1.10",
 ]
@@ -380,7 +331,7 @@ name = "dnspython"
 version = "2.7.0"
 requires_python = ">=3.9"
 summary = "DNS toolkit"
-groups = ["api-worker"]
+groups = ["api"]
 files = [
     {file = "dnspython-2.7.0-py3-none-any.whl", hash = "sha256:b4c34b7d10b51bcc3a5071e7b8dee77939f1e878477eeecc965e9835f63c6c86"},
     {file = "dnspython-2.7.0.tar.gz", hash = "sha256:ce9c432eda0dc91cf618a5cedf1a4e142651196bbcd2c80e89ed5a907e5cfaf1"},
@@ -391,7 +342,7 @@ name = "duckdb"
 version = "1.1.3"
 requires_python = ">=3.7.0"
 summary = "DuckDB in-process database"
-groups = ["geobase"]
+groups = ["geo", "geobase", "worker"]
 files = [
     {file = "duckdb-1.1.3-cp312-cp312-macosx_12_0_arm64.whl", hash = "sha256:a433ae9e72c5f397c44abdaa3c781d94f94f4065bcbf99ecd39433058c64cb38"},
     {file = "duckdb-1.1.3-cp312-cp312-macosx_12_0_universal2.whl", hash = "sha256:d08308e0a46c748d9c30f1d67ee1143e9c5ea3fbcccc27a47e115b19e7e78aa9"},
@@ -426,7 +377,7 @@ name = "email-validator"
 version = "2.2.0"
 requires_python = ">=3.8"
 summary = "A robust email address syntax and deliverability validation library."
-groups = ["api-worker"]
+groups = ["api"]
 dependencies = [
     "dnspython>=2.0.0",
     "idna>=2.0.0",
@@ -441,7 +392,7 @@ name = "faker"
 version = "33.0.0"
 requires_python = ">=3.8"
 summary = "Faker is a Python package that generates fake data for you."
-groups = ["api", "wha"]
+groups = ["wha"]
 dependencies = [
     "python-dateutil>=2.4",
     "typing-extensions",
@@ -456,7 +407,7 @@ name = "fast-depends"
 version = "2.4.12"
 requires_python = ">=3.8"
 summary = "FastDepends - extracted and cleared from HTTP domain logic FastAPI Dependency Injection System. Async and sync are both supported."
-groups = ["api-worker", "worker"]
+groups = ["api", "worker"]
 dependencies = [
     "anyio<5.0.0,>=3.0.0",
     "pydantic!=1.8,!=1.8.1,<3.0.0,>=1.7.4",
@@ -497,7 +448,7 @@ name = "fastapi"
 version = "0.115.6"
 requires_python = ">=3.8"
 summary = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
-groups = ["api-worker"]
+groups = ["api"]
 dependencies = [
     "pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4",
     "starlette<0.42.0,>=0.40.0",
@@ -513,7 +464,7 @@ name = "fastapi-cli"
 version = "0.0.6"
 requires_python = ">=3.8"
 summary = "Run and manage FastAPI apps from the command line with FastAPI CLI. 🚀"
-groups = ["api-worker"]
+groups = ["api"]
 dependencies = [
     "rich-toolkit>=0.11.1",
     "typer>=0.12.3",
@@ -530,7 +481,7 @@ version = "0.0.6"
 extras = ["standard"]
 requires_python = ">=3.8"
 summary = "Run and manage FastAPI apps from the command line with FastAPI CLI. 🚀"
-groups = ["api-worker"]
+groups = ["api"]
 dependencies = [
     "fastapi-cli==0.0.6",
     "uvicorn[standard]>=0.15.0",
@@ -546,7 +497,7 @@ version = "0.115.6"
 extras = ["standard"]
 requires_python = ">=3.8"
 summary = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
-groups = ["api-worker"]
+groups = ["api"]
 dependencies = [
     "email-validator>=2.0.0",
     "fastapi-cli[standard]>=0.0.5",
@@ -566,7 +517,7 @@ name = "faststream"
 version = "0.5.33"
 requires_python = ">=3.8"
 summary = "FastStream: the simplest way to work with a messaging queues"
-groups = ["api-worker", "worker"]
+groups = ["api", "worker"]
 dependencies = [
     "anyio<5,>=3.7.1",
     "fast-depends<3.0.0,>=2.4.0b0",
@@ -583,7 +534,7 @@ version = "0.5.33"
 extras = ["nats", "otel"]
 requires_python = ">=3.8"
 summary = "FastStream: the simplest way to work with a messaging queues"
-groups = ["api-worker", "worker"]
+groups = ["api", "worker"]
 dependencies = [
     "faststream==0.5.33",
     "nats-py<=3.0.0,>=2.7.0",
@@ -599,7 +550,7 @@ name = "frozenlist"
 version = "1.5.0"
 requires_python = ">=3.8"
 summary = "A list-like structure which implements collections.abc.MutableSequence"
-groups = ["default", "api-worker", "worker"]
+groups = ["default", "worker"]
 files = [
     {file = "frozenlist-1.5.0-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:31115ba75889723431aa9a4e77d5f398f5cf976eea3bdf61749731f62d4a4a21"},
     {file = "frozenlist-1.5.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:7437601c4d89d070eac8323f121fcf25f88674627505334654fd027b091db09d"},
@@ -640,7 +591,7 @@ name = "geojson"
 version = "3.1.0"
 requires_python = ">=3.7"
 summary = "Python bindings and utilities for GeoJSON"
-groups = ["geobase"]
+groups = ["geo", "geobase", "worker"]
 files = [
     {file = "geojson-3.1.0-py3-none-any.whl", hash = "sha256:68a9771827237adb8c0c71f8527509c8f5bef61733aa434cefc9c9d4f0ebe8f3"},
     {file = "geojson-3.1.0.tar.gz", hash = "sha256:58a7fa40727ea058efc28b0e9ff0099eadf6d0965e04690830208d3ef571adac"},
@@ -670,7 +621,7 @@ name = "googleapis-common-protos"
 version = "1.66.0"
 requires_python = ">=3.7"
 summary = "Common protobufs used in Google APIs"
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "protobuf!=3.20.0,!=3.20.1,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5,<6.0.0.dev0,>=3.20.2",
 ]
@@ -684,8 +635,8 @@ name = "greenlet"
 version = "3.1.1"
 requires_python = ">=3.7"
 summary = "Lightweight in-process concurrent programming"
-groups = ["api", "db", "db-common"]
-marker = "(platform_machine == \"win32\" or platform_machine == \"WIN32\" or platform_machine == \"AMD64\" or platform_machine == \"amd64\" or platform_machine == \"x86_64\" or platform_machine == \"ppc64le\" or platform_machine == \"aarch64\") and python_version < \"3.13\" or sys_platform == \"darwin\""
+groups = ["api", "db", "db-common", "wha", "wkk"]
+marker = "(platform_machine == \"win32\" or platform_machine == \"WIN32\" or platform_machine == \"AMD64\" or platform_machine == \"amd64\" or platform_machine == \"x86_64\" or platform_machine == \"ppc64le\" or platform_machine == \"aarch64\") and python_version < \"3.13\""
 files = [
     {file = "greenlet-3.1.1-cp312-cp312-macosx_11_0_universal2.whl", hash = "sha256:4afe7ea89de619adc868e087b4d2359282058479d7cfb94970adf4b55284574d"},
     {file = "greenlet-3.1.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f406b22b7c9a9b4f8aa9d2ab13d6ae0ac3e85c9a809bd590ad53fed2bf70dc79"},
@@ -720,7 +671,7 @@ name = "grpcio"
 version = "1.68.0"
 requires_python = ">=3.8"
 summary = "HTTP/2-based RPC framework"
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 files = [
     {file = "grpcio-1.68.0-cp312-cp312-linux_armv7l.whl", hash = "sha256:8af6137cc4ae8e421690d276e7627cfc726d4293f6607acf9ea7260bd8fc3d7d"},
     {file = "grpcio-1.68.0-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:4028b8e9a3bff6f377698587d642e24bd221810c06579a18420a17688e421af7"},
@@ -748,7 +699,7 @@ name = "h11"
 version = "0.14.0"
 requires_python = ">=3.7"
 summary = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
-groups = ["default", "api", "api-worker", "wha"]
+groups = ["default", "api", "wha"]
 dependencies = [
     "typing-extensions; python_version < \"3.8\"",
 ]
@@ -762,7 +713,7 @@ name = "httpcore"
 version = "1.0.7"
 requires_python = ">=3.8"
 summary = "A minimal low-level HTTP client."
-groups = ["default", "api", "api-worker", "wha"]
+groups = ["default", "api", "wha"]
 dependencies = [
     "certifi",
     "h11<0.15,>=0.13",
@@ -777,7 +728,7 @@ name = "httptools"
 version = "0.6.4"
 requires_python = ">=3.8.0"
 summary = "A collection of framework independent HTTP protocol utils."
-groups = ["api-worker", "wha"]
+groups = ["api", "wha"]
 files = [
     {file = "httptools-0.6.4-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:df017d6c780287d5c80601dafa31f17bddb170232d85c066604d8558683711a2"},
     {file = "httptools-0.6.4-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:85071a1e8c2d051b507161f6c3e26155b5c790e4e28d7f236422dbacc2a9cc44"},
@@ -801,7 +752,7 @@ name = "httpx"
 version = "0.27.2"
 requires_python = ">=3.8"
 summary = "The next generation HTTP client."
-groups = ["default", "api", "api-worker", "wha"]
+groups = ["default", "api", "wha"]
 dependencies = [
     "anyio",
     "certifi",
@@ -819,7 +770,7 @@ name = "idna"
 version = "3.10"
 requires_python = ">=3.6"
 summary = "Internationalized Domain Names in Applications (IDNA)"
-groups = ["default", "api", "api-worker", "otel", "wha", "worker"]
+groups = ["default", "api", "otel", "wha", "worker"]
 files = [
     {file = "idna-3.10-py3-none-any.whl", hash = "sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3"},
     {file = "idna-3.10.tar.gz", hash = "sha256:12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9"},
@@ -830,7 +781,7 @@ name = "importlib-metadata"
 version = "8.5.0"
 requires_python = ">=3.8"
 summary = "Read metadata from Python packages"
-groups = ["api-worker", "otel", "wha", "worker"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "typing-extensions>=3.6.4; python_version < \"3.8\"",
     "zipp>=3.20",
@@ -845,7 +796,7 @@ name = "jinja2"
 version = "3.1.4"
 requires_python = ">=3.7"
 summary = "A very fast and expressive template engine."
-groups = ["api-worker", "wha"]
+groups = ["api", "wha"]
 dependencies = [
     "MarkupSafe>=2.0",
 ]
@@ -872,7 +823,7 @@ name = "litestar"
 version = "2.13.0"
 requires_python = "<4.0,>=3.8"
 summary = "Litestar - A production-ready, highly performant, extensible ASGI API Framework"
-groups = ["api", "wha"]
+groups = ["wha"]
 dependencies = [
     "anyio>=3",
     "click",
@@ -899,31 +850,13 @@ name = "litestar-htmx"
 version = "0.3.0"
 requires_python = "<4.0,>=3.8"
 summary = "HTMX Integration for Litesstar"
-groups = ["api", "wha"]
+groups = ["wha"]
 dependencies = [
     "litestar",
 ]
 files = [
     {file = "litestar_htmx-0.3.0-py3-none-any.whl", hash = "sha256:3cca09314470483c867faffa77b642fba5f39531e105d6ba9c74866a1e8ab0d8"},
     {file = "litestar_htmx-0.3.0.tar.gz", hash = "sha256:dbdf7b64d7ad71ac5ca1af5663d5fba78a2742bb1056b9c49a82d0e23827b6a7"},
-]
-
-[[package]]
-name = "litestar"
-version = "2.13.0"
-extras = ["jwt", "sqlalchemy"]
-requires_python = "<4.0,>=3.8"
-summary = "Litestar - A production-ready, highly performant, extensible ASGI API Framework"
-groups = ["api"]
-dependencies = [
-    "advanced-alchemy>=0.2.2",
-    "cryptography",
-    "litestar==2.13.0",
-    "pyjwt>=2.9.0",
-]
-files = [
-    {file = "litestar-2.13.0-py3-none-any.whl", hash = "sha256:a40765644115639015a54e8cd7e7bdbe597a58d3f2d8f6d21afe9f343df43916"},
-    {file = "litestar-2.13.0.tar.gz", hash = "sha256:51a3ab60b7bc8de2c126f3ad907c2ba6f9d22194bdf1be9df52253e57ed80f0e"},
 ]
 
 [[package]]
@@ -996,7 +929,7 @@ name = "mako"
 version = "1.3.6"
 requires_python = ">=3.8"
 summary = "A super-fast templating language that borrows the best ideas from the existing templating languages."
-groups = ["api", "db"]
+groups = ["db"]
 dependencies = [
     "MarkupSafe>=0.9.2",
 ]
@@ -1010,7 +943,7 @@ name = "markdown-it-py"
 version = "3.0.0"
 requires_python = ">=3.8"
 summary = "Python port of markdown-it. Markdown parsing, done right!"
-groups = ["api", "api-worker", "wha"]
+groups = ["api", "wha"]
 dependencies = [
     "mdurl~=0.1",
 ]
@@ -1024,7 +957,7 @@ name = "markupsafe"
 version = "3.0.2"
 requires_python = ">=3.9"
 summary = "Safely add untrusted strings to HTML/XML markup."
-groups = ["api", "api-worker", "db", "wha"]
+groups = ["api", "db", "wha"]
 files = [
     {file = "MarkupSafe-3.0.2-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:9778bd8ab0a994ebf6f84c2b949e65736d5575320a17ae8984a77fab08db94cf"},
     {file = "MarkupSafe-3.0.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:846ade7b71e3536c4e56b386c2a47adf5741d2d8b94ec9dc3e92e5e1ee1e2225"},
@@ -1064,7 +997,7 @@ name = "mdurl"
 version = "0.1.2"
 requires_python = ">=3.7"
 summary = "Markdown URL utilities"
-groups = ["api", "api-worker", "wha"]
+groups = ["api", "wha"]
 files = [
     {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
     {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
@@ -1075,7 +1008,7 @@ name = "msgspec"
 version = "0.18.6"
 requires_python = ">=3.8"
 summary = "A fast serialization and validation library, with builtin support for JSON, MessagePack, YAML, and TOML."
-groups = ["default", "api", "wha"]
+groups = ["default", "wha"]
 files = [
     {file = "msgspec-0.18.6-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:d86f5071fe33e19500920333c11e2267a31942d18fed4d9de5bc2fbab267d28c"},
     {file = "msgspec-0.18.6-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:ce13981bfa06f5eb126a3a5a38b1976bddb49a36e4f46d8e6edecf33ccf11df1"},
@@ -1092,7 +1025,7 @@ name = "multidict"
 version = "6.1.0"
 requires_python = ">=3.8"
 summary = "multidict implementation"
-groups = ["default", "api", "api-worker", "wha", "worker"]
+groups = ["default", "wha", "worker"]
 dependencies = [
     "typing-extensions>=4.1.0; python_version < \"3.11\"",
 ]
@@ -1136,7 +1069,7 @@ name = "nats-py"
 version = "2.9.0"
 requires_python = ">=3.7"
 summary = "NATS client for Python"
-groups = ["default", "api-worker", "wha", "worker"]
+groups = ["default", "api", "wha", "worker"]
 files = [
     {file = "nats_py-2.9.0.tar.gz", hash = "sha256:01886eb9e0a87f0ec630652cf1fae65d2a8556378a609bc6cc07d2ea60c8d0dd"},
 ]
@@ -1147,7 +1080,7 @@ version = "2.9.0"
 extras = ["aiohttp", "nkeys"]
 requires_python = ">=3.7"
 summary = "NATS client for Python"
-groups = ["api-worker", "worker"]
+groups = ["worker"]
 dependencies = [
     "aiohttp",
     "nats-py==2.9.0",
@@ -1177,7 +1110,7 @@ name = "nkeys"
 version = "0.2.1"
 requires_python = ">=3.6"
 summary = "A public-key signature system based on Ed25519 for the NATS ecosystem."
-groups = ["default", "api-worker", "wha", "worker"]
+groups = ["default", "wha", "worker"]
 dependencies = [
     "pynacl",
 ]
@@ -1241,7 +1174,7 @@ name = "opentelemetry-api"
 version = "1.28.2"
 requires_python = ">=3.8"
 summary = "OpenTelemetry Python API"
-groups = ["api-worker", "otel", "wha", "worker"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "deprecated>=1.2.6",
     "importlib-metadata<=8.5.0,>=6.0",
@@ -1256,7 +1189,7 @@ name = "opentelemetry-distro"
 version = "0.49b2"
 requires_python = ">=3.8"
 summary = "OpenTelemetry Python Distro"
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "opentelemetry-api~=1.12",
     "opentelemetry-instrumentation==0.49b2",
@@ -1272,7 +1205,7 @@ name = "opentelemetry-exporter-otlp"
 version = "1.28.2"
 requires_python = ">=3.8"
 summary = "OpenTelemetry Collector Exporters"
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "opentelemetry-exporter-otlp-proto-grpc==1.28.2",
     "opentelemetry-exporter-otlp-proto-http==1.28.2",
@@ -1287,7 +1220,7 @@ name = "opentelemetry-exporter-otlp-proto-common"
 version = "1.28.2"
 requires_python = ">=3.8"
 summary = "OpenTelemetry Protobuf encoding"
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "opentelemetry-proto==1.28.2",
 ]
@@ -1301,7 +1234,7 @@ name = "opentelemetry-exporter-otlp-proto-grpc"
 version = "1.28.2"
 requires_python = ">=3.8"
 summary = "OpenTelemetry Collector Protobuf over gRPC Exporter"
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "deprecated>=1.2.6",
     "googleapis-common-protos~=1.52",
@@ -1321,7 +1254,7 @@ name = "opentelemetry-exporter-otlp-proto-http"
 version = "1.28.2"
 requires_python = ">=3.8"
 summary = "OpenTelemetry Collector Protobuf over HTTP Exporter"
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "deprecated>=1.2.6",
     "googleapis-common-protos~=1.52",
@@ -1341,7 +1274,7 @@ name = "opentelemetry-instrumentation"
 version = "0.49b2"
 requires_python = ">=3.8"
 summary = "Instrumentation Tools & Auto Instrumentation for OpenTelemetry Python"
-groups = ["otel", "wha"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "opentelemetry-api~=1.4",
     "opentelemetry-semantic-conventions==0.49b2",
@@ -1376,7 +1309,7 @@ name = "opentelemetry-proto"
 version = "1.28.2"
 requires_python = ">=3.8"
 summary = "OpenTelemetry Python Proto"
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "protobuf<6.0,>=5.0",
 ]
@@ -1390,7 +1323,7 @@ name = "opentelemetry-sdk"
 version = "1.28.2"
 requires_python = ">=3.8"
 summary = "OpenTelemetry Python SDK"
-groups = ["api-worker", "otel", "worker"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "opentelemetry-api==1.28.2",
     "opentelemetry-semantic-conventions==0.49b2",
@@ -1406,7 +1339,7 @@ name = "opentelemetry-semantic-conventions"
 version = "0.49b2"
 requires_python = ">=3.8"
 summary = "OpenTelemetry Semantic Conventions"
-groups = ["api-worker", "otel", "wha", "worker"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "deprecated>=1.2.6",
     "opentelemetry-api==1.28.2",
@@ -1432,7 +1365,7 @@ name = "packaging"
 version = "24.2"
 requires_python = ">=3.8"
 summary = "Core utilities for Python packages"
-groups = ["geo", "otel", "wha"]
+groups = ["api", "geo", "otel", "wha", "worker"]
 files = [
     {file = "packaging-24.2-py3-none-any.whl", hash = "sha256:09abb1bccd265c01f4a3aa3f7a7db064b36514d2cba19a2f694fe6150451a759"},
     {file = "packaging-24.2.tar.gz", hash = "sha256:c228a6dc5e932d346bc5739379109d49e8853dd8223571c7c5b55260edc0b97f"},
@@ -1481,7 +1414,7 @@ name = "polyfactory"
 version = "2.18.0"
 requires_python = "<4.0,>=3.8"
 summary = "Mock data generation factories"
-groups = ["api", "wha"]
+groups = ["wha"]
 dependencies = [
     "faker",
     "typing-extensions>=4.6.0",
@@ -1496,7 +1429,7 @@ name = "polyline"
 version = "2.0.2"
 requires_python = ">=3.7"
 summary = "A Python implementation of Google's Encoded Polyline Algorithm Format."
-groups = ["geobase", "wkk"]
+groups = ["geo", "geobase", "wkk", "worker"]
 files = [
     {file = "polyline-2.0.2-py3-none-any.whl", hash = "sha256:389655c893bdabf2863c6aaa49490cf83dcdcec86ae715f67044ee98be57bef5"},
     {file = "polyline-2.0.2.tar.gz", hash = "sha256:10541e759c5fd51f746ee304e9af94744089a4055b6257b293b3afd1df64e369"},
@@ -1507,7 +1440,7 @@ name = "propcache"
 version = "0.2.0"
 requires_python = ">=3.8"
 summary = "Accelerated property cache"
-groups = ["default", "api-worker", "worker"]
+groups = ["default", "worker"]
 files = [
     {file = "propcache-0.2.0-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:2ee7606193fb267be4b2e3b32714f2d58cad27217638db98a60f9efb5efeccc2"},
     {file = "propcache-0.2.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:91ee8fc02ca52e24bcb77b234f22afc03288e1dafbb1f88fe24db308910c4ac7"},
@@ -1550,7 +1483,7 @@ name = "protobuf"
 version = "5.28.3"
 requires_python = ">=3.8"
 summary = ""
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 files = [
     {file = "protobuf-5.28.3-cp310-abi3-win32.whl", hash = "sha256:0c4eec6f987338617072592b97943fdbe30d019c56126493111cf24344c1cc24"},
     {file = "protobuf-5.28.3-cp310-abi3-win_amd64.whl", hash = "sha256:91fba8f445723fcf400fdbe9ca796b19d3b1242cd873907979b9ed71e4afe868"},
@@ -1566,7 +1499,7 @@ name = "psycopg"
 version = "3.2.3"
 requires_python = ">=3.8"
 summary = "PostgreSQL database adapter for Python"
-groups = ["db-common"]
+groups = ["api", "db", "db-common", "wha", "wkk"]
 dependencies = [
     "backports-zoneinfo>=0.2.0; python_version < \"3.9\"",
     "typing-extensions>=4.6; python_version < \"3.13\"",
@@ -1582,7 +1515,7 @@ name = "psycopg-binary"
 version = "3.2.3"
 requires_python = ">=3.8"
 summary = "PostgreSQL database adapter for Python -- C optimisation distribution"
-groups = ["db-common"]
+groups = ["api", "db", "db-common", "wha", "wkk"]
 marker = "implementation_name != \"pypy\""
 files = [
     {file = "psycopg_binary-3.2.3-cp312-cp312-macosx_12_0_x86_64.whl", hash = "sha256:48f8ca6ee8939bab760225b2ab82934d54330eec10afe4394a92d3f2a0c37dd6"},
@@ -1615,7 +1548,7 @@ version = "3.2.3"
 extras = ["binary"]
 requires_python = ">=3.8"
 summary = "PostgreSQL database adapter for Python"
-groups = ["db-common"]
+groups = ["api", "db", "db-common", "wha", "wkk"]
 dependencies = [
     "psycopg-binary==3.2.3; implementation_name != \"pypy\"",
     "psycopg==3.2.3",
@@ -1630,7 +1563,7 @@ name = "pycparser"
 version = "2.22"
 requires_python = ">=3.8"
 summary = "C parser in Python"
-groups = ["default", "api", "api-worker", "wha", "worker"]
+groups = ["default", "wha", "worker"]
 files = [
     {file = "pycparser-2.22-py3-none-any.whl", hash = "sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc"},
     {file = "pycparser-2.22.tar.gz", hash = "sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6"},
@@ -1641,7 +1574,7 @@ name = "pydantic"
 version = "2.10.1"
 requires_python = ">=3.8"
 summary = "Data validation using Python type hints"
-groups = ["default", "api-worker", "worker"]
+groups = ["default", "api", "worker"]
 dependencies = [
     "annotated-types>=0.6.0",
     "pydantic-core==2.27.1",
@@ -1657,7 +1590,7 @@ name = "pydantic-core"
 version = "2.27.1"
 requires_python = ">=3.8"
 summary = "Core functionality for Pydantic validation and serialization"
-groups = ["default", "api-worker", "worker"]
+groups = ["default", "api", "worker"]
 dependencies = [
     "typing-extensions!=4.7.0,>=4.6.0",
 ]
@@ -1698,7 +1631,7 @@ name = "pygments"
 version = "2.18.0"
 requires_python = ">=3.8"
 summary = "Pygments is a syntax highlighting package written in Python."
-groups = ["api", "api-worker", "wha"]
+groups = ["api", "wha"]
 files = [
     {file = "pygments-2.18.0-py3-none-any.whl", hash = "sha256:b8e6aca0523f3ab76fee51799c488e38782ac06eafcf95e7ba832985c8e7b13a"},
     {file = "pygments-2.18.0.tar.gz", hash = "sha256:786ff802f32e91311bff3889f6e9a86e81505fe99f2735bb6d60ae0c5004f199"},
@@ -1720,7 +1653,7 @@ name = "pynacl"
 version = "1.5.0"
 requires_python = ">=3.6"
 summary = "Python binding to the Networking and Cryptography (NaCl) library"
-groups = ["default", "api-worker", "wha", "worker"]
+groups = ["default", "wha", "worker"]
 dependencies = [
     "cffi>=1.4.1",
 ]
@@ -1809,7 +1742,7 @@ name = "python-dateutil"
 version = "2.9.0.post0"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 summary = "Extensions to the standard Python datetime module"
-groups = ["api", "geo", "scrap", "wha"]
+groups = ["geo", "scrap", "wha"]
 dependencies = [
     "six>=1.5",
 ]
@@ -1823,7 +1756,7 @@ name = "python-dotenv"
 version = "1.0.1"
 requires_python = ">=3.8"
 summary = "Read key-value pairs from a .env file and set them as environment variables"
-groups = ["api-worker", "wha"]
+groups = ["api", "wha"]
 files = [
     {file = "python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca"},
     {file = "python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a"},
@@ -1834,7 +1767,7 @@ name = "python-multipart"
 version = "0.0.19"
 requires_python = ">=3.8"
 summary = "A streaming multipart parser for Python"
-groups = ["api-worker"]
+groups = ["api"]
 files = [
     {file = "python_multipart-0.0.19-py3-none-any.whl", hash = "sha256:f8d5b0b9c618575bf9df01c684ded1d94a338839bdd8223838afacfb4bb2082d"},
     {file = "python_multipart-0.0.19.tar.gz", hash = "sha256:905502ef39050557b7a6af411f454bc19526529ca46ae6831508438890ce12cc"},
@@ -1855,7 +1788,7 @@ name = "pyyaml"
 version = "6.0.2"
 requires_python = ">=3.8"
 summary = "YAML parser and emitter for Python"
-groups = ["default", "api", "api-worker", "wha"]
+groups = ["default", "api", "wha"]
 files = [
     {file = "PyYAML-6.0.2-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:c70c95198c015b85feafc136515252a261a84561b7b1d51e3384e0655ddf25ab"},
     {file = "PyYAML-6.0.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:ce826d6ef20b1bc864f0a68340c8b3287705cae2f8b4b1d932177dcc76721725"},
@@ -1883,7 +1816,7 @@ name = "requests"
 version = "2.32.3"
 requires_python = ">=3.8"
 summary = "Python HTTP for Humans."
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 dependencies = [
     "certifi>=2017.4.17",
     "charset-normalizer<4,>=2",
@@ -1900,7 +1833,7 @@ name = "rich"
 version = "13.9.4"
 requires_python = ">=3.8.0"
 summary = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
-groups = ["api", "api-worker", "wha"]
+groups = ["api", "wha"]
 dependencies = [
     "markdown-it-py>=2.2.0",
     "pygments<3.0.0,>=2.13.0",
@@ -1916,7 +1849,7 @@ name = "rich-click"
 version = "1.8.4"
 requires_python = ">=3.7"
 summary = "Format click help output nicely with rich"
-groups = ["api", "wha"]
+groups = ["wha"]
 dependencies = [
     "click>=7",
     "importlib-metadata; python_version < \"3.8\"",
@@ -1933,7 +1866,7 @@ name = "rich-toolkit"
 version = "0.12.0"
 requires_python = ">=3.8"
 summary = "Rich toolkit for building command-line applications"
-groups = ["api-worker"]
+groups = ["api"]
 dependencies = [
     "click>=8.1.7",
     "rich>=13.7.1",
@@ -2001,7 +1934,7 @@ name = "shellingham"
 version = "1.5.4"
 requires_python = ">=3.7"
 summary = "Tool to Detect Surrounding Shell"
-groups = ["api-worker"]
+groups = ["api"]
 files = [
     {file = "shellingham-1.5.4-py2.py3-none-any.whl", hash = "sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686"},
     {file = "shellingham-1.5.4.tar.gz", hash = "sha256:8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de"},
@@ -2012,7 +1945,7 @@ name = "six"
 version = "1.16.0"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 summary = "Python 2 and 3 compatibility utilities"
-groups = ["api", "geo", "scrap", "wha"]
+groups = ["geo", "scrap", "wha"]
 files = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
@@ -2023,7 +1956,7 @@ name = "sniffio"
 version = "1.3.1"
 requires_python = ">=3.7"
 summary = "Sniff out which async library your code is running under"
-groups = ["default", "api", "api-worker", "wha", "worker"]
+groups = ["default", "api", "wha", "worker"]
 files = [
     {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
     {file = "sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc"},
@@ -2045,7 +1978,7 @@ name = "sqlalchemy"
 version = "2.0.36"
 requires_python = ">=3.7"
 summary = "Database Abstraction Library"
-groups = ["api", "db", "db-common"]
+groups = ["api", "db", "db-common", "wha", "wkk"]
 dependencies = [
     "greenlet!=0.4.17; (platform_machine == \"win32\" or platform_machine == \"WIN32\" or platform_machine == \"AMD64\" or platform_machine == \"amd64\" or platform_machine == \"x86_64\" or platform_machine == \"ppc64le\" or platform_machine == \"aarch64\") and python_version < \"3.13\"",
     "importlib-metadata; python_version < \"3.8\"",
@@ -2077,7 +2010,7 @@ name = "starlette"
 version = "0.41.3"
 requires_python = ">=3.8"
 summary = "The little ASGI library that shines."
-groups = ["api-worker"]
+groups = ["api"]
 dependencies = [
     "anyio<5,>=3.4.0",
     "typing-extensions>=3.10.0; python_version < \"3.10\"",
@@ -2108,7 +2041,7 @@ name = "typer"
 version = "0.15.1"
 requires_python = ">=3.7"
 summary = "Typer, build great CLIs. Easy to code. Based on Python type hints."
-groups = ["api-worker"]
+groups = ["api"]
 dependencies = [
     "click>=8.0.0",
     "rich>=10.11.0",
@@ -2166,7 +2099,7 @@ name = "typing-extensions"
 version = "4.12.2"
 requires_python = ">=3.8"
 summary = "Backported and Experimental Type Hints for Python 3.8+"
-groups = ["default", "api", "api-worker", "db", "db-common", "dev", "otel", "wha", "wkk", "worker"]
+groups = ["default", "api", "db", "db-common", "dev", "otel", "wha", "wkk", "worker"]
 files = [
     {file = "typing_extensions-4.12.2-py3-none-any.whl", hash = "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d"},
     {file = "typing_extensions-4.12.2.tar.gz", hash = "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8"},
@@ -2177,7 +2110,7 @@ name = "tzdata"
 version = "2024.2"
 requires_python = ">=2"
 summary = "Provider of IANA time zone data"
-groups = ["db-common", "geo", "scrap"]
+groups = ["api", "db", "db-common", "geo", "scrap", "wha", "wkk"]
 files = [
     {file = "tzdata-2024.2-py2.py3-none-any.whl", hash = "sha256:a48093786cdcde33cad18c2555e8532f34422074448fbc874186f0abd79565cd"},
     {file = "tzdata-2024.2.tar.gz", hash = "sha256:7d85cc416e9382e69095b7bdf4afd9e3880418a2413feec7069d533d6b4e31cc"},
@@ -2188,7 +2121,7 @@ name = "urllib3"
 version = "2.2.3"
 requires_python = ">=3.8"
 summary = "HTTP library with thread-safe connection pooling, file post, and more."
-groups = ["otel"]
+groups = ["api", "otel", "wha", "worker"]
 files = [
     {file = "urllib3-2.2.3-py3-none-any.whl", hash = "sha256:ca899ca043dcb1bafa3e262d73aa25c465bfb49e0bd9dd5d59f1d0acba2f8fac"},
     {file = "urllib3-2.2.3.tar.gz", hash = "sha256:e7d814a81dad81e6caf2ec9fdedb284ecc9c73076b62654547cc64ccdcae26e9"},
@@ -2199,7 +2132,7 @@ name = "uvicorn"
 version = "0.32.1"
 requires_python = ">=3.8"
 summary = "The lightning-fast ASGI server."
-groups = ["api", "api-worker", "wha"]
+groups = ["api", "wha"]
 dependencies = [
     "click>=7.0",
     "h11>=0.8",
@@ -2216,7 +2149,7 @@ version = "0.32.1"
 extras = ["standard"]
 requires_python = ">=3.8"
 summary = "The lightning-fast ASGI server."
-groups = ["api-worker", "wha"]
+groups = ["api", "wha"]
 dependencies = [
     "colorama>=0.4; sys_platform == \"win32\"",
     "httptools>=0.6.3",
@@ -2237,7 +2170,7 @@ name = "uvloop"
 version = "0.21.0"
 requires_python = ">=3.8.0"
 summary = "Fast implementation of asyncio event loop on top of libuv"
-groups = ["api-worker", "wha"]
+groups = ["api", "wha"]
 marker = "sys_platform != \"win32\""
 files = [
     {file = "uvloop-0.21.0-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:359ec2c888397b9e592a889c4d72ba3d6befba8b2bb01743f72fffbde663b59c"},
@@ -2260,7 +2193,7 @@ name = "watchfiles"
 version = "0.24.0"
 requires_python = ">=3.8"
 summary = "Simple, modern and high performance file watching and code reload in python."
-groups = ["api-worker", "wha"]
+groups = ["api", "wha"]
 dependencies = [
     "anyio>=3.0.0",
 ]
@@ -2298,7 +2231,7 @@ name = "websockets"
 version = "14.1"
 requires_python = ">=3.9"
 summary = "An implementation of the WebSocket Protocol (RFC 6455 & 7692)"
-groups = ["api-worker", "wha"]
+groups = ["api", "wha"]
 files = [
     {file = "websockets-14.1-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:ed907449fe5e021933e46a3e65d651f641975a768d0649fee59f10c2985529ed"},
     {file = "websockets-14.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:87e31011b5c14a33b29f17eb48932e63e1dcd3fa31d72209848652310d3d1f0d"},
@@ -2331,7 +2264,7 @@ name = "wrapt"
 version = "1.17.0"
 requires_python = ">=3.8"
 summary = "Module for decorators, wrappers and monkey patching."
-groups = ["api-worker", "otel", "wha", "worker"]
+groups = ["api", "otel", "wha", "worker"]
 files = [
     {file = "wrapt-1.17.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:89fc28495896097622c3fc238915c79365dd0ede02f9a82ce436b13bd0ab7569"},
     {file = "wrapt-1.17.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:875d240fdbdbe9e11f9831901fb8719da0bd4e6131f83aa9f69b96d18fae7504"},
@@ -2369,7 +2302,7 @@ name = "yarl"
 version = "1.18.0"
 requires_python = ">=3.9"
 summary = "Yet another URL library"
-groups = ["default", "api-worker", "worker"]
+groups = ["default", "worker"]
 dependencies = [
     "idna>=2.0",
     "multidict>=4.0",
@@ -2417,7 +2350,7 @@ name = "zipp"
 version = "3.21.0"
 requires_python = ">=3.9"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
-groups = ["api-worker", "otel", "wha", "worker"]
+groups = ["api", "otel", "wha", "worker"]
 files = [
     {file = "zipp-3.21.0-py3-none-any.whl", hash = "sha256:ac1bbe05fd2991f160ebce24ffbac5f6d11d83dc90891255885223d42b3cd931"},
     {file = "zipp-3.21.0.tar.gz", hash = "sha256:2c9958f6430a2040341a52eb608ed6dd93ef4392e02ffe219417c1b28b5dd1f4"},

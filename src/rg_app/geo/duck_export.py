@@ -11,12 +11,9 @@ def pg_export(pg_connstr: str, db_path: str | None = None) -> None:
     )
 
     conn.execute("""
-                DELETE FROM pdb.region
-                """)
-
-    conn.execute("""
                 INSERT INTO pdb.region
-                SELECT ID as id, type as type, ancestors as ancestors FROM borders
+                (SELECT ID as id, type as type, ancestors as ancestors FROM borders)
+                ON CONFLICT (id) DO UPDATE SET type = EXCLUDED.type, ancestors = EXCLUDED.ancestors
                 """)
 
 

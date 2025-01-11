@@ -1,0 +1,44 @@
+name: Create Geographical Data in DuckDB
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GEO_DIR: geo-data
+      DDB_NAME: geo-data.db
+      GML_PAK_URL: https://eu2.contabostorage.com/9556be5764414357ae3184b95da10055:rowerowegminy.pl/gml_pak.zip
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download GML files
+        run: |
+          wget $GML_PAK_URL
+
+      - name: Unzip GML files
+        run: |
+          mkdir -p $GEO_DIR
+          unzip gml_pak.zip -d $GEO_DIR
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+
+      - name: Install dependencies
+        run: pdm install
+      
+      - name: Create GeoJSON files
+        run: pdm run rg-geo --path $GEO_DIR
+      
+      - name: Create DuckDB database
+        run: pdm run rg-geo create-ddb --json_dir $GEO_DIR --db_path $DDB_NAME
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: geo-ddb
+          path: $DDB_NAME
+
+      
+
