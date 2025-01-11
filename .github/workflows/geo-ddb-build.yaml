@@ -42,7 +42,9 @@ jobs:
         run: pdm install
       
       - name: Create GeoJSON files
-        run: pdm run rg-geo preprocess --path $GEO_DIR
+        run: |
+          # Find all .gml files and process each
+          find $GEO_DIR -name "*.gml" -type f -print0 | xargs -0 -I {} pdm run rg-geo preprocess --path {}
       
       - name: Create DuckDB database
         run: pdm run rg-geo create-ddb --json_dir $GEO_DIR --db_path $DDB_NAME
@@ -58,6 +60,4 @@ jobs:
       
       - name: Upload DuckDB database to S3
         run: rclone --config rclone.conf copy $DDB_NAME $S3_BUCKET:$DDB_NAME
-
-      
 
