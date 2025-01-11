@@ -56,8 +56,11 @@ jobs:
           path: ${{ env.DDB_NAME }}       # From env
       
       - name: Create Rclone config
-        run:
-          echo ${{ secrets.RCLONE_S3_CFG }} > rclone.conf
+        run: |
+          cat << 'EOF' > rclone.conf
+          ${{ secrets.RCLONE_S3_CFG }}
+          EOF
+          
       
       - name: Upload DuckDB database to S3
         run: rclone --config rclone.conf copy $DDB_NAME $RCLONE_CFG_NAME:$S3_BUCKET
