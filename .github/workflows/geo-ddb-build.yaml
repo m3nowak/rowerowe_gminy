@@ -10,6 +10,7 @@ jobs:
       RCLONE_CFG_NAME: rg
       S3_BUCKET: rowerowegminy.pl
       GML_PAK_URL: https://eu2.contabostorage.com/9556be5764414357ae3184b95da10055:rowerowegminy.pl/gml_pak.zip
+      ARTIFACT_NAME: geo-ddb
     steps:
       - uses: actions/checkout@v4
       - name: install Rclone
@@ -51,8 +52,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: geo-ddb
-          path: $DDB_NAME
+          name: ${{ env.ARTIFACT_NAME }}  # From env
+          path: ${{ env.DDB_NAME }}       # From env
       
       - name: Create Rclone config
         run:
