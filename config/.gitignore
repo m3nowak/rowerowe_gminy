@@ -1,1 +1,5 @@
-*.yaml
+# Ignore all directories
+*/
+
+# But don't ignore the examples directory
+!examples/

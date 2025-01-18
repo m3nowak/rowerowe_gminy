@@ -4,7 +4,7 @@ from .app import app_factory
 from .config import Config
 
 ENV_KEY = "API_CFG"
-DEFAULT_CFG = "config.api.yaml"
+DEFAULT_CFG = "config/debug/api.yaml"
 
 
 def get_debug_config():

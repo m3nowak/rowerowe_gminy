@@ -40,6 +40,19 @@ services:
       - ./compose/config.alloy:/etc/alloy/config.alloy
     command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy"]
 
+  app-api:
+    profiles:
+      - "app"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config/compose/api.yaml:/home/rgapp/config.yaml
+    command: ["--config", "/home/rgapp/config.yaml"]
+
 volumes:
   rg-nats:
     external: true
