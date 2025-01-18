@@ -122,7 +122,7 @@ def hadnle_update_factory(
             logging.info(f"Activity {activity_id} not found")
             await msg.ack()
             return
-        if da.type not in RIDE_LIKE_TYPES:
+        if da.sport_type not in RIDE_LIKE_TYPES:
             logging.info(f"Activity {activity_id} is not a Ride-Like activity")
             await msg.ack()
             return
