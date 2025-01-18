@@ -17,10 +17,10 @@ from nats.aio.msg import Msg
 from nats.js.kv import KeyValue
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from rg_app.common.internal.helpers import RIDE_LIKE_TYPES
 from rg_app.common.msg import BaseStruct
 from rg_app.common.strava import RateLimitManager, RLNatsConfig, StravaTokenManager
 from rg_app.common.strava.activities import get_activity, get_activity_streams
-from rg_app.common.strava.helpers import RIDE_LIKE_TYPES
 from rg_app.common.strava.models.activity import ActivityStreamSet
 
 from .config import Config
