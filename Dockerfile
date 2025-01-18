@@ -31,6 +31,11 @@ RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
 RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[wkk]
 
+FROM common as venv-worker
+RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
+COPY --from=build /app/dist/*.whl /app/whl/
+RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[worker]
+
 FROM common as runtime
 RUN groupadd -g 1000 rgapp
 RUN useradd -ms /bin/bash -u 1000 -g 1000 rgapp
@@ -56,3 +61,8 @@ FROM runtime as wkk
 COPY --chown=rgapp:rgapp --from=venv-wkk /home/rgapp/venv /home/rgapp/venv
 ENV PATH="/home/rgapp/venv/bin:$PATH"
 ENTRYPOINT [ "rg-wkk" ]
+
+FROM runtime as worker
+COPY --chown=rgapp:rgapp --from=venv-worker /home/rgapp/venv /home/rgapp/venv
+ENV PATH="/home/rgapp/venv/bin:$PATH"
+ENTRYPOINT [ "rg-worker" ]
