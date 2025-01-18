@@ -46,12 +46,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: api
+      target: all
     ports:
       - "8000:8000"
     volumes:
       - ./config/compose/api.yaml:/home/rgapp/config.yaml
-    command: ["--config", "/home/rgapp/config.yaml"]
+    command: ["rg-api", "--config", "/home/rgapp/config.yaml"]
   
   app-db:
     profiles:
@@ -59,8 +59,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: db
-    command: ["migrate", "postgresql+psycopg://postgres:postgres@db/postgres"]
+      target: all
+    command: ["rg-db", "migrate", "postgresql+psycopg://postgres:postgres@db/postgres"]
   
   app-nats-defs:
     profiles:
@@ -68,8 +68,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: nats-defs
-    command: ["nats://nats:4222", "local", "--dev"]
+      target: all
+    command: ["rg-nats-defs","nats://nats:4222", "local", "--dev"]
   
   app-worker:
     profiles:
@@ -77,10 +77,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: worker
+      target: all
     volumes:
       - ./config/compose/worker.yaml:/home/rgapp/config.yaml
-    command: ["--config", "/home/rgapp/config.yaml"]
+      - ./data/geo.db:/home/rgapp/geo.db
+    command: ["rg-worker","--config", "/home/rgapp/config.yaml"]
 
   app-wha:
     profiles:
@@ -88,10 +89,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: wha
+      target: all
     volumes:
       - ./config/compose/wha.yaml:/home/rgapp/config.yaml
-    command: ["--config", "/home/rgapp/config.yaml", "--no-register"]
+    command: ["rg-wha", "--config", "/home/rgapp/config.yaml", "--no-register"]
 
 volumes:
   rg-nats:

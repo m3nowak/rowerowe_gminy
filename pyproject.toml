@@ -19,7 +19,7 @@ requires-python = ">=3.12"
 version = "0.0.1"
 
 [project.optional-dependencies]
-all = ["rowerowe_gminy[scrap,geo]"]
+all = ["rowerowe_gminy[api,db,geo,scrap,wha,wkk,worker,nats-defs]"]
 api = [
   "pyjwt>=2.9.0",
   "fastapi[standard]>=0.115.6",

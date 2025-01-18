@@ -3,6 +3,8 @@ import typing as ty
 
 import click
 import nats
+import nats.aio
+import nats.aio.client
 
 from .cloud import setup as setup_cloud
 from .local import setup as setup_local
@@ -20,11 +22,25 @@ def setup(url: str, creds: str | None, domain: str, inbox: str, mode: ty.Literal
 
 
 async def a_setup(url: str, creds: str | None, domain: str, inbox: str, mode: ty.Literal["local", "cloud"], dev: bool):
-    nc = await nats.connect(url, user_credentials=creds, inbox_prefix=inbox)
-    if domain:
-        js = nc.jetstream(domain=domain)
-    else:
-        js = nc.jetstream()
+    has_connected = False
+    nc = None
+    js = None
+    for _ in range(10):
+        try:
+            nc = await nats.connect(url, user_credentials=creds, inbox_prefix=inbox)
+            if domain:
+                js = nc.jetstream(domain=domain)
+            else:
+                js = nc.jetstream()
+            await js.streams_info()
+            has_connected = True
+            break
+        except Exception:
+            await asyncio.sleep(5)
+    assert nc is not None
+    assert js is not None
+    if not has_connected:
+        raise ValueError("Could not connect to NATS")
     if mode == "local":
         await setup_local(js, dev=dev)
     elif mode == "cloud":
