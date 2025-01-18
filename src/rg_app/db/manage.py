@@ -1,8 +1,9 @@
 import os
+import time
 
 import alembic.command
 import alembic.config
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, create_engine, text
 
 import rg_app.db.models
 
@@ -21,6 +22,19 @@ def migrate(db_url: str):
     alembic_cfg = alembic.config.Config(os.path.join(pkg_path, "alembic.ini"))
     alembic_cfg.set_main_option("sqlalchemy.url", db_url)
     alembic_cfg.set_main_option("script_location", os.path.join(pkg_path, "alembic"))
+    engine = create_engine(db_url)
+    success = False
+    for _ in range(10):
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+                success = True
+            break
+        except Exception as e:
+            print(e)
+            time.sleep(5)
+    if not success:
+        raise Exception("Could not connect to the database")
     alembic.command.upgrade(alembic_cfg, "head")
 
 

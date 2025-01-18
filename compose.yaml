@@ -52,6 +52,46 @@ services:
     volumes:
       - ./config/compose/api.yaml:/home/rgapp/config.yaml
     command: ["--config", "/home/rgapp/config.yaml"]
+  
+  app-db:
+    profiles:
+      - "app"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: db
+    command: ["migrate", "postgresql+psycopg://postgres:postgres@db/postgres"]
+  
+  app-nats-defs:
+    profiles:
+      - "app"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nats-defs
+    command: ["nats://nats:4222", "local", "--dev"]
+  
+  app-worker:
+    profiles:
+      - "app"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    volumes:
+      - ./config/compose/worker.yaml:/home/rgapp/config.yaml
+    command: ["--config", "/home/rgapp/config.yaml"]
+
+  app-wha:
+    profiles:
+      - "app"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: wha
+    volumes:
+      - ./config/compose/wha.yaml:/home/rgapp/config.yaml
+    command: ["--config", "/home/rgapp/config.yaml", "--no-register"]
 
 volumes:
   rg-nats:

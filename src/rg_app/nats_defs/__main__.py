@@ -34,6 +34,7 @@ async def a_setup(url: str, creds: str | None, domain: str, inbox: str, mode: ty
     else:
         raise ValueError("Invalid mode")
     await nc.close()
+    click.echo("Setup complete")
 
 
 def main():

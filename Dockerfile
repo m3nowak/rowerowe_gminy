@@ -21,6 +21,11 @@ RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
 RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[db]
 
+FROM common as venv-nats-defs
+RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
+COPY --from=build /app/dist/*.whl /app/whl/
+RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[nats-defs]
+
 FROM common as venv-wha
 RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
@@ -51,6 +56,11 @@ FROM runtime as db
 COPY --chown=rgapp:rgapp --from=venv-db /home/rgapp/venv /home/rgapp/venv
 ENV PATH="/home/rgapp/venv/bin:$PATH"
 ENTRYPOINT [ "rg-db" ]
+
+FROM runtime as nats-defs
+COPY --chown=rgapp:rgapp --from=venv-nats-defs /home/rgapp/venv /home/rgapp/venv
+ENV PATH="/home/rgapp/venv/bin:$PATH"
+ENTRYPOINT [ "rg-nats-defs" ]
 
 FROM runtime as wha
 COPY --chown=rgapp:rgapp --from=venv-wha /home/rgapp/venv /home/rgapp/venv

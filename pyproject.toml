@@ -61,6 +61,9 @@ worker = [
   "faststream[nats, otel]>=0.5.25",
   "rowerowe_gminy[geobase, otel]",
 ]
+nats-defs = [
+    "rowerowe-gminy[worker]",
+]
 
 [build-system]
 build-backend = "pdm.backend"
