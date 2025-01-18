@@ -16,6 +16,11 @@ RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
 RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[api]
 
+FROM common as venv-db
+RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
+COPY --from=build /app/dist/*.whl /app/whl/
+RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[db]
+
 FROM common as venv-wha
 RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
@@ -35,7 +40,12 @@ WORKDIR /home/rgapp/app
 FROM runtime as api
 COPY --chown=rgapp:rgapp --from=venv-api /home/rgapp/venv /home/rgapp/venv
 ENV PATH="/home/rgapp/venv/bin:$PATH"
-ENTRYPOINT [ "rg-api", "run" ]
+ENTRYPOINT [ "rg-api" ]
+
+FROM runtime as db
+COPY --chown=rgapp:rgapp --from=venv-db /home/rgapp/venv /home/rgapp/venv
+ENV PATH="/home/rgapp/venv/bin:$PATH"
+ENTRYPOINT [ "rg-db" ]
 
 FROM runtime as wha
 COPY --chown=rgapp:rgapp --from=venv-wha /home/rgapp/venv /home/rgapp/venv
