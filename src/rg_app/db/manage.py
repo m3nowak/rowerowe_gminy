@@ -1,4 +1,5 @@
 import os
+import re
 import time
 
 import alembic.command
@@ -18,6 +19,9 @@ def generate_url(
 
 def migrate(db_url: str):
     pkg_path = os.path.dirname(rg_app.db.__file__)
+
+    if not re.match(r"^[a-z]+(\+[a-z]+)?://", db_url):
+        db_url = f"{_SCHEME}://{db_url}"
 
     alembic_cfg = alembic.config.Config(os.path.join(pkg_path, "alembic.ini"))
     alembic_cfg.set_main_option("sqlalchemy.url", db_url)
