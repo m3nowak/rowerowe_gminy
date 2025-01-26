@@ -87,7 +87,7 @@ jobs:
       - name: Upload DuckDB database to S3
         run: rclone --config rclone.conf copy $DDB_NAME $RCLONE_CFG_NAME:$S3_BUCKET
       - name: Upload Topology to S3
-        run: rclone --config rclone.conf copy topo.json $RCLONE_CFG_NAME:$S3_BUCKET
+        run: rclone --config rclone.conf copy topo.json.gz $RCLONE_CFG_NAME:$S3_BUCKET
   
   container:
     runs-on: ubuntu-latest
