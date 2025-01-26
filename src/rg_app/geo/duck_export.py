@@ -42,6 +42,7 @@ def pg_export(pg_url: str, db_path: str | None = None) -> None:
                 )
             )
             pg_conn.execute(insert_stmt)
+        pg_conn.commit()
 
 
 if __name__ == "__main__":
