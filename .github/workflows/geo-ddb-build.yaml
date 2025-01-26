@@ -50,6 +50,9 @@ jobs:
       - name: Generate topology
         run: pdm run rg-geo mktopo --db_path $DDB_NAME --output topo.json
 
+      - name: Topology gzip
+        run: gzip topo.json
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME_DB }} # From env
@@ -57,8 +60,8 @@ jobs:
       
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME_TOPO }} # From env
-          path: topo.json # From env
+          name: ${{ env.ARTIFACT_NAME_TOPO }}
+          path: topo.json.gz
 
   s3-pub:
     runs-on: ubuntu-latest
@@ -75,7 +78,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME_TOPO }}
-          path: topo.json
+          path: topo.json.gz
       - name: Create Rclone config
         run: |
           cat << 'EOF' > rclone.conf
