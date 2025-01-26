@@ -3,7 +3,9 @@ import duckdb
 
 def pg_export(pg_connstr: str, db_path: str | None = None) -> None:
     db_path = db_path or "data/geo.db"
-    conn = duckdb.connect(db_path)
+    conn = duckdb.connect(db_path, read_only=True)
+    conn.install_extension("postgres")
+    conn.install_extension("spatial")
     conn.load_extension("postgres")
     conn.load_extension("spatial")
     conn.execute(
