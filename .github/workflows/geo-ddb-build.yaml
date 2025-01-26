@@ -6,7 +6,9 @@ env:
   DDB_NAME: geo-data.db
   RCLONE_CFG_NAME: rg
   S3_BUCKET: rowerowegminy.pl
-  GML_PAK_URL: https://eu2.contabostorage.com/9556be5764414357ae3184b95da10055:rowerowegminy.pl/00_jednostki_administracyjne_gml.zip
+  #GML_PAK_URL: https://eu2.contabostorage.com/9556be5764414357ae3184b95da10055:rowerowegminy.pl/00_jednostki_administracyjne_gml.zip
+
+  GML_PAK_URL: https://opendata.geoportal.gov.pl/prg/granice/00_jednostki_administracyjne_gml.zip
   ARTIFACT_NAME_DB: geodb
   ARTIFACT_NAME_TOPO: topo
 
@@ -20,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Download GML files
         run: |
-          wget $GML_PAK_URL -o gml_pak.zip
+          wget $GML_PAK_URL -O gml_pak.zip
 
       - name: Unzip GML files
         run: |
