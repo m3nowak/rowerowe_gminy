@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from rg_app.common.config import (
     BaseConfigModel,
     BaseDbConfig,
@@ -28,3 +30,4 @@ class Config(BaseConfigModel):
     strava: BaseStravaConfig
     db: BaseDbConfig
     auth: AuthConfig
+    origins: list[str] = Field(default_factory=list)
