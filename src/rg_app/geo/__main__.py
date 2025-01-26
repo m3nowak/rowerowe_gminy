@@ -1,8 +1,12 @@
+import os
+
 import click
 
 from .duck_export import pg_export
 from .duck_source import create_db
 from .preprocessing import preprocess_gml
+
+ENV_PG_CONN = "PG_CONN"
 
 
 @click.group()
@@ -43,11 +47,16 @@ def cmd_preprocess(path: str):
 @click.option(
     "--pg_conn",
     help="Postgres connection string like 'dbname=postgres host=localhost user=postgres password=postgres'",
-    required=True,
+    default=None,
 )
 @click.option("--duckdb_path", help="Path to the DuckDB database file", default=None)
-def cmd_pg_export(pg_conn: str, duckdb_path: str | None = None):
+def cmd_pg_export(pg_conn: str | None, duckdb_path: str | None = None):
     print("Exporting DuckDB regions to Postgres")
+    pg_conn = pg_conn or os.getenv(ENV_PG_CONN)
+    if not pg_conn:
+        click.echo(f"Missing required argument --pg_conn or environment variable {ENV_PG_CONN}")
+        exit(1)
+
     pg_export(pg_conn, duckdb_path)
 
 
