@@ -24,6 +24,7 @@ async def after_startup(context: ContextRepo):
     else:
         db_path = config.duck_db_path
     conn = aes.enter_context(duckdb.connect(db_path, read_only=True))
+    conn.install_extension("spatial")
     conn.load_extension("spatial")
     context.set_global("duck_conn", conn)
 
