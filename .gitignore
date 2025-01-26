@@ -173,3 +173,4 @@ config.*.yaml
 #secrets
 secrets/
 
+geo.db

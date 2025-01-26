@@ -1,8 +1,9 @@
-FROM docker.io/library/almalinux:9-minimal AS common
+FROM docker.io/library/almalinux:9-minimal AS base
 LABEL org.opencontainers.image.source="https://github.com/m3nowak/rowerowe_gminy"
 LABEL org.opencontainers.image.description="Rowerowe Gminy"
 LABEL org.opencontainers.image.licenses=Apache-2.0
 
+FROM base AS common
 RUN ["microdnf", "install", "-y", "python3.12", "python3.12-pip"]
 
 FROM common AS build
@@ -85,3 +86,12 @@ FROM runtime as worker
 COPY --chown=rgapp:rgapp --from=venv-worker /home/rgapp/venv /home/rgapp/venv
 ENV PATH="/home/rgapp/venv/bin:$PATH"
 ENTRYPOINT [ "rg-worker" ]
+
+# DuckDB container
+# Requires DuckDB database to be ready
+FROM base as geodb
+# Local path to DuckDB database
+ARG dbpath=./geo.db
+COPY ${dbpath} /opt/geo.db
+ENV GEO_DB_PATH=/opt/geo.db
+RUN chown 1000:1000 /opt/geo.db

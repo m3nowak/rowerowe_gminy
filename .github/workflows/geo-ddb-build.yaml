@@ -7,15 +7,16 @@ env:
   RCLONE_CFG_NAME: rg
   S3_BUCKET: rowerowegminy.pl
   GML_PAK_URL: https://eu2.contabostorage.com/9556be5764414357ae3184b95da10055:rowerowegminy.pl/gml_pak.zip
-  ARTIFACT_NAME: geo-ddb
+  ARTIFACT_NAME: geodb
+
+  target_image: geodb
+  image_repo_base: ghcr.io/m3nowak/rowerowe_gminy
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: install Rclone
-        run: |
-          curl https://rclone.org/install.sh | sudo bash
       - name: Download GML files
         run: |
           wget $GML_PAK_URL
@@ -27,34 +28,74 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
 
       - name: Install dependencies
         run: pdm install
-      
+
       - name: Create GeoJSON files
         run: |
           # Find all .gml files and process each
           find $GEO_DIR -name "*.gml" -type f -print0 | xargs -0 -I {} pdm run rg-geo preprocess --path {}
-      
+
       - name: Create DuckDB database
         run: pdm run rg-geo create-ddb --json_dir $GEO_DIR --db_path $DDB_NAME
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}  # From env
-          path: ${{ env.DDB_NAME }}       # From env
-      
+          name: ${{ env.ARTIFACT_NAME }} # From env
+          path: ${{ env.DDB_NAME }} # From env
+
+  s3-pub:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: install Rclone
+        run: |
+          curl https://rclone.org/install.sh | sudo bash
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.DDB_NAME }}
       - name: Create Rclone config
         run: |
           cat << 'EOF' > rclone.conf
           ${{ secrets.RCLONE_S3_CFG }}
           EOF
-          
-      
       - name: Upload DuckDB database to S3
         run: rclone --config rclone.conf copy $DDB_NAME $RCLONE_CFG_NAME:$S3_BUCKET
-
+  
+  container:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.DDB_NAME }}
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+      - name: What day is it?
+        id: date
+        run: echo "date=$(date +%F)" >> "$GITHUB_OUTPUT"
+      - name: Build the Container image
+        run: >
+          podman build .
+          --tag ${{ env.image_repo_base }}/${{ env.target_image }}:${{ steps.date.outputs.date }}
+          --tag ${{ env.image_repo_base }}/${{ env.target_image }}:${{ github.run_number }}
+          --tag ${{ env.image_repo_base }}/${{ env.target_image }}:latest
+          --target ${{ env.target_image }}
+          --build-arg dbpath=${{ env.DDB_NAME }}
+      - name: Push the Container image to ghcr
+        run: |
+          podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.packages_token }}
+          podman push ${{ env.image_repo_base }}/${{ env.target_image }}:${{ steps.date.outputs.date }}
+          podman push ${{ env.image_repo_base }}/${{ env.target_image }}:${{ github.run_number }}
+          podman push ${{ env.image_repo_base }}/${{ env.target_image }}:latest
