@@ -16,6 +16,17 @@
             ]
         },
         {
+            "name": "PG-export",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rg_app.geo",
+            "args": [
+                "pg-export",
+                "--pg_conn",
+                "postgresql+psycopg://postgres:postgres@localhost/postgres"
+            ]
+        },
+        {
             "name": "API",
             "type": "debugpy",
             "request": "launch",

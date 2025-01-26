@@ -34,6 +34,7 @@ def cmd_mktopo(db_path: str, tolerance: float, output: str):
 def cmd_create_db(json_dir: str | None = None, db_path: str | None = None):
     print("Creating DuckDB database")
     create_db(json_dir, db_path)
+    click.echo("Database created")
 
 
 @cli.command(help="Preprocess GML file to geojson", name="preprocess")
@@ -41,6 +42,7 @@ def cmd_create_db(json_dir: str | None = None, db_path: str | None = None):
 def cmd_preprocess(path: str):
     print(f"Preprocessing {path}")
     preprocess_gml(path)
+    click.echo("Preprocessing complete")
 
 
 @cli.command(help="Perform DB migrations", name="pg-export")
@@ -51,13 +53,14 @@ def cmd_preprocess(path: str):
 )
 @click.option("--db_path", help="Path to the DuckDB database file", default=None)
 def cmd_pg_export(pg_conn: str | None, db_path: str | None = None):
-    print("Exporting DuckDB regions to Postgres")
+    click.echo("Exporting DuckDB regions to Postgres")
     pg_conn = pg_conn or os.getenv(ENV_PG_CONN)
     if not pg_conn:
-        click.echo(f"Missing required argument --pg_conn or environment variable {ENV_PG_CONN}")
+        click.echo(f"Missing required argument --pg_conn or environment variable {ENV_PG_CONN}", err=True)
         exit(1)
 
     pg_export(pg_conn, db_path)
+    click.echo("Export complete")
 
 
 def main():
