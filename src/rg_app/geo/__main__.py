@@ -49,15 +49,15 @@ def cmd_preprocess(path: str):
     help="Postgres connection string like 'dbname=postgres host=localhost user=postgres password=postgres'",
     default=None,
 )
-@click.option("--duckdb_path", help="Path to the DuckDB database file", default=None)
-def cmd_pg_export(pg_conn: str | None, duckdb_path: str | None = None):
+@click.option("--db_path", help="Path to the DuckDB database file", default=None)
+def cmd_pg_export(pg_conn: str | None, db_path: str | None = None):
     print("Exporting DuckDB regions to Postgres")
     pg_conn = pg_conn or os.getenv(ENV_PG_CONN)
     if not pg_conn:
         click.echo(f"Missing required argument --pg_conn or environment variable {ENV_PG_CONN}")
         exit(1)
 
-    pg_export(pg_conn, duckdb_path)
+    pg_export(pg_conn, db_path)
 
 
 def main():
