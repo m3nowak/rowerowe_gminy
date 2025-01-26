@@ -98,6 +98,8 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME_DB }}
           path: ${{ env.DDB_NAME }}
+      - name: Reorganize downloaded artifact
+        run: mv ${{ env.DDB_NAME }}/* geo.db
       - name: Install Podman
         run: |
           sudo apt-get update
@@ -112,7 +114,7 @@ jobs:
           --tag ${{ env.image_repo_base }}/${{ env.target_image }}:${{ github.run_number }}
           --tag ${{ env.image_repo_base }}/${{ env.target_image }}:latest
           --target ${{ env.target_image }}
-          --build-arg dbpath=${{ env.DDB_NAME }}
+          --build-arg dbpath=geo.db
       - name: Push the Container image to ghcr
         run: |
           podman login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.packages_token }}
