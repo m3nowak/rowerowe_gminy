@@ -6,8 +6,9 @@ env:
   DDB_NAME: geo-data.db
   RCLONE_CFG_NAME: rg
   S3_BUCKET: rowerowegminy.pl
-  GML_PAK_URL: https://eu2.contabostorage.com/9556be5764414357ae3184b95da10055:rowerowegminy.pl/gml_pak.zip
-  ARTIFACT_NAME: geodb
+  GML_PAK_URL: https://opendata.geoportal.gov.pl/prg/granice/00_jednostki_administracyjne_gml.zip
+  ARTIFACT_NAME_DB: geodb
+  ARTIFACT_NAME_TOPO: topo
 
   target_image: geodb
   image_repo_base: ghcr.io/m3nowak/rowerowe_gminy
@@ -19,12 +20,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Download GML files
         run: |
-          wget $GML_PAK_URL
+          wget $GML_PAK_URL -o gml_pak.zip
 
       - name: Unzip GML files
         run: |
           mkdir -p $GEO_DIR
-          unzip gml_pak.zip -d $GEO_DIR
+          unzip -j gml_pak.zip "00_jednostki_administracyjne_gml/*" -d $GEO_DIR
 
       - uses: actions/setup-python@v5
         with:
@@ -43,11 +44,19 @@ jobs:
 
       - name: Create DuckDB database
         run: pdm run rg-geo create-ddb --json_dir $GEO_DIR --db_path $DDB_NAME
+      
+      - name: Generate topology
+        run: pdm run rg-geo mktopo --db_path $DDB_NAME --output topo.json
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }} # From env
+          name: ${{ env.ARTIFACT_NAME_DB }} # From env
           path: ${{ env.DDB_NAME }} # From env
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME_TOPO }} # From env
+          path: topo.json # From env
 
   s3-pub:
     runs-on: ubuntu-latest
@@ -59,8 +68,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_NAME_DB }}
           path: ${{ env.DDB_NAME }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME_TOPO }}
+          path: topo.json
       - name: Create Rclone config
         run: |
           cat << 'EOF' > rclone.conf
@@ -68,6 +81,8 @@ jobs:
           EOF
       - name: Upload DuckDB database to S3
         run: rclone --config rclone.conf copy $DDB_NAME $RCLONE_CFG_NAME:$S3_BUCKET
+      - name: Upload Topology to S3
+        run: rclone --config rclone.conf copy topo.json $RCLONE_CFG_NAME:$S3_BUCKET
   
   container:
     runs-on: ubuntu-latest
@@ -76,7 +91,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_NAME_DB }}
           path: ${{ env.DDB_NAME }}
       - name: Install Podman
         run: |

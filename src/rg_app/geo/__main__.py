@@ -11,17 +11,17 @@ def cli():
 
 
 @cli.command(help="Generate simplified topology in topojson format", name="mktopo")
-@click.option("--duckdb_path", help="Path to the DuckDB database file", required=True)
+@click.option("--db_path", help="Path to the DuckDB database file", required=True)
 @click.option("--tolerance", help="Simplification tolerance", default=0.005)
-def cmd_mktopo(duckdb_path: str, tolerance: float):
+@click.option("--output", help="Output path", default="topo.json")
+def cmd_mktopo(db_path: str, tolerance: float, output: str):
     click.echo(f"Generating simplified topology in topojson format with tolerance {tolerance}")
     from .simplification import toposimplify_duckdb
 
-    topojson = toposimplify_duckdb(duckdb_path, tolerance)
-    filename = "tpy{:.0e}.json".format(tolerance).replace("-", "_")
-    with open(filename, "w") as f:
+    topojson = toposimplify_duckdb(db_path, tolerance)
+    with open(output, "w") as f:
         f.write(topojson)
-    click.echo(f"Saved to {filename}")
+    click.echo(f"Saved to {output}")
 
 
 @cli.command(help="Create DuckDB database", name="create-ddb")
