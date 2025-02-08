@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - uses: ./.github/actions/checkout-build
+      - uses: ./.github/actions/py-pdm-setup.yaml
       - name: Download GML files
         run: |
           wget $GML_PAK_URL -O gml_pak.zip
