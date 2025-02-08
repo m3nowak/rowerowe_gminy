@@ -22,8 +22,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: tree .github
-        run: tree .github
       - uses: ./.github/actions/py_pdm_setup
       - name: Download GML files
         run: |
