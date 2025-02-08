@@ -16,10 +16,13 @@ env:
   image_repo_base: ghcr.io/m3nowak/rowerowe_gminy
 
 jobs:
+  setup:
+    uses: ./.github/workflows/checkout-build.yaml
+
   build:
+    needs: setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Download GML files
         run: |
           wget $GML_PAK_URL -O gml_pak.zip
@@ -28,16 +31,6 @@ jobs:
         run: |
           mkdir -p $GEO_DIR
           unzip -j gml_pak.zip "00_jednostki_administracyjne_gml/*" -d $GEO_DIR
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Setup PDM
-        uses: pdm-project/setup-pdm@v4
-
-      - name: Install dependencies
-        run: pdm install
 
       - name: Create GeoJSON files
         run: |
