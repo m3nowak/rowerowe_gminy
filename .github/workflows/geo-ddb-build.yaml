@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4
       - name: tree .github
         run: tree .github
-      - uses: ./.github/actions/py-pdm-setup.yaml
+      - uses: ./.github/actions/py_pdm_setup
       - name: Download GML files
         run: |
           wget $GML_PAK_URL -O gml_pak.zip
