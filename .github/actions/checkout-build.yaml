@@ -1,0 +1,17 @@
+name: checkout-build
+description: |
+  This action pulls current repository, installs python and pdm and installs dependencies.
+
+runs:
+  using: "composite"
+  steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
+  - name: Set up Python 3.12
+    uses: actions/setup-python@v4
+    with:
+      python-version: "3.12"
+  - name: Install PDM
+    run: pip install pdm
+  - name: Install dependencies
+    run: pdm install
