@@ -10,7 +10,7 @@ import shutil
 import subprocess
 
 MAPPING = {
-    "./data/gml/A00_GranicePanstwa.gml": "./data/json/country.json",
+    "./data/gml/A00_GranicaPanstwa.gml": "./data/json/country.json",
     "./data/gml/A01_GraniceWojewodztw.gml": "./data/json/voivodeships.json",
     "./data/gml/A02_GranicePowiatow.gml": "./data/json/counties.json",
     "./data/gml/A03_GraniceGmin.gml": "./data/json/communes.json",
