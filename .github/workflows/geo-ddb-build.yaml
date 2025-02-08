@@ -30,7 +30,7 @@ jobs:
       - name: Unzip GML files
         run: |
           mkdir -p $GEO_DIR
-          unzip -j gml_pak.zip "00_jednostki_administracyjne_gml/*" -d $GEO_DIR
+          unzip -j gml_pak.zip -d $GEO_DIR
 
       - name: Create GeoJSON files
         run: |
