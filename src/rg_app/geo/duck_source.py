@@ -24,7 +24,7 @@ def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb
         ancestors VARCHAR[]
     )""")
 
-    communes_json = f"{json_dir}/A03_Granice_gmin.json"
+    communes_json = f"{json_dir}/A03_GraniceGmin.json"
     conn.sql(
         f"""INSERT INTO borders
         SELECT 
@@ -36,7 +36,7 @@ def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb
         FROM ST_Read('{communes_json}')"""
     )
 
-    counties_json = f"{json_dir}/A02_Granice_powiatow.json"
+    counties_json = f"{json_dir}/A02_GranicePowiatow.json"
     conn.sql(
         f"""INSERT INTO borders
         SELECT 
@@ -48,7 +48,7 @@ def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb
         FROM ST_Read('{counties_json}')"""
     )
 
-    voivodeships_json = f"{json_dir}/A01_Granice_wojewodztw.json"
+    voivodeships_json = f"{json_dir}/A01_GraniceWojewodztw.json"
     conn.sql(
         f"""INSERT INTO borders
         SELECT 
@@ -60,7 +60,7 @@ def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb
         FROM ST_Read('{voivodeships_json}')"""
     )
 
-    country_json = f"{json_dir}/A00_Granice_panstwa.json"
+    country_json = f"{json_dir}/A00_GranicePanstwa.json"
     conn.sql(
         f"""INSERT INTO borders
         SELECT 

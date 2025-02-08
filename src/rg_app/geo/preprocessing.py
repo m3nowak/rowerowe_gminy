@@ -14,6 +14,7 @@ def preprocess_gml(path: str) -> None:
         target_path = path[:-4] + ".json"
     else:
         target_path = path + ".json"
+    print(f"Saving to {target_path}")
 
     gdf.to_file(target_path, driver="GeoJSON")
 

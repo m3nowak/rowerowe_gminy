@@ -10,10 +10,10 @@ import shutil
 import subprocess
 
 MAPPING = {
-    "./data/gml/A00_Granice_panstwa.gml": "./data/json/country.json",
-    "./data/gml/A01_Granice_wojewodztw.gml": "./data/json/voivodeships.json",
-    "./data/gml/A02_Granice_powiatow.gml": "./data/json/counties.json",
-    "./data/gml/A03_Granice_gmin.gml": "./data/json/communes.json",
+    "./data/gml/A00_GranicePanstwa.gml": "./data/json/country.json",
+    "./data/gml/A01_GraniceWojewodztw.gml": "./data/json/voivodeships.json",
+    "./data/gml/A02_GranicePowiatow.gml": "./data/json/counties.json",
+    "./data/gml/A03_GraniceGmin.gml": "./data/json/communes.json",
 }
 
 COMMAND_TEMPLATE = "ogr2ogr -f GeoJSON -s_srs EPSG:2180 -t_srs EPSG:4326 {dst_fname} {src_fname}"
