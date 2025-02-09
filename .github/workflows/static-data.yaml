@@ -14,8 +14,8 @@ jobs:
           mv data/admjson/combo.json data/admjson/combo-raw.json
       - uses: actions/upload-artifact@v4
         with:
-          name: combo-raw.json
-          path: data/admjson/combo.json
+          name: combo-raw
+          path: data/admjson/combo-raw.json
   coa:
     runs-on: ubuntu-latest
     needs: adm
@@ -24,12 +24,13 @@ jobs:
       - uses: ./.github/actions/py_pdm_setup
       - uses: actions/download-artifact@v4
         with:
-          name: combo-raw.json
+          name: combo-raw
       - name: Download coat of arms
         run: |
           mkdir -p data/coa
-          mkdir -p data/info
-          pdm run rg-scrapping coa -r data/sdata -o data/coa combo-raw.json
+          pdm run rg-scrapping coa -r data/combo.json -o data/coa combo-raw.json
+      - name: Compress combo.json
+        run: gzip data/combo.json -c > data/combo.json.gz
       - uses: actions/upload-artifact@v4
         with:
           path: data
