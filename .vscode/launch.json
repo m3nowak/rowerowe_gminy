@@ -73,6 +73,23 @@
             "type": "debugpy",
             "request": "launch",
             "module": "rg_app.core"
+        },
+        {
+            "name": "COA Small",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rg_app.scrapping",
+            "args": [
+                // coa -r data/admjson/combolc-mini.json -o data/coa-mini/ -l 20 data/admjson/combo.json
+                "coa",
+                "-r",
+                "data/admjson/combolc-mini.json",
+                "-o",
+                "data/coa-mini/",
+                "-l",
+                "20",
+                "data/admjson/combo.json"
+            ]
         }
     ]
 }

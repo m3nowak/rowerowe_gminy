@@ -24,6 +24,7 @@ def adm(output: str):
 
 @cli.command(help="Download Coat Of Arms images")
 @click.argument("df_path", type=click.Path(exists=True, dir_okay=False))
+@click.option("--limit", "-l", default=0, help="Limit of downloaded images", type=int)
 @click.option(
     "--output_dir",
     "-o",
@@ -39,8 +40,8 @@ def adm(output: str):
     help="Path to save modified dataframe",
     type=click.Path(dir_okay=False, writable=True),
 )
-def coa(df_path: str, output_dir: str, resulting_df_path: str | None = None):
-    download_coa_list(df_path, output_dir, resulting_df_path)
+def coa(df_path: str, output_dir: str, resulting_df_path: str | None = None, limit: int = 0):
+    download_coa_list(df_path, output_dir, resulting_df_path, limit=limit)
 
 
 def main():

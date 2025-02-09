@@ -1,8 +1,36 @@
-name: Generate static data for website
+name: Generate static data for website, coat of arms and administrative units data
 on: workflow_dispatch
 
 jobs:
-  build:
+  adm:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/py_pdm_setup
+      - name: Download administrative units
+        run: |
+          mkdir -p data/admjson
+          pdm run rg-scrapping adm -o data/admjson
+      - uses: actions/upload-artifact@v4
+        with:
+          name: combo.json
+          path: data/admjson/combo.json
+  coa:
+    runs-on: ubuntu-latest
+    needs: adm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/py_pdm_setup
+      - uses: actions/download-artifact@v4
+        with:
+          name: combo-raw.json
+      - name: Download coat of arms
+        run: |
+          mkdir -p data/coa
+          mkdir -p data/info
+          pdm run rg-scrapping coa -r data/sdata -o data/coa combo-raw.json
+      - uses: actions/upload-artifact@v4
+        with:
+          path: data
+          name: static-data
+
