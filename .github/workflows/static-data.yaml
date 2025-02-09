@@ -11,9 +11,10 @@ jobs:
         run: |
           mkdir -p data/admjson
           pdm run rg-scrapping adm -o data/admjson
+          mv data/admjson/combo.json data/admjson/combo-raw.json
       - uses: actions/upload-artifact@v4
         with:
-          name: combo.json
+          name: combo-raw.json
           path: data/admjson/combo.json
   coa:
     runs-on: ubuntu-latest
@@ -32,5 +33,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: data
-          name: static-data
+          name: coa-and-adm
 
