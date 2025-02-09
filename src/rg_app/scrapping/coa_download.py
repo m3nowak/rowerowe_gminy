@@ -6,6 +6,8 @@ import urllib.request
 
 import pandas as pd
 
+POLAND_SVG_LINK = "https://upload.wikimedia.org/wikipedia/commons/c/c9/Herb_Polski.svg"
+
 
 def download_coa_list(
     df_path: str, output_dir: str, resulting_df_path: str | None = None, skip_downloaded: bool = True, limit: int = 0
@@ -20,6 +22,7 @@ def download_coa_list(
     # download images
 
     headers = {"User-Agent": "RoweroweGminy/0.0 (https://rowerowegminy.pl/; rowerowe-gminy@mp.miknowak.pl)"}
+    download_image(headers, POLAND_SVG_LINK, os.path.join(output_dir, "0.svg"))
     for idx, row in ldf.iterrows():
         idx = ty.cast(int, idx)
         row = ty.cast(ty.Any, row)
@@ -33,24 +36,7 @@ def download_coa_list(
             print(f"Skipping {url}, COA of {name}")
         else:
             # session = new_session(model_name="isnet-anime")
-            with open(tgt_fname, "wb") as f:
-                downloaded = False
-                resp = None
-                while not downloaded:
-                    try:
-                        req = urllib.request.Request(url, headers=headers)
-                        resp = urllib.request.urlopen(req)
-                        downloaded = True
-                    except urllib.error.HTTPError as e:
-                        if e.code == 429:
-                            time.sleep(1)
-                            continue
-                        else:
-                            raise e
-                assert resp is not None
-                f.write(resp.read())
-            print(f"Downloaded {url} to {tgt_fname}")
-            time.sleep(0.05)
+            download_image(headers, url, tgt_fname)
             # if tgt_fname.endswith(".jpg") or tgt_fname.endswith(".jpeg"):
             #     ldf.at[row.name, "coa_low_quality"] = True
             # img = Image.open(tgt_fname)
@@ -74,3 +60,24 @@ def download_coa_list(
     else:
         if resulting_df_path:
             ldf.to_json(resulting_df_path, orient="records")
+
+
+def download_image(headers, url, tgt_fname):
+    with open(tgt_fname, "wb") as f:
+        downloaded = False
+        resp = None
+        while not downloaded:
+            try:
+                req = urllib.request.Request(url, headers=headers)
+                resp = urllib.request.urlopen(req)
+                downloaded = True
+            except urllib.error.HTTPError as e:
+                if e.code == 429:
+                    time.sleep(1)
+                    continue
+                else:
+                    raise e
+        assert resp is not None
+        f.write(resp.read())
+    print(f"Downloaded {url} to {tgt_fname}")
+    time.sleep(0.05)
