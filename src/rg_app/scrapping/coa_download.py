@@ -72,8 +72,5 @@ def download_coa_list(
         if resulting_df_path:
             ldf.to_json(resulting_df_path, orient="records", indent=2)
     else:
-        # update df coa_link
-        df.update(ldf)
-
         if resulting_df_path:
-            df.to_json(resulting_df_path, orient="records")
+            ldf.to_json(resulting_df_path, orient="records")
