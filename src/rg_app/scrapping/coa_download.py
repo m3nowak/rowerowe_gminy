@@ -1,6 +1,7 @@
 import os.path
 import time
 import typing as ty
+import urllib.error
 import urllib.request
 
 import pandas as pd
@@ -33,8 +34,22 @@ def download_coa_list(
         else:
             # session = new_session(model_name="isnet-anime")
             with open(tgt_fname, "wb") as f:
-                req = urllib.request.Request(url, headers=headers)
-                f.write(urllib.request.urlopen(req).read())
+                downloaded = False
+                resp = None
+                while not downloaded:
+                    try:
+                        req = urllib.request.Request(url, headers=headers)
+                        resp = urllib.request.urlopen(req)
+                        downloaded = True
+                    except urllib.error.HTTPError as e:
+                        if e.code == 429:
+                            time.sleep(1)
+                            continue
+                        else:
+                            raise e
+                assert resp is not None
+                f.write(resp.read())
+            print(f"Downloaded {url} to {tgt_fname}")
             time.sleep(0.05)
             # if tgt_fname.endswith(".jpg") or tgt_fname.endswith(".jpeg"):
             #     ldf.at[row.name, "coa_low_quality"] = True
