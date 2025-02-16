@@ -19,6 +19,7 @@ def download_coa_list(
     ldf["coa_low_quality"] = False
 
     ldf["coa_fname"] = ldf["TERYT"].astype(str) + "." + ldf["coa_link"].str.split(".").str[-1].astype(str)
+    ldf.loc[ldf["coa_link"].isna(), "coa_fname"] = None
     # download images
 
     headers = {"User-Agent": "RoweroweGminy/0.0 (https://rowerowegminy.pl/; rowerowe-gminy@mp.miknowak.pl)"}
