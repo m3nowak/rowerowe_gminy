@@ -14,7 +14,7 @@ def download_coa_list(
 ):
     df = pd.read_json(df_path, dtype={"TERYT": str})
 
-    ldf = df.dropna(subset=["coa_link"])
+    ldf = df.copy()  # df.dropna(subset=["coa_link"])
 
     ldf["coa_low_quality"] = False
 
@@ -24,6 +24,8 @@ def download_coa_list(
     headers = {"User-Agent": "RoweroweGminy/0.0 (https://rowerowegminy.pl/; rowerowe-gminy@mp.miknowak.pl)"}
     download_image(headers, POLAND_SVG_LINK, os.path.join(output_dir, "0.svg"))
     for idx, row in ldf.iterrows():
+        if row.coa_link is None:
+            continue
         idx = ty.cast(int, idx)
         row = ty.cast(ty.Any, row)
         # f it if something goes wrong check this line
