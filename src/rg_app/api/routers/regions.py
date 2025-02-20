@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 
 import fastapi
@@ -19,6 +20,7 @@ class UnlockedRegion(BaseModel):
 class UnlockedRegionDetail(UnlockedRegion):
     last_visited: datetime | None = None
     first_visited: datetime | None = None
+    last_activity_id: str | None = None
     visited_count: int
 
 
@@ -62,7 +64,7 @@ async def unlocked_detail(region_id: str, session: AsyncSession, user_info: User
     else:
         cont_where_clause = Activity.visited_regions_additional.contains(cast(region_id, JSONB))
 
-    query = select(
+    query_stats = select(
         func.min(Activity.start).label("first_visited"),
         func.max(Activity.start).label("last_visited"),
         func.count(Activity.id).label("visited_count"),
@@ -71,16 +73,31 @@ async def unlocked_detail(region_id: str, session: AsyncSession, user_info: User
         cont_where_clause,
     )
 
-    result = await session.execute(query)
+    query_last_activity_id = (
+        select(Activity.id)
+        .where(
+            Activity.user_id == user_info.user_id,
+            cont_where_clause,
+        )
+        .order_by(Activity.start.desc())
+        .limit(1)
+    )
+    aw_stats = session.execute(query_stats)
+    aw_last_activity_id = session.execute(query_last_activity_id)
 
-    row = result.fetchone()
+    result_stats, result_last_activity_id = await asyncio.gather(aw_stats, aw_last_activity_id)
 
-    if row is None or row.first_visited is None:
+    row_stats = result_stats.fetchone()
+    scalar_last_activity_id = result_last_activity_id.scalar_one_or_none()
+
+    if row_stats is None or row_stats.first_visited is None:
         return UnlockedRegionDetail(region_id=region_id, visited_count=0)
     else:
+        la_id = str(scalar_last_activity_id) if scalar_last_activity_id is not None else None
         return UnlockedRegionDetail(
             region_id=region_id,
-            last_visited=row.last_visited,
-            first_visited=row.first_visited,
-            visited_count=row.visited_count,
+            last_visited=row_stats.last_visited,
+            first_visited=row_stats.first_visited,
+            visited_count=row_stats.visited_count,
+            last_activity_id=la_id,
         )

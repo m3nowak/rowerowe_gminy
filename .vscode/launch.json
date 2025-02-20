@@ -3,6 +3,12 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
+    "compounds": [
+        {
+            "name": "API + Worker",
+            "configurations": ["Worker", "API"]
+        }
+    ],
     "configurations": [
         {
             "name": "Worker",
@@ -32,6 +38,7 @@
             "request": "launch",
             "module": "rg_app.api",
             "args": [
+                "start",
                 "-c",
                 "config/debug/api.yaml",
                 "-d"
@@ -90,6 +97,6 @@
                 "20",
                 "data/admjson/combo.json"
             ]
-        }
+        },
     ]
 }
