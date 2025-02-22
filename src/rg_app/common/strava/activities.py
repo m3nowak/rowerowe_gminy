@@ -35,7 +35,7 @@ async def get_activity_range(
     resp.raise_for_status()
     await rlm.feed_headers(resp.headers)
     activity_list = _activity_list_adapter.validate_json(resp.text)
-    return PaginatedResult(items=activity_list, page=page, has_more=len(activity_list) == MAX_PAGE_SIZE)
+    return PaginatedResult(items=activity_list, page=page, has_more=len(activity_list) != 0)
 
 
 async def get_activity(
