@@ -25,6 +25,7 @@ class User(Base):
     last_login: Mapped[datetime] = mapped_column(
         UTCDateTime, default=lambda: datetime.now(UTC), server_default=func.now()
     )
+    last_backlog_sync: Mapped[datetime | None] = mapped_column(UTCDateTime, default=None, nullable=True)
     activities: Mapped[list["Activity"]] = relationship("Activity", back_populates="user")
 
 
