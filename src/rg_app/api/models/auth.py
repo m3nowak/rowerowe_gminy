@@ -25,3 +25,4 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str = Field(alias="access_token")
     token_type: Literal["bearer"] = Field("bearer", alias="token_type")
+    is_first_login: bool

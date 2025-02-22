@@ -44,6 +44,7 @@ async def login(
     # User is legit
 
     user = await session.get(User, atr.athlete.id)
+    is_first_login = user is None
     if user:
         user.access_token = atr.access_token
         user.refresh_token = atr.refresh_token
@@ -69,4 +70,4 @@ async def login(
     )
 
     token = create_token(str(atr.athlete.id), expiry, config.auth.get_secret(), atr.friendly_name())
-    return LoginResponse(access_token=token, token_type="bearer")
+    return LoginResponse(access_token=token, token_type="bearer", is_first_login=is_first_login)
