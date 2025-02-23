@@ -6,6 +6,7 @@ from httpx import HTTPStatusError
 
 from rg_app.api.dependencies.config import Config
 from rg_app.api.dependencies.db import AsyncSession
+from rg_app.api.dependencies.debug_flag import DebugFlag
 from rg_app.api.dependencies.strava import StravaTokenManager
 from rg_app.api.models.auth import LoginRequest, LoginResponse
 from rg_app.db import User
@@ -26,7 +27,7 @@ def create_token(user_id: str, expiry: timedelta, secret: str, username: str) ->
 
 @router.post("/login")
 async def login(
-    login_data: LoginRequest, config: Config, stm: StravaTokenManager, session: AsyncSession
+    login_data: LoginRequest, config: Config, stm: StravaTokenManager, session: AsyncSession, df: DebugFlag
 ) -> LoginResponse:
     try:
         atr = await stm.authenticate(login_data.code)
@@ -70,4 +71,4 @@ async def login(
     )
 
     token = create_token(str(atr.athlete.id), expiry, config.auth.get_secret(), atr.friendly_name())
-    return LoginResponse(access_token=token, token_type="bearer", is_first_login=is_first_login)
+    return LoginResponse(access_token=token, token_type="bearer", is_first_login=is_first_login or df)

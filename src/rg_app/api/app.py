@@ -6,19 +6,21 @@ from .config import Config
 from .dependencies.broker import lifespan as broker_lifespan
 from .dependencies.config import lifespan_factory as config_lifespan_factory
 from .dependencies.db import lifespan as db_lifespan
+from .dependencies.debug_flag import lifespan_factory as debug_flag_lifespan_factory
 from .dependencies.http_client import lifespan as http_client_lifespan
 from .dependencies.strava import lifespan as strava_lifespan
 from .dependencies.util import combined_lifespans_factory
 from .routers import activities_router, athletes_router, auth_router, health_router, regions_router
 
 
-def app_factory(config: Config):
+def app_factory(config: Config, debug: bool = False) -> fastapi.FastAPI:
     lifespans = [
         config_lifespan_factory(config),
         db_lifespan,
         broker_lifespan,
         http_client_lifespan,
         strava_lifespan,
+        debug_flag_lifespan_factory(debug),
     ]
 
     app = fastapi.FastAPI(title="Rowerowe Gminy API", lifespan=combined_lifespans_factory(*lifespans))

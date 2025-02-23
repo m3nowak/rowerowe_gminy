@@ -15,4 +15,4 @@ def get_debug_config():
 
 def debug_app_factory():
     config = get_debug_config()
-    return app_factory(config)
+    return app_factory(config, True)
