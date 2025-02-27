@@ -7,8 +7,11 @@ from httpx import HTTPStatusError
 from rg_app.api.dependencies.config import Config
 from rg_app.api.dependencies.db import AsyncSession
 from rg_app.api.dependencies.debug_flag import DebugFlag
-from rg_app.api.dependencies.strava import StravaTokenManager
+from rg_app.api.dependencies.http_client import AsyncClient
+from rg_app.api.dependencies.strava import RateLimitManager, StravaTokenManager
 from rg_app.api.models.auth import LoginRequest, LoginResponse
+from rg_app.common.strava.athletes import get_athlete
+from rg_app.common.strava.auth import StravaAuth
 from rg_app.db import User
 
 router = fastapi.APIRouter(tags=["auth"])
@@ -27,7 +30,13 @@ def create_token(user_id: str, expiry: timedelta, secret: str, username: str) ->
 
 @router.post("/login")
 async def login(
-    login_data: LoginRequest, config: Config, stm: StravaTokenManager, session: AsyncSession, df: DebugFlag
+    login_data: LoginRequest,
+    config: Config,
+    stm: StravaTokenManager,
+    session: AsyncSession,
+    df: DebugFlag,
+    async_client: AsyncClient,
+    rlm: RateLimitManager,
 ) -> LoginResponse:
     try:
         atr = await stm.authenticate(login_data.code)
@@ -53,6 +62,8 @@ async def login(
         user.last_login = datetime.now(UTC)
         user.name = atr.friendly_name()
     else:
+        auth = StravaAuth(atr.access_token)
+        athlete_raw = await get_athlete(async_client, auth, rlm)
         user = User(
             id=atr.athlete.id,
             access_token=atr.access_token,
@@ -60,6 +71,7 @@ async def login(
             expires_at=atr.expires_at,
             last_login=datetime.now(UTC),
             name=atr.friendly_name(),
+            strava_account_created_at=athlete_raw.created_at,
         )
         session.add(user)
     await session.commit()
