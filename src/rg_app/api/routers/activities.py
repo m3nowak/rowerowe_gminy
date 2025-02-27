@@ -4,6 +4,7 @@ from typing import Literal
 
 import fastapi
 
+from rg_app.api.common import user_check_last_trigger
 from rg_app.api.dependencies.auth import UserInfoRequired
 from rg_app.api.dependencies.broker import NatsBroker
 from rg_app.api.dependencies.db import AsyncSession
@@ -28,13 +29,6 @@ class BacklogLastTriggerResponse(BaseModel):
     eligible: bool
 
 
-def _check_last_trigger(user: User) -> bool:
-    """
-    Check if the user is eligible for backlog trigger
-    """
-    return user.last_backlog_sync is None or user.last_backlog_sync + BACKLOG_TRIGGER_TIMEOUT < datetime.now(UTC)
-
-
 @router.post("/backlog")
 async def backlog(
     backlog_request: BacklogRequest,
@@ -50,7 +44,7 @@ async def backlog(
     user = await session.get(User, user_info.user_id)
     if user is None:
         raise fastapi.HTTPException(status_code=500, detail="Internal server error, user not found")
-    if not _check_last_trigger(user) and not debug:
+    if not user_check_last_trigger(user) and not debug:
         raise fastapi.HTTPException(status_code=400, detail="Backlog trigger not allowed")
     user.last_backlog_sync = datetime.now(UTC)
     await session.commit()
@@ -74,14 +68,3 @@ async def backlog(
 
     await asyncio.gather(*awaitables)
     return "OK"
-
-
-@router.get("/backlog/last-trigger")
-async def backlog_last_trigger(user_info: UserInfoRequired, session: AsyncSession) -> BacklogLastTriggerResponse:
-    user = await session.get(User, user_info.user_id)
-    if user is None:
-        raise fastapi.HTTPException(status_code=500, detail="Internal server error, user not found")
-    return BacklogLastTriggerResponse(
-        last_trigger=user.last_backlog_sync,
-        eligible=_check_last_trigger(user),
-    )
