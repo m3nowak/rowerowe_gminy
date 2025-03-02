@@ -24,49 +24,49 @@ def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb
         ancestors VARCHAR[]
     )""")
 
-    communes_json = f"{json_dir}/A03_GraniceGmin.json"
+    communes_json = f"{json_dir}/A03_Granice_gmin.json"
     conn.sql(
         f"""INSERT INTO borders
         SELECT 
-            CONCAT('PL', LPAD(CAST(JPT_KOD_JEDNOSTKI AS VARCHAR), 7, '0')) as ID,
+            CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 7, '0')) as ID,
             geom AS shape, 
-            JPT_SJR_KOD as type,
-            CONCAT('PL', LPAD(CAST(JPT_KOD_JEDNOSTKI AS VARCHAR), 4, '0')) as parent_id,
-            ['PL', CONCAT('PL', LPAD(CAST(JPT_KOD_JEDNOSTKI AS VARCHAR), 2, '0')), CONCAT('PL', LPAD(CAST(JPT_KOD_JEDNOSTKI AS VARCHAR), 4, '0'))] as ancestors
+            JPT_SJR_KO as type,
+            CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 4, '0')) as parent_id,
+            ['PL', CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 2, '0')), CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 4, '0'))] as ancestors
         FROM ST_Read('{communes_json}')"""
     )
 
-    counties_json = f"{json_dir}/A02_GranicePowiatow.json"
+    counties_json = f"{json_dir}/A02_Granice_powiatow.json"
     conn.sql(
         f"""INSERT INTO borders
         SELECT 
-            CONCAT('PL', LPAD(CAST(JPT_KOD_JEDNOSTKI AS VARCHAR), 4, '0')) as ID,
+            CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 4, '0')) as ID,
             geom AS shape,
-            JPT_SJR_KOD as type,
-            CONCAT('PL', LPAD(CAST(JPT_KOD_JEDNOSTKI AS VARCHAR), 2, '0')) as parent_id,
-            ['PL', CONCAT('PL', LPAD(CAST(JPT_KOD_JEDNOSTKI AS VARCHAR), 2, '0'))] as ancestors
+            JPT_SJR_KO as type,
+            CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 2, '0')) as parent_id,
+            ['PL', CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 2, '0'))] as ancestors
         FROM ST_Read('{counties_json}')"""
     )
 
-    voivodeships_json = f"{json_dir}/A01_GraniceWojewodztw.json"
+    voivodeships_json = f"{json_dir}/A01_Granice_wojewodztw.json"
     conn.sql(
         f"""INSERT INTO borders
         SELECT 
-            CONCAT('PL', LPAD(CAST(JPT_KOD_JEDNOSTKI AS VARCHAR), 2, '0')) as ID,
+            CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 2, '0')) as ID,
             geom AS shape,
-            JPT_SJR_KOD as type,
+            JPT_SJR_KO as type,
             'PL' as parent_id,
             ['PL'] as ancestors
         FROM ST_Read('{voivodeships_json}')"""
     )
 
-    country_json = f"{json_dir}/A00_GranicaPanstwa.json"
+    country_json = f"{json_dir}/A00_Granice_panstwa.json"
     conn.sql(
         f"""INSERT INTO borders
         SELECT 
             'PL' as ID,
             geom AS shape,
-            JPT_SJR_KOD as type,
+            JPT_SJR_KO as type,
             NULL as parent_id,
             [] as ancestors
         FROM ST_Read('{country_json}')"""
