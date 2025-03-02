@@ -10,6 +10,7 @@ from rg_app.api.dependencies.debug_flag import DebugFlag
 from rg_app.api.dependencies.http_client import AsyncClient
 from rg_app.api.dependencies.strava import RateLimitManager, StravaTokenManager
 from rg_app.api.models.auth import LoginErrorCause, LoginRequest, LoginResponse, LoginResponseError, StravaScopes
+from rg_app.common.strava.activities import verify_activities_accessible
 from rg_app.common.strava.athletes import get_athlete
 from rg_app.common.strava.auth import StravaAuth
 from rg_app.db import User
@@ -71,6 +72,12 @@ async def login(
         user.name = atr.friendly_name()
     else:
         auth = StravaAuth(atr.access_token)
+        accessible = await verify_activities_accessible(async_client, auth, rlm)
+
+        if not accessible:
+            resp.status_code = 400
+            return LoginResponseError(cause=LoginErrorCause.INVALID_SCOPE)
+
         athlete_raw = await get_athlete(async_client, auth, rlm)
         user = User(
             id=atr.athlete.id,
