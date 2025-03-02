@@ -12,7 +12,7 @@ def toposimplify_duckdb(path: str, toposimplify: float) -> str:
         conn.load_extension("spatial")
 
         df = conn.execute(
-            "SELECT borders.ID , ST_AsText(borders.shape) as shape, type, parent_id FROM borders WHERE type='GMI'"  # WHERE type='WOJ' OR type='PAN'
+            "SELECT borders.ID , ST_AsText(borders.shape) as shape, type, parent_id FROM borders"  # WHERE type='WOJ' OR type='PAN' WHERE type='GMI'
         ).df()
 
         gdf = gpd.GeoDataFrame(data=df, geometry=gpd.GeoSeries.from_wkt(df["shape"]), crs="EPSG:4326")  # type: ignore

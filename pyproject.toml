@@ -101,7 +101,6 @@ types = {cmd = "pyright"}
 db-revision = {cmd = "cd src/rg_app/db && alembic revision --autogenerate"}
 migrate-db = {cmd = "rg-db migrate --url postgresql+psycopg://postgres:postgres@localhost/postgres"}
 migrate-nats = {cmd = "rg-nats-defs  nats://localhost local --dev"}
-mk-data = {composite = ["scripts/download_gml.py", "scripts/gml_to_json.py"]}
 openapi = {cmd = "rg-api openapi -j -o openapi.json -c config/debug/api.yaml"}
 
 _start-compose = {cmd = "docker compose up -d"}
