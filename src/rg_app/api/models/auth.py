@@ -26,3 +26,14 @@ class LoginResponse(BaseModel):
     access_token: str = Field(alias="access_token")
     token_type: Literal["bearer"] = Field("bearer", alias="token_type")
     is_first_login: bool
+
+
+class LoginErrorCause(StrEnum):
+    INVALID_SCOPE = "invalid_scope"
+    INVALID_CODE = "invalid_code"
+    STRAVA_ERROR = "strava_error"
+    INTERNAL_ERROR = "internal_error"
+
+
+class LoginResponseError(BaseModel):
+    cause: LoginErrorCause

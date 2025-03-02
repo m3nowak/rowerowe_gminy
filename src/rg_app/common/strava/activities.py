@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Sequence
 
 from httpx import AsyncClient
@@ -48,6 +48,26 @@ async def get_activity(
     resp.raise_for_status()
     await rlm.feed_headers(resp.headers)
     return ActivityPartial.model_validate_json(resp.text)
+
+
+async def verify_activities_accessible(
+    client: AsyncClient,
+    auth: StravaAuth,
+    rlm: RateLimitManager,
+) -> bool:
+    """
+    Check current user can have its activities accessed
+    """
+    query = {
+        "before": int(datetime.now(UTC).timestamp()),
+        "page": 1,
+        "per_page": MAX_PAGE_SIZE,
+    }
+    resp = await client.get("https://www.strava.com/api/v3/athlete/activities", params=query, auth=auth)
+    if resp.status_code == 401:
+        return False
+    resp.raise_for_status()
+    return True
 
 
 async def get_activity_streams(

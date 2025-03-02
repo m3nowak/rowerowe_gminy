@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -13,6 +14,8 @@ from rg_app.common.strava.rate_limits import RateLimitManager
 from rg_app.db import User
 
 _URL = "https://www.strava.com/oauth/token"
+
+_TRIES = 3
 
 
 class StravaAuth(httpx.Auth):
@@ -139,7 +142,14 @@ class StravaTokenManager:
             "code": code,
             "grant_type": "authorization_code",
         }
-        resp = await self._client.post(_URL, data=request)
-        await self._rate_limit_mgr.feed_headers(resp.headers)
-        resp.raise_for_status()
-        return StravaTokenResponse.model_validate_json(resp.text)
+        for i in range(_TRIES):
+            resp = await self._client.post(_URL, data=request)
+            if resp.is_success:
+                return StravaTokenResponse.model_validate_json(resp.text)
+            await self._rate_limit_mgr.feed_headers(resp.headers)
+            if i < _TRIES - 1:
+                await asyncio.sleep(1)
+            else:
+                resp.raise_for_status()
+                raise ValueError("Unreachable")
+        raise ValueError("Unreachable")

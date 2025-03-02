@@ -9,7 +9,8 @@ from rg_app.api.dependencies.db import AsyncSession
 from rg_app.api.dependencies.debug_flag import DebugFlag
 from rg_app.api.dependencies.http_client import AsyncClient
 from rg_app.api.dependencies.strava import RateLimitManager, StravaTokenManager
-from rg_app.api.models.auth import LoginRequest, LoginResponse
+from rg_app.api.models.auth import LoginErrorCause, LoginRequest, LoginResponse, LoginResponseError, StravaScopes
+from rg_app.common.strava.activities import verify_activities_accessible
 from rg_app.common.strava.athletes import get_athlete
 from rg_app.common.strava.auth import StravaAuth
 from rg_app.db import User
@@ -28,7 +29,11 @@ def create_token(user_id: str, expiry: timedelta, secret: str, username: str) ->
     return jwt.encode(payload, secret, algorithm="HS256")
 
 
-@router.post("/login")
+@router.post(
+    "/login",
+    # response_model=LoginResponse,
+    responses={400: {"model": LoginResponseError}, 200: {"model": LoginResponse}},
+)
 async def login(
     login_data: LoginRequest,
     config: Config,
@@ -37,17 +42,21 @@ async def login(
     df: DebugFlag,
     async_client: AsyncClient,
     rlm: RateLimitManager,
-) -> LoginResponse:
+    resp: fastapi.Response,
+) -> LoginResponse | LoginResponseError:
+    if StravaScopes.ACTIVITY_READ not in login_data.scopes:
+        resp.status_code = 400
+        return LoginResponseError(cause=LoginErrorCause.INVALID_SCOPE)
+
     try:
         atr = await stm.authenticate(login_data.code)
     except HTTPStatusError as hse:
         status_code = hse.response.status_code
+        resp.status_code = 400
         if status_code >= 400 and status_code < 500:
-            raise fastapi.HTTPException(status_code=hse.response.status_code, detail=hse.response.text)
+            return LoginResponseError(cause=LoginErrorCause.INVALID_CODE)
         else:
-            raise fastapi.HTTPException(
-                status_code=500, detail="Internal server error, unable to authenticate in strava"
-            )
+            return LoginResponseError(cause=LoginErrorCause.STRAVA_ERROR)
 
     assert atr is not None
 
@@ -63,6 +72,12 @@ async def login(
         user.name = atr.friendly_name()
     else:
         auth = StravaAuth(atr.access_token)
+        accessible = await verify_activities_accessible(async_client, auth, rlm)
+
+        if not accessible:
+            resp.status_code = 400
+            return LoginResponseError(cause=LoginErrorCause.INVALID_SCOPE)
+
         athlete_raw = await get_athlete(async_client, auth, rlm)
         user = User(
             id=atr.athlete.id,
