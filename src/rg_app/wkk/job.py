@@ -122,6 +122,14 @@ def hadnle_update_factory(
             logging.info(f"Activity {activity_id} not found")
             await msg.ack()
             return
+        if config.ignore_before and da.start_date < config.ignore_before:
+            logging.info(f"Activity {activity_id} is before configured ignore_before date")
+            await msg.ack()
+            return
+        if config.ignore_after and da.start_date > config.ignore_after:
+            logging.info(f"Activity {activity_id} is after configured ignore_after date")
+            await msg.ack()
+            return
         if da.sport_type not in RIDE_LIKE_TYPES:
             logging.info(f"Activity {activity_id} is not a Ride-Like activity")
             await msg.ack()
