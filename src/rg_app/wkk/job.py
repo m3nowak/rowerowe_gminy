@@ -180,8 +180,10 @@ def hadnle_update_factory(
                 resp = await client.post(
                     "https://wkolkokrece.pl/routes-traveled/import-route", files=files, data=data, headers=headers
                 )
-                resp.raise_for_status()
-                logging.info(f"Activity {activity_id} added to wkk!")
+                if resp.is_error:
+                    logging.error(f"Failed to add activity {activity_id} to wkk, status code {resp.status_code}")
+                else:
+                    logging.info(f"Activity {activity_id} added to wkk!")
 
         await msg.ack()
 
