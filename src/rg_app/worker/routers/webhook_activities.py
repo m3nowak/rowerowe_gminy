@@ -21,6 +21,7 @@ publisher = router.publisher("rg.internal.cmd.activity.*.*.*", stream=activity_c
 
 
 @router.subscriber(
+    subject="an1",
     config=CONSUMER_ACTIVITIES,
     stream=wha_stream,
     durable=CONSUMER_ACTIVITIES.durable_name,

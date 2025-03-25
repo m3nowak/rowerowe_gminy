@@ -20,6 +20,7 @@ wha_stream = JStream(name=ty.cast(str, NAME_INCOMING_WHA_MIRROR), declare=False)
 
 
 @router.subscriber(
+    subject="an2",
     config=CONSUMER_REVOCATIONS,
     stream=wha_stream,
     durable=CONSUMER_REVOCATIONS.durable_name,
