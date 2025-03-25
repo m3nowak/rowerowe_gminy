@@ -31,7 +31,7 @@ class WebhookActivity(BaseStravaModel):
 class WebhookAthlete(BaseStravaModel):
     object_type: Literal["athlete"]
     object_id: int
-    aspect_type: Literal["update"]
+    aspect_type: Literal["delete"]
     event_time: datetime
     owner_id: int
     subscription_id: int

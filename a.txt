@@ -1,0 +1,501 @@
+asyncapi: 2.6.0
+defaultContentType: application/json
+info:
+  title: FastStream
+  version: 0.1.0
+  description: ''
+servers:
+  development:
+    url: nats://localhost:4222
+    protocol: nats
+    protocolVersion: custom
+channels:
+  incoming-wha/revocations:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: ''
+        bindingVersion: custom
+    subscribe:
+      message:
+        $ref: '#/components/messages/incoming-wha.revocations:Message'
+  :BacklogHandle:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: ''
+        bindingVersion: custom
+    subscribe:
+      message:
+        $ref: '#/components/messages/:BacklogHandle:Message'
+  :StdHandle:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: ''
+        bindingVersion: custom
+    subscribe:
+      message:
+        $ref: '#/components/messages/:StdHandle:Message'
+  rg.svc.geo.ping:Ping:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.svc.geo.ping
+        queue: default
+        bindingVersion: custom
+    subscribe:
+      message:
+        $ref: '#/components/messages/rg.svc.geo.ping:Ping:Message'
+  rg.svc.geo.check-polyline:CheckPolyline:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.svc.geo.check-polyline
+        queue: default
+        bindingVersion: custom
+    subscribe:
+      message:
+        $ref: '#/components/messages/rg.svc.geo.check-polyline:CheckPolyline:Message'
+  rg.svc.geo.check:Check:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.svc.geo.check
+        queue: default
+        bindingVersion: custom
+    subscribe:
+      message:
+        $ref: '#/components/messages/rg.svc.geo.check:Check:Message'
+  rg.svc.activity.upsert-ineligible:UpsertIneligible:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.svc.activity.upsert-ineligible
+        queue: default
+        bindingVersion: custom
+    subscribe:
+      message:
+        $ref: '#/components/messages/rg.svc.activity.upsert-ineligible:UpsertIneligible:Message'
+  rg.svc.activity.upsert:Upsert:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.svc.activity.upsert
+        queue: default
+        bindingVersion: custom
+    subscribe:
+      message:
+        $ref: '#/components/messages/rg.svc.activity.upsert:Upsert:Message'
+  rg.svc.activity.delete:Delete:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.svc.activity.delete
+        queue: default
+        bindingVersion: custom
+    subscribe:
+      message:
+        $ref: '#/components/messages/rg.svc.activity.delete:Delete:Message'
+  rg.svc.user.regions-unlocked:UserUnlocked:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.svc.user.regions-unlocked
+        queue: default
+        bindingVersion: custom
+    subscribe:
+      message:
+        $ref: '#/components/messages/rg.svc.user.regions-unlocked:UserUnlocked:Message'
+  rg.internal.cmd.activity.*.*.*:Publisher:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.internal.cmd.activity.*.*.*
+        bindingVersion: custom
+    publish:
+      message:
+        $ref: '#/components/messages/rg.internal.cmd.activity.*.*.*:Publisher:Message'
+  rg.svc.activity.upsert:Publisher:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.svc.activity.upsert
+        bindingVersion: custom
+    publish:
+      message:
+        $ref: '#/components/messages/rg.svc.activity.upsert:Publisher:Message'
+  rg.svc.activity.upsert-ineligible:Publisher:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.svc.activity.upsert-ineligible
+        bindingVersion: custom
+    publish:
+      message:
+        $ref: '#/components/messages/rg.svc.activity.upsert-ineligible:Publisher:Message'
+  rg.svc.activity.delete:Publisher:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.svc.activity.delete
+        bindingVersion: custom
+    publish:
+      message:
+        $ref: '#/components/messages/rg.svc.activity.delete:Publisher:Message'
+  rg.svc.activity.rg.svc.geo.check:Publisher:
+    servers:
+    - development
+    bindings:
+      nats:
+        subject: rg.svc.activity.rg.svc.geo.check
+        bindingVersion: custom
+    publish:
+      message:
+        $ref: '#/components/messages/rg.svc.activity.rg.svc.geo.check:Publisher:Message'
+components:
+  messages:
+    incoming-wha.revocations:Message:
+      title: incoming-wha.revocations:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/WebhookAthlete'
+    :BacklogHandle:Message:
+      title: :BacklogHandle:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/BacklogActivityCmd'
+    :StdHandle:Message:
+      title: :StdHandle:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/StdActivityCmd'
+    rg.svc.geo.ping:Ping:Message:
+      title: rg.svc.geo.ping:Ping:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/EmptyPayload'
+    rg.svc.geo.check-polyline:CheckPolyline:Message:
+      title: rg.svc.geo.check-polyline:CheckPolyline:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/GeoSvcCheckPolylineRequest'
+    rg.svc.geo.check:Check:Message:
+      title: rg.svc.geo.check:Check:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/GeoSvcCheckRequest'
+    rg.svc.activity.upsert-ineligible:UpsertIneligible:Message:
+      title: rg.svc.activity.upsert-ineligible:UpsertIneligible:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/UpsertModelIneligible'
+    rg.svc.activity.upsert:Upsert:Message:
+      title: rg.svc.activity.upsert:Upsert:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/UpsertModel'
+    rg.svc.activity.delete:Delete:Message:
+      title: rg.svc.activity.delete:Delete:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/DeleteModel'
+    rg.svc.user.regions-unlocked:UserUnlocked:Message:
+      title: rg.svc.user.regions-unlocked:UserUnlocked:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/UnlockedRequest'
+    rg.internal.cmd.activity.*.*.*:Publisher:Message:
+      title: rg.internal.cmd.activity.*.*.*:Publisher:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/StdActivityCmd'
+    rg.svc.activity.upsert:Publisher:Message:
+      title: rg.svc.activity.upsert:Publisher:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/UpsertModel'
+    rg.svc.activity.upsert-ineligible:Publisher:Message:
+      title: rg.svc.activity.upsert-ineligible:Publisher:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/UpsertModel'
+    rg.svc.activity.delete:Publisher:Message:
+      title: rg.svc.activity.delete:Publisher:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/DeleteModel'
+    rg.svc.activity.rg.svc.geo.check:Publisher:Message:
+      title: rg.svc.activity.rg.svc.geo.check:Publisher:Message
+      correlationId:
+        location: $message.header#/correlation_id
+      payload:
+        $ref: '#/components/schemas/GeoSvcCheckRequest'
+  schemas:
+    WebhookAthlete:
+      properties:
+        object_type:
+          const: athlete
+          title: Object Type
+          type: string
+        object_id:
+          title: Object Id
+          type: integer
+        aspect_type:
+          const: delete
+          title: Aspect Type
+          type: string
+        event_time:
+          format: date-time
+          title: Event Time
+          type: string
+        owner_id:
+          title: Owner Id
+          type: integer
+        subscription_id:
+          title: Subscription Id
+          type: integer
+      required:
+      - object_type
+      - object_id
+      - aspect_type
+      - event_time
+      - owner_id
+      - subscription_id
+      title: WebhookAthlete
+      type: object
+    BacklogActivityCmd:
+      properties:
+        ownerId:
+          title: Ownerid
+          type: integer
+        periodFrom:
+          format: date-time
+          title: Periodfrom
+          type: string
+        periodTo:
+          format: date-time
+          title: Periodto
+          type: string
+        type:
+          const: backlog
+          default: backlog
+          title: Type
+          type: string
+      required:
+      - ownerId
+      - periodFrom
+      - periodTo
+      title: BacklogActivityCmd
+      type: object
+    StdActivityCmd:
+      properties:
+        ownerId:
+          title: Ownerid
+          type: integer
+        activityId:
+          title: Activityid
+          type: integer
+        type:
+          enum:
+          - create
+          - update
+          - delete
+          title: Type
+          type: string
+      required:
+      - ownerId
+      - activityId
+      - type
+      title: StdActivityCmd
+      type: object
+    EmptyPayload:
+      title: EmptyPayload
+      type: 'null'
+    GeoSvcCheckPolylineRequest:
+      properties:
+        data:
+          title: Data
+          type: string
+      required:
+      - data
+      title: GeoSvcCheckPolylineRequest
+      type: object
+    GeoSvcCheckRequest:
+      properties:
+        coordinates:
+          items:
+            maxItems: 2
+            minItems: 2
+            prefixItems:
+            - type: number
+            - type: number
+            type: array
+          title: Coordinates
+          type: array
+      required:
+      - coordinates
+      title: GeoSvcCheckRequest
+      type: object
+    UpsertModelIneligible:
+      properties:
+        id:
+          title: Id
+          type: integer
+        userId:
+          title: Userid
+          type: integer
+        name:
+          title: Name
+          type: string
+        rejectReason:
+          title: Rejectreason
+          type: string
+        start:
+          format: date-time
+          title: Start
+          type: string
+      required:
+      - id
+      - userId
+      - name
+      - rejectReason
+      - start
+      title: UpsertModelIneligible
+      type: object
+    UpsertModel:
+      properties:
+        id:
+          title: Id
+          type: integer
+        userId:
+          title: Userid
+          type: integer
+        name:
+          title: Name
+          type: string
+        manual:
+          title: Manual
+          type: boolean
+        start:
+          format: date-time
+          title: Start
+          type: string
+        movingTime:
+          title: Movingtime
+          type: integer
+        elapsedTime:
+          title: Elapsedtime
+          type: integer
+        distance:
+          anyOf:
+          - type: number
+          - type: string
+          title: Distance
+        trackIsDetailed:
+          title: Trackisdetailed
+          type: boolean
+        elevationGain:
+          anyOf:
+          - type: number
+          - type: string
+          - type: 'null'
+          default: null
+          title: Elevationgain
+        elevationLow:
+          anyOf:
+          - type: number
+          - type: string
+          - type: 'null'
+          default: null
+          title: Elevationlow
+        elevationHigh:
+          anyOf:
+          - type: number
+          - type: string
+          - type: 'null'
+          default: null
+          title: Elevationhigh
+        sportType:
+          title: Sporttype
+          type: string
+        gearId:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Gearid
+        polyline:
+          title: Polyline
+          type: string
+        fullData:
+          anyOf:
+          - type: object
+          - type: 'null'
+          default: null
+          title: Fulldata
+      required:
+      - id
+      - userId
+      - name
+      - manual
+      - start
+      - movingTime
+      - elapsedTime
+      - distance
+      - trackIsDetailed
+      - sportType
+      - polyline
+      title: UpsertModel
+      type: object
+    DeleteModel:
+      properties:
+        id:
+          title: Id
+          type: integer
+        userId:
+          title: Userid
+          type: integer
+      required:
+      - id
+      - userId
+      title: DeleteModel
+      type: object
+    UnlockedRequest:
+      properties:
+        userId:
+          title: Userid
+          type: integer
+      required:
+      - userId
+      title: UnlockedRequest
+      type: object
+

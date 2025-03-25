@@ -47,7 +47,8 @@ CONSUMER_ACTIVITIES = make_durable(
     ConsumerConfig(
         "activities",
         description="Process incoming activities",
-        ack_policy=AckPolicy.ALL,
+        ack_policy=AckPolicy.EXPLICIT,
+        deliver_policy=DeliverPolicy.NEW,
         filter_subject="rg.incoming.wha.activity.*.*",
     )
 )
@@ -56,7 +57,8 @@ CONSUMER_REVOCATIONS = make_durable(
     ConsumerConfig(
         "revocations",
         description="Process incoming revocations",
-        ack_policy=AckPolicy.ALL,
+        ack_policy=AckPolicy.EXPLICIT,
+        deliver_policy=DeliverPolicy.NEW,
         filter_subject="rg.incoming.wha.athlete.*.*",
     )
 )
