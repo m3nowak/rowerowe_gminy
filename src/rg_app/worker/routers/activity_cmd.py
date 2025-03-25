@@ -11,10 +11,11 @@ from opentelemetry import trace
 
 from rg_app.common.faststream.otel import otel_logger, tracer_fn
 from rg_app.common.internal import activity_filter
-from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel
+from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel, UpsertModelIneligible
 from rg_app.common.msg.cmd import BacklogActivityCmd, StdActivityCmd
 from rg_app.common.strava.activities import get_activity, get_activity_range
 from rg_app.common.strava.auth import StravaTokenManager
+from rg_app.common.strava.models.activity import ActivityPartial
 from rg_app.common.strava.rate_limits import RateLimitManager
 from rg_app.nats_defs.local import CONSUMER_ACTIVITY_CMD_BACKLOG, CONSUMER_ACTIVITY_CMD_STD, STREAM_ACTIVITY_CMD
 from rg_app.worker.deps import http_client, rate_limit_mgr, token_mgr
@@ -24,7 +25,41 @@ router = NatsRouter()
 stream = JStream(name=ty.cast(str, STREAM_ACTIVITY_CMD.name), declare=False)
 
 req_upsert = router.publisher("rg.svc.activity.upsert", schema=UpsertModel)
+req_upsert_ineligible = router.publisher("rg.svc.activity.upsert-ineligible", schema=UpsertModel)
 req_delete = router.publisher("rg.svc.activity.delete", schema=DeleteModel)
+
+
+def _mk_ineligible_activity(activity: ActivityPartial, reason: str) -> UpsertModelIneligible:
+    return UpsertModelIneligible(
+        id=activity.id,
+        user_id=activity.athlete.id,
+        name=activity.name,
+        reject_reason=reason,
+        start=activity.start_date,
+    )
+
+
+def _mk_upsert_model(activity: ActivityPartial, polyline_str: str, is_detailed: bool) -> UpsertModel:
+    activity_model = UpsertModel(
+        id=activity.id,
+        user_id=activity.athlete.id,
+        name=activity.name,
+        manual=activity.manual,
+        start=activity.start_date,
+        moving_time=activity.moving_time,
+        elapsed_time=activity.elapsed_time,
+        distance=ty.cast(Decimal, activity.distance),
+        track_is_detailed=is_detailed,
+        elevation_gain=activity.total_elevation_gain,
+        elevation_high=activity.elev_high,
+        elevation_low=activity.elev_low,
+        sport_type=activity.sport_type,
+        gear_id=activity.gear_id,
+        polyline=polyline_str,
+        full_data=activity.original_data,
+    )
+
+    return activity_model
 
 
 @router.subscriber(
@@ -65,28 +100,14 @@ async def backlog_handle(
                 reason = reason or "Unknown"
                 span.add_event("activity_filter_failed", {"reason": reason, "activity_id": activity.id})
                 print(f"Activity {activity.id} filtered out: {reason}")
-                continue
-            assert activity.map is not None
-            polyline_str = activity.map.summary_polyline
-            assert polyline_str is not None
-            activity_model = UpsertModel(
-                id=activity.id,
-                user_id=activity.athlete.id,
-                name=activity.name,
-                manual=activity.manual,
-                start=activity.start_date,
-                moving_time=activity.moving_time,
-                elapsed_time=activity.elapsed_time,
-                distance=ty.cast(Decimal, activity.distance),
-                track_is_detailed=body.type == "update",
-                elevation_gain=activity.total_elevation_gain,
-                elevation_high=activity.elev_high,
-                elevation_low=activity.elev_low,
-                sport_type=activity.sport_type,
-                gear_id=activity.gear_id,
-                polyline=polyline_str,
-            )
-            awaitables.append(req_upsert.request(activity_model, timeout=30))
+                umi = _mk_ineligible_activity(activity, reason)
+                awaitables.append(req_upsert_ineligible.request(umi, timeout=30))
+            else:
+                assert activity.map is not None
+                polyline_str = activity.map.summary_polyline
+                assert polyline_str is not None
+                activity_model = _mk_upsert_model(activity, polyline_str, body.type == "update")
+                awaitables.append(req_upsert.request(activity_model, timeout=30))
     await asyncio.gather(*awaitables)
     await nats_msg.ack()
 
@@ -117,43 +138,30 @@ async def std_handle(
             activity_expanded = await get_activity(http_client, body.activity_id, auth, rlm)
             act_span.add_event("activity_expanded", {"name": activity_expanded.name})
         otel_logger.info(activity_expanded.model_dump_json())
+        span.set_attribute("activity_id", activity_expanded.id)
         is_ok, reason = activity_filter(activity_expanded)
         if not is_ok:
             reason = reason or "Unknown"
             span.add_event("activity_filter_failed", {"reason": reason, "activity_id": body.activity_id})
             print(f"Activity {body.activity_id} filtered out: {reason}")
-            await nats_msg.ack()
-            return
+            umi = _mk_ineligible_activity(activity_expanded, reason)
+            resp = await req_upsert_ineligible.request(umi, timeout=30)
+            resp_parsed = resp.body.decode()
+            assert resp_parsed == "OK"
+            print(f"Activity {body.activity_id} processed as ineligible ({reason})!")
+        else:
+            assert activity_expanded.map is not None
+            polyline_str = (
+                activity_expanded.map.summary_polyline if body.type == "create" else activity_expanded.map.polyline
+            )
+            assert polyline_str is not None
 
-        assert activity_expanded.map is not None
-        polyline_str = (
-            activity_expanded.map.summary_polyline if body.type == "create" else activity_expanded.map.polyline
-        )
-        assert polyline_str is not None
+            activity_model = _mk_upsert_model(activity_expanded, polyline_str, body.type == "update")
 
-        activity_model = UpsertModel(
-            id=activity_expanded.id,
-            user_id=activity_expanded.athlete.id,
-            name=activity_expanded.name,
-            manual=activity_expanded.manual,
-            start=activity_expanded.start_date,
-            moving_time=activity_expanded.moving_time,
-            elapsed_time=activity_expanded.elapsed_time,
-            distance=ty.cast(Decimal, activity_expanded.distance),
-            track_is_detailed=body.type == "update",
-            elevation_gain=activity_expanded.total_elevation_gain,
-            elevation_high=activity_expanded.elev_high,
-            elevation_low=activity_expanded.elev_low,
-            sport_type=activity_expanded.sport_type,
-            gear_id=activity_expanded.gear_id,
-            polyline=polyline_str,
-        )
-
-        resp = await req_upsert.request(activity_model, timeout=30)
-        resp_parsed = resp.body.decode()
-        assert resp_parsed == "OK"
-        span.set_attribute("activity_id", activity_model.id)
-        print(f"Activity {body.activity_id} processed!")
+            resp = await req_upsert.request(activity_model, timeout=30)
+            resp_parsed = resp.body.decode()
+            assert resp_parsed == "OK"
+            print(f"Activity {body.activity_id} processed!")
     elif body.type == "delete":
         resp = await req_delete.request(DeleteModel(id=body.activity_id, user_id=body.owner_id), timeout=30)
         resp_parsed = resp.body.decode()

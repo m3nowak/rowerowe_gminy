@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from pydantic import AliasChoices, Field
 
@@ -33,6 +33,7 @@ class ActivityPartial(BaseStravaModel):
     elev_high: Decimal | None = None
     elev_low: Decimal | None = None
     gear_id: str | None = None
+    original_data: dict[str, Any] | None = None
 
 
 T = TypeVar("T")

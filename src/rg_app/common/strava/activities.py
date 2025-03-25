@@ -1,5 +1,5 @@
+import json
 from datetime import UTC, datetime
-from typing import Sequence
 
 from httpx import AsyncClient
 from pydantic import TypeAdapter
@@ -10,7 +10,7 @@ from .models.activity import ActivityPartial, ActivityStreamSet
 from .models.base import PaginatedResult
 from .rate_limits import RateLimitManager
 
-_activity_list_adapter = TypeAdapter(Sequence[ActivityPartial])
+_activity_list_adapter = TypeAdapter(list[ActivityPartial])
 
 
 async def get_activity_range(
@@ -35,6 +35,9 @@ async def get_activity_range(
     resp.raise_for_status()
     await rlm.feed_headers(resp.headers)
     activity_list = _activity_list_adapter.validate_json(resp.text)
+    for pos, activity in enumerate(json.loads(resp.text)):
+        activity_list[pos].original_data = activity
+
     return PaginatedResult(items=activity_list, page=page, has_more=len(activity_list) != 0)
 
 
@@ -47,7 +50,9 @@ async def get_activity(
     resp = await client.get(f"https://www.strava.com/api/v3/activities/{activity_id}", auth=auth)
     resp.raise_for_status()
     await rlm.feed_headers(resp.headers)
-    return ActivityPartial.model_validate_json(resp.text)
+    result = ActivityPartial.model_validate_json(resp.text)
+    result.original_data = json.loads(resp.text)
+    return result
 
 
 async def verify_activities_accessible(
