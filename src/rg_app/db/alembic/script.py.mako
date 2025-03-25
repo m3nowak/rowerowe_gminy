@@ -9,6 +9,8 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+
+import rg_app.db.decorators
 ${imports if imports else ""}
 
 # revision identifiers, used by Alembic.

@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy import BigInteger, Boolean, ForeignKey, Numeric, String, func
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
@@ -30,6 +30,9 @@ class User(Base):
         UTCDateTime, default=lambda: datetime.now(UTC), server_default=func.now()
     )
     activities: Mapped[list["Activity"]] = relationship("Activity", back_populates="user")
+    ineligible_activities: Mapped[list["IneligibleActivity"]] = relationship(
+        "IneligibleActivity", back_populates="user"
+    )
 
 
 class Activity(Base):
@@ -58,7 +61,21 @@ class Activity(Base):
     visited_regions: Mapped[list[str]] = mapped_column(JSONB)
     visited_regions_additional: Mapped[list[str]] = mapped_column(JSONB)
 
+    full_data: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=True)
+
     user: Mapped[User] = relationship("User", back_populates="activities")
+
+
+class IneligibleActivity(Base):
+    __tablename__ = "ineligible_activity"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    reject_reason: Mapped[str] = mapped_column(String(20))
+    start: Mapped[datetime] = mapped_column(UTCDateTime)
+
+    user: Mapped[User] = relationship("User", back_populates="ineligible_activities")
 
 
 class Region(Base):
