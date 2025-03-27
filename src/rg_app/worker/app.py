@@ -10,7 +10,14 @@ from rg_app.common.faststream.otel import prepare_bundle
 from .config import Config
 from .deps import after_startup, lifespan, on_startup_factory
 from .duck_deps import after_startup as duck_after_startup
-from .routers import activity_cmd_router, activity_svc_router, geo_svc_router, incoming_wha_router, user_svc_router
+from .routers import (
+    activity_cmd_router,
+    activity_svc_router,
+    geo_svc_router,
+    user_svc_router,
+    webhook_activities_router,
+    webhook_revocations_router,
+)
 
 
 def app_factory(config: Config, debug: bool) -> FastStream:
@@ -24,7 +31,8 @@ def app_factory(config: Config, debug: bool) -> FastStream:
         middlewares=(otel_bundle.middeware,) if otel_bundle else [],
     )
     broker.include_routers(
-        incoming_wha_router,
+        webhook_revocations_router,
+        webhook_activities_router,
         activity_cmd_router,
         geo_svc_router,
         activity_svc_router,

@@ -29,9 +29,15 @@ class User(Base):
     strava_account_created_at: Mapped[datetime] = mapped_column(
         UTCDateTime, default=lambda: datetime.now(UTC), server_default=func.now()
     )
-    activities: Mapped[list["Activity"]] = relationship("Activity", back_populates="user")
+    activities: Mapped[list["Activity"]] = relationship(
+        "Activity",
+        back_populates="user",
+        cascade="all, delete",
+    )
     ineligible_activities: Mapped[list["IneligibleActivity"]] = relationship(
-        "IneligibleActivity", back_populates="user"
+        "IneligibleActivity",
+        back_populates="user",
+        cascade="all, delete",
     )
 
 

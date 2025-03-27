@@ -10,7 +10,7 @@ from .dependencies.debug_flag import lifespan_factory as debug_flag_lifespan_fac
 from .dependencies.http_client import lifespan as http_client_lifespan
 from .dependencies.strava import lifespan as strava_lifespan
 from .dependencies.util import combined_lifespans_factory
-from .routers import activities_router, athletes_router, auth_router, health_router, regions_router
+from .routers import activities_router, athletes_router, auth_router, health_router, regions_router, user_router
 
 
 def app_factory(config: Config, debug: bool = False) -> fastapi.FastAPI:
@@ -29,6 +29,7 @@ def app_factory(config: Config, debug: bool = False) -> fastapi.FastAPI:
     app.include_router(regions_router)
     app.include_router(activities_router)
     app.include_router(athletes_router)
+    app.include_router(user_router)
 
     app.add_middleware(GZipMiddleware, minimum_size=1000)
     app.add_middleware(
