@@ -1,22 +1,19 @@
 import typing as ty
 
-from faststream import Depends
 from faststream.nats import JStream, NatsRouter, PullSub
-from faststream.nats.annotations import NatsBroker, NatsMessage
-from sqlalchemy.ext.asyncio import AsyncSession
+from faststream.nats.annotations import NatsMessage
 
+from rg_app.common.internal.user_svc import AccountDeleteRequest
 from rg_app.common.strava.models.webhook import WebhookAthlete
-from rg_app.db.models.models import User
 from rg_app.nats_defs.local import (
     CONSUMER_REVOCATIONS,
     NAME_INCOMING_WHA_MIRROR,
-    STREAM_ACTIVITY_CMD,
 )
-from rg_app.worker.deps import db_session
 
 router = NatsRouter()
 
 wha_stream = JStream(name=ty.cast(str, NAME_INCOMING_WHA_MIRROR), declare=False)
+publisher = router.publisher("rg.svc.user.delete-account", schema=AccountDeleteRequest)
 
 
 @router.subscriber(
@@ -30,9 +27,7 @@ wha_stream = JStream(name=ty.cast(str, NAME_INCOMING_WHA_MIRROR), declare=False)
 )
 async def revocations_handle(
     body: WebhookAthlete,
-    broker: NatsBroker,
     nats_msg: NatsMessage,
-    session: AsyncSession = Depends(db_session),
 ):
     print("Got revocation for: ", body.object_id)
     if body.aspect_type != "delete":
@@ -40,14 +35,9 @@ async def revocations_handle(
         await nats_msg.ack()
         return
     # Will delete user
-    nats_conn = broker._connection
-    assert nats_conn is not None
-    js = nats_conn.jetstream()
-    activity_stream_name = ty.cast(str, STREAM_ACTIVITY_CMD.name)
-    await js.purge_stream(activity_stream_name, subject=f"rg.internal.cmd.activity.*.{body.object_id}.>")
-    user = await session.get(User, body.object_id)
-    if user:
-        await session.delete(user)
-    await session.commit()
-    await nats_msg.ack()
-    print(f"User {body.object_id} deleted")
+    resp = await publisher.request(AccountDeleteRequest(user_id=body.object_id))
+    if resp.body.decode() != "OK":
+        print(f"Failed to delete user {body.object_id}")
+        await nats_msg.nack()
+    else:
+        await nats_msg.ack()
