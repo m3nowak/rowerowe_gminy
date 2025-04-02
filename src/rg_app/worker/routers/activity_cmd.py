@@ -83,7 +83,6 @@ async def backlog_handle(
     otel_logger: Logger = Depends(otel_logger),
     session: AsyncSession = Depends(db_session),
 ):
-    span = trace.get_current_span()
     with tracer.start_as_current_span("get_auth") as auth_span:
         auth = await stm.get_httpx_auth(body.owner_id)
         auth_span.add_event("auth", {"owner_id": body.owner_id})
