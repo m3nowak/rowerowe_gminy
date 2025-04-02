@@ -1,4 +1,3 @@
-import asyncio
 import typing as ty
 from decimal import Decimal
 from logging import Logger
@@ -9,6 +8,7 @@ from faststream.nats.annotations import NatsBroker, NatsMessage
 from httpx import AsyncClient
 from opentelemetry import trace
 
+from rg_app.api.dependencies.db import AsyncSession
 from rg_app.common.faststream.otel import otel_logger, tracer_fn
 from rg_app.common.internal import activity_filter
 from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel, UpsertModelIneligible
@@ -17,12 +17,15 @@ from rg_app.common.strava.activities import get_activity, get_activity_range
 from rg_app.common.strava.auth import StravaTokenManager
 from rg_app.common.strava.models.activity import ActivityPartial
 from rg_app.common.strava.rate_limits import RateLimitManager
+from rg_app.db.models import User
 from rg_app.nats_defs.local import CONSUMER_ACTIVITY_CMD_BACKLOG, CONSUMER_ACTIVITY_CMD_STD, STREAM_ACTIVITY_CMD
-from rg_app.worker.deps import http_client, rate_limit_mgr, token_mgr
+from rg_app.worker.deps import db_session, http_client, rate_limit_mgr, token_mgr
 
 router = NatsRouter()
 
 stream = JStream(name=ty.cast(str, STREAM_ACTIVITY_CMD.name), declare=False)
+
+pub_activity_std = router.publisher("rg.internal.cmd.activity.create.{athlete_id}.{activity_id}", stream=stream)
 
 req_upsert = router.publisher("rg.svc.activity.upsert", schema=UpsertModel)
 req_upsert_ineligible = router.publisher("rg.svc.activity.upsert-ineligible", schema=UpsertModel)
@@ -78,37 +81,35 @@ async def backlog_handle(
     stm: StravaTokenManager = Depends(token_mgr),
     tracer: trace.Tracer = Depends(tracer_fn),
     otel_logger: Logger = Depends(otel_logger),
+    session: AsyncSession = Depends(db_session),
 ):
     span = trace.get_current_span()
     with tracer.start_as_current_span("get_auth") as auth_span:
         auth = await stm.get_httpx_auth(body.owner_id)
         auth_span.add_event("auth", {"owner_id": body.owner_id})
+
+    user = await session.get(User, body.owner_id)
+    if user is None:
+        otel_logger.error(f"User {body.owner_id} not found")
+        await nats_msg.ack()
     has_more = True
     page = 0
-    awaitables = []
     while has_more:
         activity_range = await get_activity_range(http_client, body.period_from, body.period_to, page, auth, rlm)
         has_more = activity_range.has_more
         page += 1
-        if page >= 20:
+        if page >= 50:
             print("Too many pages!")
             break
         for activity in activity_range.items:
-            # filter out activities
-            is_ok, reason = activity_filter(activity)
-            if not is_ok:
-                reason = reason or "Unknown"
-                span.add_event("activity_filter_failed", {"reason": reason, "activity_id": activity.id})
-                print(f"Activity {activity.id} filtered out: {reason}")
-                umi = _mk_ineligible_activity(activity, reason)
-                awaitables.append(req_upsert_ineligible.request(umi, timeout=30))
-            else:
-                assert activity.map is not None
-                polyline_str = activity.map.summary_polyline
-                assert polyline_str is not None
-                activity_model = _mk_upsert_model(activity, polyline_str, body.type == "update")
-                awaitables.append(req_upsert.request(activity_model, timeout=30))
-    await asyncio.gather(*awaitables)
+            # republish actvity, for std handle
+
+            activity_cmd = StdActivityCmd(
+                owner_id=activity.athlete.id, activity_id=activity.id, type="create", activity=activity
+            )
+            subject = f"rg.internal.cmd.activity.create.{activity.athlete.id}.{activity.id}"
+
+            await pub_activity_std.publish(activity_cmd, subject)
     await nats_msg.ack()
 
 
@@ -120,7 +121,7 @@ async def backlog_handle(
     no_ack=True,
 )
 async def std_handle(
-    body: StdActivityCmd,  # CreateActivityCmd | UpdateActivityCmd | DeleteActivityCmd,
+    body: StdActivityCmd,
     broker: NatsBroker,
     nats_msg: NatsMessage,
     http_client: AsyncClient = Depends(http_client),
@@ -134,13 +135,16 @@ async def std_handle(
         with tracer.start_as_current_span("get_auth") as auth_span:
             auth = await stm.get_httpx_auth(body.owner_id)
             auth_span.add_event("auth", {"owner_id": body.owner_id})
-        with tracer.start_as_current_span("get_activity") as act_span:
-            activity_expanded = await get_activity(http_client, body.activity_id, auth, rlm)
-            act_span.add_event("activity_expanded", {"name": activity_expanded.name})
+        if body.activity is None:
+            with tracer.start_as_current_span("get_activity") as act_span:
+                activity_expanded = await get_activity(http_client, body.activity_id, auth, rlm)
+                act_span.add_event("activity_expanded", {"name": activity_expanded.name})
+        else:
+            activity_expanded = body.activity
         otel_logger.info(activity_expanded.model_dump_json())
         span.set_attribute("activity_id", activity_expanded.id)
-        is_ok, reason = activity_filter(activity_expanded)
-        if not is_ok:
+        is_eligible, reason = activity_filter(activity_expanded)
+        if not is_eligible:
             reason = reason or "Unknown"
             span.add_event("activity_filter_failed", {"reason": reason, "activity_id": body.activity_id})
             print(f"Activity {body.activity_id} filtered out: {reason}")

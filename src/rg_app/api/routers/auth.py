@@ -1,19 +1,23 @@
+import asyncio
 from datetime import UTC, datetime, timedelta
 
 import fastapi
 import jwt
 from httpx import HTTPStatusError
 
+from rg_app.api.dependencies.broker import NatsBroker
 from rg_app.api.dependencies.config import Config
 from rg_app.api.dependencies.db import AsyncSession
 from rg_app.api.dependencies.debug_flag import DebugFlag
 from rg_app.api.dependencies.http_client import AsyncClient
 from rg_app.api.dependencies.strava import RateLimitManager, StravaTokenManager
 from rg_app.api.models.auth import LoginErrorCause, LoginRequest, LoginResponse, LoginResponseError, StravaScopes
+from rg_app.common.msg.cmd import BacklogActivityCmd
 from rg_app.common.strava.activities import verify_activities_accessible
 from rg_app.common.strava.athletes import get_athlete
 from rg_app.common.strava.auth import StravaAuth
 from rg_app.db import User
+from rg_app.nats_defs.local import STREAM_ACTIVITY_CMD
 
 router = fastapi.APIRouter(tags=["auth"])
 
@@ -27,6 +31,38 @@ def create_token(user_id: str, expiry: timedelta, secret: str, username: str) ->
         "preferred_username": username,
     }
     return jwt.encode(payload, secret, algorithm="HS256")
+
+
+_PERIOD_STEP = timedelta(days=365)
+
+
+async def _initialize_backlog_import(
+    user: User,
+    broker: NatsBroker,
+):
+    now = datetime.now(UTC)
+    period_from = user.strava_account_created_at
+    period_to = period_from + _PERIOD_STEP
+    should_continue = True
+    awaitables = []
+
+    print(f"Backlog import for {user.id} from {period_from} to {now}")
+
+    while should_continue:
+        msg = BacklogActivityCmd(
+            owner_id=user.id,
+            period_from=period_from,
+            period_to=min(period_to, now),
+            type="backlog",
+        )
+        awaitables.append(
+            broker.publish(msg, f"rg.internal.cmd.activity.backlog.{user.id}", stream=STREAM_ACTIVITY_CMD.name)
+        )
+        if period_to >= now:
+            break
+        period_from = period_to
+        period_to = period_from + _PERIOD_STEP
+    await asyncio.gather(*awaitables)
 
 
 @router.post(
@@ -43,6 +79,7 @@ async def login(
     async_client: AsyncClient,
     rlm: RateLimitManager,
     resp: fastapi.Response,
+    broker: NatsBroker,
 ) -> LoginResponse | LoginResponseError:
     if StravaScopes.ACTIVITY_READ not in login_data.scopes:
         resp.status_code = 400
@@ -90,6 +127,10 @@ async def login(
         )
         session.add(user)
     await session.commit()
+
+    if is_first_login:
+        await session.refresh(user, attribute_names=["id", "strava_account_created_at"])
+        await _initialize_backlog_import(user, broker)
 
     expiry = (
         timedelta(hours=config.auth.long_expiry_hours)

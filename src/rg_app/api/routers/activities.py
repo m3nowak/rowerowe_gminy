@@ -29,7 +29,7 @@ class BacklogLastTriggerResponse(BaseModel):
     eligible: bool
 
 
-@router.post("/backlog")
+@router.post("/backlog", deprecated=True)
 async def backlog(
     backlog_request: BacklogRequest,
     user_info: UserInfoRequired,
