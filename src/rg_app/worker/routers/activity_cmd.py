@@ -91,6 +91,7 @@ async def backlog_handle(
     if user is None:
         otel_logger.error(f"User {body.owner_id} not found")
         await nats_msg.ack()
+        return
     has_more = True
     page = 0
     while has_more:
