@@ -9,3 +9,4 @@ class AthleteDetail(BaseModel):
     last_backlog_sync: datetime | None
     backlog_sync_eligible: bool
     strava_account_created_at: datetime
+    unprocessed_activities: int
