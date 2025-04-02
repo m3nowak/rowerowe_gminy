@@ -102,8 +102,7 @@ async def backlog_handle(
             print("Too many pages!")
             break
         for activity in activity_range.items:
-            # republish actvity, for std handle
-
+            # republish activity, for std handle
             activity_cmd = StdActivityCmd(
                 owner_id=activity.athlete.id, activity_id=activity.id, type="create", activity=activity
             )
