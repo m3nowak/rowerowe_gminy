@@ -128,13 +128,24 @@ async def std_handle(
     stm: StravaTokenManager = Depends(token_mgr),
     tracer: trace.Tracer = Depends(tracer_fn),
     otel_logger: Logger = Depends(otel_logger),
+    session: AsyncSession = Depends(db_session),
 ):
     span = trace.get_current_span()
     if body.type in ["create", "update"]:
-        with tracer.start_as_current_span("get_auth") as auth_span:
-            auth = await stm.get_httpx_auth(body.owner_id)
-            auth_span.add_event("auth", {"owner_id": body.owner_id})
+        user_id = body.owner_id
+        user = await session.get(User, user_id)
+        if user is None:
+            otel_logger.error(
+                f"User {user_id} not found, skipping activity {body.activity_id}",
+                extra={"user_id": user_id, "activity_id": body.activity_id},
+            )
+            await nats_msg.ack()
+            return
+
         if body.activity is None:
+            with tracer.start_as_current_span("get_auth") as auth_span:
+                auth = await stm.get_httpx_auth(body.owner_id)
+                auth_span.add_event("auth", {"owner_id": body.owner_id})
             with tracer.start_as_current_span("get_activity") as act_span:
                 activity_expanded = await get_activity(http_client, body.activity_id, auth, rlm)
                 act_span.add_event("activity_expanded", {"name": activity_expanded.name})
