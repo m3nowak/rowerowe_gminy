@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Literal, Sequence
+from typing import Any, Literal, Sequence
 
 from pydantic import Field
 
@@ -26,6 +26,11 @@ class LoginResponse(BaseModel):
     access_token: str = Field(alias="access_token")
     token_type: Literal["bearer"] = Field("bearer", alias="token_type")
     is_first_login: bool
+
+
+class LoginResponseCookie(BaseModel):
+    is_first_login: bool
+    token_claims: dict[str, Any]
 
 
 class LoginErrorCause(StrEnum):
