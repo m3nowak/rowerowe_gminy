@@ -5,20 +5,21 @@ from logging import Logger
 from faststream import Depends
 from faststream.nats import JStream, NatsRouter, PullSub
 from faststream.nats.annotations import NatsBroker, NatsMessage
-from httpx import AsyncClient
+from httpx import AsyncClient, HTTPStatusError
 from opentelemetry import trace
+from sqlalchemy import and_, func, not_, select
 
 from rg_app.api.dependencies.db import AsyncSession
 from rg_app.common.faststream.otel import otel_logger, tracer_fn
 from rg_app.common.internal import activity_filter
 from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel, UpsertModelIneligible
 from rg_app.common.msg.cmd import BacklogActivityCmd, StdActivityCmd
-from rg_app.common.strava.activities import get_activity, get_activity_range
-from rg_app.common.strava.auth import StravaTokenManager
-from rg_app.common.strava.models.activity import ActivityPartial
+from rg_app.common.strava.activities import get_activity, get_activity_range, update_activity
+from rg_app.common.strava.auth import StravaAuth, StravaTokenManager
+from rg_app.common.strava.models.activity import ActivityPartial, ActivityPatch
 from rg_app.common.strava.rate_limits import RateLimitManager
 from rg_app.db.models import User
-from rg_app.db.models.models import Activity, User
+from rg_app.db.models.models import Activity, Region
 from rg_app.nats_defs.local import CONSUMER_ACTIVITY_CMD_BACKLOG, CONSUMER_ACTIVITY_CMD_STD, STREAM_ACTIVITY_CMD
 from rg_app.worker.deps import db_session, http_client, rate_limit_mgr, token_mgr
 
@@ -119,49 +120,144 @@ async def backlog_handle(
 
 DESC_SECTION_START = "RoweroweGminy.pl 🏘️🚴🇵🇱"
 DESC_SECTION_END = "---"
+DESC_TOWN_HEADER = "🏙️ Zdobyte Miasta :"
+DESC_COMMUNE_HEADER = "🏡 Zdobyte Gminy :"
 
 
-async def _update_activity_desc(session: AsyncSession, http_client: AsyncClient, activity: ActivityPartial) -> None:
+def _declinate_commune(count: int) -> str:
+    if count == 1:
+        return "gmina"
+    elif count == 2 or count == 3 or count == 4:
+        return "gminy"
+    else:
+        return "gmin"
+
+
+def _declinate_new(count: int) -> str:
+    if count == 1:
+        return "nową"
+    elif count == 2 or count == 3 or count == 4:
+        return "nowe"
+    else:
+        return "nowych"
+
+
+async def _get_activity_description_content(session: AsyncSession, db_activity: Activity) -> list[str]:
+    """
+    Generate activity description content with commune and town information.
+    Returns a list of lines to be inserted in the activity description.
+    """
+    # Target record CTE
+    target_record_cte = (
+        select(Activity.id, Activity.user_id, Activity.visited_regions, Activity.start)
+        .where(Activity.id == db_activity.id)
+        .cte("target_record")
+    )
+
+    # Earlier regions CTE
+    earlier_regions_cte = (
+        select(func.jsonb_array_elements_text(Activity.visited_regions).label("region"))
+        .select_from(Activity)
+        .join(
+            target_record_cte,
+            and_(
+                Activity.user_id == target_record_cte.c.user_id,
+                Activity.start < target_record_cte.c.start,
+                Activity.id != target_record_cte.c.id,
+            ),
+        )
+        .distinct()
+        .cte("earlier_regions")
+    )
+
+    # Target record array elements CTE
+    target_regions_cte = select(
+        func.jsonb_array_elements_text(target_record_cte.c.visited_regions).label("region")
+    ).cte("target_record_ael")
+
+    # Final query - find regions in target activity that aren't in earlier activities
+    new_regions_query = (
+        select(target_regions_cte.c.region, Region.name)
+        .select_from(target_regions_cte.join(Region, target_regions_cte.c.region == Region.id))
+        .where(not_(target_regions_cte.c.region.in_(select(earlier_regions_cte.c.region))))
+    )
+
+    # Execute the query to get the new regions
+    result = await session.execute(new_regions_query)
+    new_communes = []
+    new_towns = []
+    for row in result:
+        region_id: str = row[0]
+        region_name = row[1]
+        if not region_name:
+            # Region not found in DB or is nameless, skip it
+            continue
+        if region_id.endswith("1"):
+            new_towns.append((region_id, region_name))
+        else:
+            new_communes.append((region_id, region_name))
+    activity_new_count = len(new_communes) + len(new_towns)
+    activity_total_count = len(db_activity.visited_regions)
+
+    so_far_regions_cte = (
+        select(target_regions_cte.c.region).union(select(earlier_regions_cte.c.region)).cte("total_regions")
+    )
+    so_far_regions_unique_cte = select(so_far_regions_cte.c.region).distinct().cte("total_regions_unique")
+    so_far_regions_unique_count_result = await session.execute(
+        select(func.count(so_far_regions_unique_cte.c.region).label("count"))
+    )
+    so_far_regions_unique_count = so_far_regions_unique_count_result.scalar_one_or_none() or 0
+
+    total_achievable_count = await session.execute(
+        select(func.count(Region.id).label("count")).where(
+            Region.type == "GMI",
+        )
+    )
+    total_achievable_count = total_achievable_count.scalar_one_or_none() or 0
+
+    desc_lines = []
+    desc_lines.append(DESC_SECTION_START)
+    fline = f"Odwiedzono {activity_total_count} {_declinate_commune(activity_total_count)}"
+    if activity_new_count:
+        fline += f", w tym {activity_new_count} {_declinate_new(activity_new_count)}!"
+    else:
+        fline += "."
+    desc_lines.append(fline)
+    if new_towns:
+        desc_lines.append(DESC_TOWN_HEADER)
+        for _, name in new_towns:
+            desc_lines.append(f"- {name}")
+    if new_communes:
+        desc_lines.append(DESC_COMMUNE_HEADER)
+        for _, name in new_communes:
+            desc_lines.append(f"- gmina {name}")
+    achieved_percent = "{:.3f}%".format(100 * so_far_regions_unique_count / total_achievable_count)
+    desc_lines.append(
+        f"Przejechano do tej pory {so_far_regions_unique_count} {_declinate_commune(so_far_regions_unique_count)} z {total_achievable_count}! ({achieved_percent})"
+    )
+    desc_lines.append(DESC_SECTION_END)
+    return desc_lines
+
+
+async def _update_activity_desc(
+    session: AsyncSession,
+    http_client: AsyncClient,
+    activity: ActivityPartial,
+    auth: StravaAuth,
+    rlm: RateLimitManager,
+) -> None:
     """
     Update activity description in strava.
     Has to be called after activity is created in DB.
     """
-    user = await session.get_one(User, activity.athlete.id)
     db_activity = await session.get_one(Activity, activity.id)
     if not db_activity.visited_regions:
         # No regions visited, no need to update desc
         return
 
-    county_codes = db_activity.visited_regions
-
-    magic_query = """
-    WITH target_record AS (
-    -- Select the specific record and its start time
-    SELECT
-        id,
-        user_id,
-        visited_regions,
-        start
-    FROM
-        activity 
-    WHERE
-        id = 14019763483 -- Replace :target_id with the actual ID
-    ), earlier_regions AS (
-    -- Select all distinct regions visited in records *before* the target record
-    SELECT DISTINCT
-        jsonb_array_elements_text(yt.visited_regions) AS region
-    FROM
-        activity yt
-    CROSS JOIN target_record tr -- Use CROSS JOIN or JOIN since target_record has only one row
-    WHERE
-        yt.start < tr.start -- Filter for records that started earlier
-        AND yt.id != tr.id -- Optionally exclude the target record itself if start times could be identical
-        and yt.user_id = tr.user_id
-    ), target_record_ael as (
-        select jsonb_array_elements_text(tr.visited_regions) as region from target_record tr
-    )
-
-    select tra.region from target_record_ael tra where tra.region not in (select region from earlier_regions)"""
+    desc_content = await _get_activity_description_content(session, db_activity)
+    for line in desc_content:
+        print(line)
 
     activity_desc_lines = (activity.description or "").splitlines()
     start_idx = -1
@@ -174,14 +270,24 @@ async def _update_activity_desc(session: AsyncSession, http_client: AsyncClient,
         pass
 
     if start_idx == -1 and end_idx == -1:
-        # add section
-        pass
+        activity_desc_lines.extend(desc_content)
     elif start_idx != -1:
         # malformed section, do not update
         return
     else:
         # update section
-        pass
+        activity_desc_lines = activity_desc_lines[:start_idx] + desc_content + activity_desc_lines[end_idx + 1 :]
+
+    # Update activity description
+    await update_activity(
+        http_client,
+        activity.id,
+        auth,
+        rlm,
+        ActivityPatch(
+            description="\n".join(activity_desc_lines),
+        ),
+    )
 
 
 @router.subscriber(
@@ -213,7 +319,7 @@ async def std_handle(
             )
             await nats_msg.ack()
             return
-
+        auth = None
         if body.activity is None:
             with tracer.start_as_current_span("get_auth") as auth_span:
                 auth = await stm.get_httpx_auth(body.owner_id)
@@ -250,7 +356,28 @@ async def std_handle(
 
             # Acitivity desc update
             if user.update_strava_desc:
-                await _update_activity_desc(session, http_client, activity_expanded)
+                if auth is None:
+                    with tracer.start_as_current_span("get_auth") as auth_span:
+                        auth = await stm.get_httpx_auth(body.owner_id)
+                        auth_span.add_event("auth", {"owner_id": body.owner_id})
+                try:
+                    await _update_activity_desc(session, http_client, activity_expanded, auth, rlm)
+                except HTTPStatusError as e:
+                    if e.response.status_code == 401:
+                        # User not authorized to update activity
+                        print(f"User {user_id} not authorized to update activity {body.activity_id}")
+                        otel_logger.error(
+                            f"User {user_id} not authorized to update activity {body.activity_id}",
+                            extra={"user_id": user_id, "activity_id": body.activity_id},
+                        )
+                    else:
+                        span.record_exception(e)
+                        otel_logger.error(
+                            f"Failed to update activity {body.activity_id} description: {e}",
+                            extra={"user_id": user_id, "activity_id": body.activity_id},
+                        )
+                        await nats_msg.nack()
+                        return
                 print(f"Activity {body.activity_id} description updated!")
 
             print(f"Activity {body.activity_id} processed!")

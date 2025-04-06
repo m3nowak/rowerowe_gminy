@@ -64,6 +64,7 @@ async def update_activity(
 ) -> ActivityPartial:
     resp = await client.put(
         f"https://www.strava.com/api/v3/activities/{activity_id}",
+        auth=auth,
         json=activity.model_dump(by_alias=True),
     )
     resp.raise_for_status()

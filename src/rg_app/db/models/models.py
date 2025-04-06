@@ -89,5 +89,6 @@ class Region(Base):
     __tablename__ = "region"
 
     id: Mapped[int] = mapped_column(String(16), primary_key=True)
+    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     type: Mapped[str] = mapped_column(String(8), index=True)
     ancestors: Mapped[list[str]] = mapped_column(ARRAY(String(16), dimensions=1))
