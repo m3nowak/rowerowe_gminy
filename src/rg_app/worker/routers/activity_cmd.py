@@ -256,27 +256,26 @@ async def _update_activity_desc(
         return
 
     desc_content = await _get_activity_description_content(session, db_activity)
-    for line in desc_content:
-        print(line)
 
     activity_desc_lines = (activity.description or "").splitlines()
     start_idx = -1
     end_idx = -1
     try:
         start_idx = activity_desc_lines.index(DESC_SECTION_START)
-        end_idx = activity_desc_lines[start_idx:].index(DESC_SECTION_END)
+        end_idx = activity_desc_lines[start_idx:].index(DESC_SECTION_END) + start_idx
     except ValueError:
         # No existing section, need to add it at the end
         pass
 
     if start_idx == -1 and end_idx == -1:
         activity_desc_lines.extend(desc_content)
-    elif start_idx != -1:
-        # malformed section, do not update
-        return
-    else:
+
+    elif start_idx != -1 and end_idx != -1:
         # update section
         activity_desc_lines = activity_desc_lines[:start_idx] + desc_content + activity_desc_lines[end_idx + 1 :]
+    else:
+        # malformed section, skip
+        return
 
     # Update activity description
     await update_activity(
