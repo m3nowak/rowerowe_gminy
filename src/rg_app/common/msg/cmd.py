@@ -13,6 +13,7 @@ class StdActivityCmd(BaseModel):
     activity_id: int
     type: Literal["create", "update", "delete"]
     activity: ActivityPartial | None = None
+    is_from_backlog: bool = False
 
 
 class BacklogActivityCmd(BaseModel):

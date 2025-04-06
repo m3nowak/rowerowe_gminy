@@ -18,6 +18,7 @@ from rg_app.common.strava.auth import StravaTokenManager
 from rg_app.common.strava.models.activity import ActivityPartial
 from rg_app.common.strava.rate_limits import RateLimitManager
 from rg_app.db.models import User
+from rg_app.db.models.models import Activity, User
 from rg_app.nats_defs.local import CONSUMER_ACTIVITY_CMD_BACKLOG, CONSUMER_ACTIVITY_CMD_STD, STREAM_ACTIVITY_CMD
 from rg_app.worker.deps import db_session, http_client, rate_limit_mgr, token_mgr
 
@@ -104,12 +105,83 @@ async def backlog_handle(
         for activity in activity_range.items:
             # republish activity, for std handle
             activity_cmd = StdActivityCmd(
-                owner_id=activity.athlete.id, activity_id=activity.id, type="create", activity=activity
+                owner_id=activity.athlete.id,
+                activity_id=activity.id,
+                type="create",
+                activity=activity,
+                is_from_backlog=True,
             )
             subject = f"rg.internal.cmd.activity.create.{activity.athlete.id}.{activity.id}"
 
             await pub_activity_std.publish(activity_cmd, subject)
     await nats_msg.ack()
+
+
+DESC_SECTION_START = "RoweroweGminy.pl 🏘️🚴🇵🇱"
+DESC_SECTION_END = "---"
+
+
+async def _update_activity_desc(session: AsyncSession, http_client: AsyncClient, activity: ActivityPartial) -> None:
+    """
+    Update activity description in strava.
+    Has to be called after activity is created in DB.
+    """
+    user = await session.get_one(User, activity.athlete.id)
+    db_activity = await session.get_one(Activity, activity.id)
+    if not db_activity.visited_regions:
+        # No regions visited, no need to update desc
+        return
+
+    county_codes = db_activity.visited_regions
+
+    magic_query = """
+    WITH target_record AS (
+    -- Select the specific record and its start time
+    SELECT
+        id,
+        user_id,
+        visited_regions,
+        start
+    FROM
+        activity 
+    WHERE
+        id = 14019763483 -- Replace :target_id with the actual ID
+    ), earlier_regions AS (
+    -- Select all distinct regions visited in records *before* the target record
+    SELECT DISTINCT
+        jsonb_array_elements_text(yt.visited_regions) AS region
+    FROM
+        activity yt
+    CROSS JOIN target_record tr -- Use CROSS JOIN or JOIN since target_record has only one row
+    WHERE
+        yt.start < tr.start -- Filter for records that started earlier
+        AND yt.id != tr.id -- Optionally exclude the target record itself if start times could be identical
+        and yt.user_id = tr.user_id
+    ), target_record_ael as (
+        select jsonb_array_elements_text(tr.visited_regions) as region from target_record tr
+    )
+
+    select tra.region from target_record_ael tra where tra.region not in (select region from earlier_regions)"""
+
+    activity_desc_lines = (activity.description or "").splitlines()
+    start_idx = -1
+    end_idx = -1
+    try:
+        start_idx = activity_desc_lines.index(DESC_SECTION_START)
+        end_idx = activity_desc_lines[start_idx:].index(DESC_SECTION_END)
+    except ValueError:
+        # No existing section, need to add it at the end
+        pass
+
+    if start_idx == -1 and end_idx == -1:
+        # add section
+        pass
+    elif start_idx != -1:
+        # malformed section, do not update
+        return
+    else:
+        # update section
+        pass
 
 
 @router.subscriber(
@@ -175,6 +247,12 @@ async def std_handle(
             resp = await req_upsert.request(activity_model, timeout=30)
             resp_parsed = resp.body.decode()
             assert resp_parsed == "OK"
+
+            # Acitivity desc update
+            if user.update_strava_desc:
+                await _update_activity_desc(session, http_client, activity_expanded)
+                print(f"Activity {body.activity_id} description updated!")
+
             print(f"Activity {body.activity_id} processed!")
     elif body.type == "delete":
         resp = await req_delete.request(DeleteModel(id=body.activity_id, user_id=body.owner_id), timeout=30)

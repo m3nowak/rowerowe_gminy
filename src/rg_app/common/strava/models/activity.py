@@ -34,6 +34,11 @@ class ActivityPartial(BaseStravaModel):
     elev_low: Decimal | None = None
     gear_id: str | None = None
     original_data: dict[str, Any] | None = None
+    description: str | None = None  # Only for detailed activity
+
+
+class ActivityPatch(BaseStravaModel):
+    description: str | None = None
 
 
 T = TypeVar("T")

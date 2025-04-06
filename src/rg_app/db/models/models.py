@@ -29,6 +29,7 @@ class User(Base):
     strava_account_created_at: Mapped[datetime] = mapped_column(
         UTCDateTime, default=lambda: datetime.now(UTC), server_default=func.now()
     )
+    update_strava_desc: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     activities: Mapped[list["Activity"]] = relationship(
         "Activity",
         back_populates="user",
