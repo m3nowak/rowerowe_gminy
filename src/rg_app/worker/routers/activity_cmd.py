@@ -355,7 +355,7 @@ async def std_handle(
             assert resp_parsed == "OK"
 
             # Acitivity desc update
-            if user.update_strava_desc:
+            if user.update_strava_desc and not body.is_from_backlog:
                 if auth is None:
                     with tracer.start_as_current_span("get_auth") as auth_span:
                         auth = await stm.get_httpx_auth(body.owner_id)
