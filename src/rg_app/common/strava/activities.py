@@ -6,7 +6,7 @@ from pydantic import TypeAdapter
 
 from .auth import StravaAuth
 from .helpers import MAX_PAGE_SIZE
-from .models.activity import ActivityPartial, ActivityStreamSet
+from .models.activity import ActivityPartial, ActivityPatch, ActivityStreamSet
 from .models.base import PaginatedResult
 from .rate_limits import RateLimitManager
 
@@ -48,6 +48,25 @@ async def get_activity(
     rlm: RateLimitManager,
 ) -> ActivityPartial:
     resp = await client.get(f"https://www.strava.com/api/v3/activities/{activity_id}", auth=auth)
+    resp.raise_for_status()
+    await rlm.feed_headers(resp.headers)
+    result = ActivityPartial.model_validate_json(resp.text)
+    result.original_data = json.loads(resp.text)
+    return result
+
+
+async def update_activity(
+    client: AsyncClient,
+    activity_id: int,
+    auth: StravaAuth,
+    rlm: RateLimitManager,
+    activity: ActivityPatch,
+) -> ActivityPartial:
+    resp = await client.put(
+        f"https://www.strava.com/api/v3/activities/{activity_id}",
+        auth=auth,
+        json=activity.model_dump(by_alias=True),
+    )
     resp.raise_for_status()
     await rlm.feed_headers(resp.headers)
     result = ActivityPartial.model_validate_json(resp.text)

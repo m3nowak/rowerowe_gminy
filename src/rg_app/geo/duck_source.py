@@ -20,6 +20,7 @@ def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb
         ID VARCHAR PRIMARY KEY,
         shape GEOMETRY,
         type VARCHAR,
+        name VARCHAR,
         parent_id VARCHAR NULL,
         ancestors VARCHAR[]
     )""")
@@ -31,6 +32,7 @@ def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb
             CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 7, '0')) as ID,
             geom AS shape, 
             JPT_SJR_KO as type,
+            JPT_NAZWA_ as name,
             CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 4, '0')) as parent_id,
             ['PL', CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 2, '0')), CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 4, '0'))] as ancestors
         FROM ST_Read('{communes_json}')"""
@@ -43,6 +45,7 @@ def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb
             CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 4, '0')) as ID,
             geom AS shape,
             JPT_SJR_KO as type,
+            JPT_NAZWA_ as name,
             CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 2, '0')) as parent_id,
             ['PL', CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 2, '0'))] as ancestors
         FROM ST_Read('{counties_json}')"""
@@ -55,6 +58,7 @@ def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb
             CONCAT('PL', LPAD(CAST(JPT_KOD_JE AS VARCHAR), 2, '0')) as ID,
             geom AS shape,
             JPT_SJR_KO as type,
+            JPT_NAZWA_ as name,
             'PL' as parent_id,
             ['PL'] as ancestors
         FROM ST_Read('{voivodeships_json}')"""
@@ -67,6 +71,7 @@ def create_db(json_dir: str | None = None, db_path: str | None = None) -> duckdb
             'PL' as ID,
             geom AS shape,
             JPT_SJR_KO as type,
+            JPT_NAZWA_ as name,
             NULL as parent_id,
             [] as ancestors
         FROM ST_Read('{country_json}')"""

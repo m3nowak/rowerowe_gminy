@@ -29,6 +29,7 @@ class User(Base):
     strava_account_created_at: Mapped[datetime] = mapped_column(
         UTCDateTime, default=lambda: datetime.now(UTC), server_default=func.now()
     )
+    update_strava_desc: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     activities: Mapped[list["Activity"]] = relationship(
         "Activity",
         back_populates="user",
@@ -88,5 +89,6 @@ class Region(Base):
     __tablename__ = "region"
 
     id: Mapped[int] = mapped_column(String(16), primary_key=True)
+    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     type: Mapped[str] = mapped_column(String(8), index=True)
     ancestors: Mapped[list[str]] = mapped_column(ARRAY(String(16), dimensions=1))

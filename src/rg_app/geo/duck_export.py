@@ -27,7 +27,7 @@ def pg_export(pg_url: str, db_path: str | None = None) -> None:
     #         """)
 
     # Get all regions from DuckDB
-    regions = conn.execute("SELECT ID as id, type, ancestors FROM borders").fetchall()
+    regions = conn.execute("SELECT ID as id, type, ancestors, name FROM borders").fetchall()
 
     engine = sa.create_engine(pg_url)
 
@@ -35,10 +35,10 @@ def pg_export(pg_url: str, db_path: str | None = None) -> None:
         for region in regions:
             insert_stmt = (
                 insert(Region)
-                .values(id=region[0], type=region[1], ancestors=region[2])
+                .values(id=region[0], type=region[1], ancestors=region[2], name=region[3])
                 .on_conflict_do_update(
                     index_elements=[Region.id],
-                    set_={"type": region[1], "ancestors": region[2]},
+                    set_={"type": region[1], "ancestors": region[2], "name": region[3]},
                 )
             )
             pg_conn.execute(insert_stmt)
