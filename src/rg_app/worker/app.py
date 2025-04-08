@@ -28,7 +28,7 @@ def app_factory(config: Config, debug: bool) -> FastStream:
         log_level=log_level,
         inbox_prefix=config.nats.inbox_prefix,
         user_credentials=config.nats.creds_path,
-        middlewares=(otel_bundle.middeware,) if otel_bundle else [],
+        middlewares=(otel_bundle.middleware,) if otel_bundle else [],
     )
     broker.include_routers(
         webhook_revocations_router,

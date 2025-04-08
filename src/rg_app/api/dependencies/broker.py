@@ -23,7 +23,7 @@ def lifespan_factory(mp: MeterProvider, tp: TracerProvider, logger: Logger):
             config.nats.url,
             user_credentials=config.nats.creds_path,
             inbox_prefix=config.nats.inbox_prefix,
-            middlewares=[bundle.middeware],
+            middlewares=[bundle.middleware],
         )
         await broker.start()
         setattr(app.state, _BROKER_KEY, broker)
