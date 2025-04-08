@@ -325,7 +325,15 @@ async def std_handle(
                 auth_span.add_event("auth", {"owner_id": body.owner_id})
             with tracer.start_as_current_span("get_activity") as act_span:
                 activity_expanded = await get_activity(http_client, body.activity_id, auth, rlm)
-                act_span.add_event("activity_expanded", {"name": activity_expanded.name})
+                if activity_expanded:
+                    act_span.add_event(
+                        "activity_expanded", {"name": activity_expanded.name, "id": body.activity_id, "user": user_id}
+                    )
+                else:
+                    act_span.add_event("activity_missing", {"id": body.activity_id, "user": user_id})
+                    print(f"Activity {body.activity_id} not found, skipping!")
+                    await nats_msg.ack()
+                    return
         else:
             activity_expanded = body.activity
         otel_logger.info(activity_expanded.model_dump_json())
