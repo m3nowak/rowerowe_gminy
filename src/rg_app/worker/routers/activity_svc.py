@@ -1,6 +1,5 @@
 from typing import Literal
 
-from httpx import AsyncClient
 import polyline
 from faststream import Depends
 from faststream.nats import NatsRouter
@@ -10,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel, UpsertModelIneligible
 from rg_app.common.internal.geo_svc import GeoSvcCheckRequest, GeoSvcCheckResponse
-from rg_app.common.strava.models.activity import ActivityPartial
 from rg_app.db.models import Activity, IneligibleActivity
 from rg_app.worker.common import DEFAULT_QUEUE
 from rg_app.worker.deps import db_session
