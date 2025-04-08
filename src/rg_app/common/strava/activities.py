@@ -1,7 +1,7 @@
 import json
 from datetime import UTC, datetime
 
-from httpx import AsyncClient
+from httpx import AsyncClient, HTTPStatusError
 from pydantic import TypeAdapter
 
 from .auth import StravaAuth
@@ -46,10 +46,15 @@ async def get_activity(
     activity_id: int,
     auth: StravaAuth,
     rlm: RateLimitManager,
-) -> ActivityPartial:
-    resp = await client.get(f"https://www.strava.com/api/v3/activities/{activity_id}", auth=auth)
-    resp.raise_for_status()
-    await rlm.feed_headers(resp.headers)
+) -> ActivityPartial | None:
+    try:
+        resp = await client.get(f"https://www.strava.com/api/v3/activities/{activity_id}", auth=auth)
+        await rlm.feed_headers(resp.headers)
+        resp.raise_for_status()
+    except HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return None
+        raise e
     result = ActivityPartial.model_validate_json(resp.text)
     result.original_data = json.loads(resp.text)
     return result
