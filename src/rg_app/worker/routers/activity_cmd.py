@@ -85,9 +85,7 @@ async def backlog_handle(
     otel_logger: Logger = Depends(otel_logger),
     session: AsyncSession = Depends(db_session),
 ):
-    with tracer.start_as_current_span("get_auth") as auth_span:
-        auth = await stm.get_httpx_auth(body.owner_id)
-        auth_span.add_event("auth", {"owner_id": body.owner_id})
+    auth = await stm.get_httpx_auth(body.owner_id)
 
     user = await session.get(User, body.owner_id)
     if user is None:
@@ -320,9 +318,7 @@ async def std_handle(
             return
         auth = None
         if body.activity is None:
-            with tracer.start_as_current_span("get_auth") as auth_span:
-                auth = await stm.get_httpx_auth(body.owner_id)
-                auth_span.add_event("auth", {"owner_id": body.owner_id})
+            auth = await stm.get_httpx_auth(body.owner_id)
             with tracer.start_as_current_span("get_activity") as act_span:
                 activity_expanded = await get_activity(http_client, body.activity_id, auth, rlm)
                 if activity_expanded:
@@ -364,9 +360,7 @@ async def std_handle(
             # Acitivity desc update
             if user.update_strava_desc and not body.is_from_backlog:
                 if auth is None:
-                    with tracer.start_as_current_span("get_auth") as auth_span:
-                        auth = await stm.get_httpx_auth(body.owner_id)
-                        auth_span.add_event("auth", {"owner_id": body.owner_id})
+                    auth = await stm.get_httpx_auth(body.owner_id)
                 try:
                     await _update_activity_desc(session, http_client, activity_expanded, auth, rlm)
                 except HTTPStatusError as e:

@@ -9,6 +9,7 @@ import msgspec.json
 import nats.js.errors
 from httpx import Headers
 from nats.aio.client import Client as NATS
+from opentelemetry.trace import get_tracer_provider
 
 from rg_app.common.msg.base_struct import BaseStruct
 
@@ -166,9 +167,16 @@ class RateLimitManager:
         return self.limits_set.get()
 
     async def feed_headers(self, headers: Headers):
-        limits = extract_limits(headers)
-        if limits is not None:
-            if self._kv is not None:
-                assert self._kv_name is not None
-                await self._kv.put(self._kv_name, msgspec.json.encode(limits))
-            self.limits_set.set(limits)
+        tp = get_tracer_provider()
+        tracer = tp.get_tracer(__name__)
+        with tracer.start_as_current_span("feed_headers") as span:
+            limits = extract_limits(headers)
+            if limits is not None:
+                span.set_attribute("limits.read_15m", limits.read_15m.usage)
+                span.set_attribute("limits.read_daily", limits.read_daily.usage)
+                span.set_attribute("limits.any_15m", limits.any_15m.usage)
+                span.set_attribute("limits.any_daily", limits.any_daily.usage)
+                if self._kv is not None:
+                    assert self._kv_name is not None
+                    await self._kv.put(self._kv_name, msgspec.json.encode(limits))
+                self.limits_set.set(limits)

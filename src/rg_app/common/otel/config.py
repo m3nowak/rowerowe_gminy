@@ -2,7 +2,7 @@ from rg_app.common._config_base import BaseConfigModel
 
 
 class BaseOtelConfig(BaseConfigModel):
-    enabled: bool = True
+    enabled: bool = False
     use_global_context: bool = True
     endpoint: str | None = None
     use_grpc: bool = True

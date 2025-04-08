@@ -32,14 +32,6 @@ services:
     depends_on:
       - nats
 
-  alloy:
-    image: docker.io/grafana/alloy:latest
-    ports:
-      - "12345:12345"
-    volumes:
-      - ./compose/config.alloy:/etc/alloy/config.alloy
-    command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy"]
-
   app-api:
     profiles:
       - "app"

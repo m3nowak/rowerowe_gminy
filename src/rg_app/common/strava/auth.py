@@ -7,6 +7,7 @@ from typing import Any, AsyncGenerator, Literal, Self
 import httpx
 import msgspec
 import sqlalchemy as sa
+from opentelemetry.trace import get_tracer_provider
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
@@ -113,8 +114,11 @@ class StravaTokenManager:
             return user.access_token
 
     async def get_httpx_auth(self, athlete_id: int) -> StravaAuth:
-        token = await self.get_token(athlete_id)
-        return StravaAuth(token)
+        trc = get_tracer_provider().get_tracer(__name__)
+        with trc.start_as_current_span("get_auth") as span:
+            span.set_attribute("user.id", athlete_id)
+            token = await self.get_token(athlete_id)
+            return StravaAuth(token)
 
     async def refresh(self, refresh_token: str) -> TokenResponse:
         assert self._client is not None, "You must call this in async with begin() block"
