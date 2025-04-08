@@ -8,7 +8,7 @@ from litestar.params import Parameter
 from nats.js import JetStreamContext
 from opentelemetry.metrics import Counter, Meter
 from opentelemetry.propagate import inject
-from opentelemetry.trace import StatusCode, Tracer
+from opentelemetry.trace import StatusCode, Tracer, get_current_span
 from typing_extensions import Annotated
 
 from rg_app.common.litestar.plugins import AsyncExitStackPlugin, ConfigPlugin, NatsPlugin, NatsPluginConfig
@@ -60,6 +60,11 @@ async def webhook_handler(
     counter: Counter,
     otel_logger: Logger,
 ) -> dict[str, str]:
+    span = get_current_span()
+    span.set_attribute("user.id", data.root.owner_id)
+    span.set_attribute("object.id", data.root.object_id)
+    span.set_attribute("object.object_type", data.root.object_type)
+    span.set_attribute("object.aspect_type", data.root.aspect_type)
     if path_token != config.get_verify_token():
         raise PermissionDeniedException("Invalid path token")
     data_root = data.root

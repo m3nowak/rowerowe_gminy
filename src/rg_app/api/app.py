@@ -1,9 +1,12 @@
 import fastapi
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+from rg_app.common.otel.base import prepare_utils
 
 from .config import Config
-from .dependencies.broker import lifespan as broker_lifespan
+from .dependencies.broker import lifespan_factory as broker_lifespan_factory
 from .dependencies.config import lifespan_factory as config_lifespan_factory
 from .dependencies.db import lifespan as db_lifespan
 from .dependencies.debug_flag import lifespan_factory as debug_flag_lifespan_factory
@@ -14,10 +17,11 @@ from .routers import activities_router, athletes_router, auth_router, health_rou
 
 
 def app_factory(config: Config, debug: bool = False) -> fastapi.FastAPI:
+    mp, tp, lg = prepare_utils(config.otel)
     lifespans = [
         config_lifespan_factory(config),
         db_lifespan,
-        broker_lifespan,
+        broker_lifespan_factory(mp, tp, lg),
         http_client_lifespan,
         strava_lifespan,
         debug_flag_lifespan_factory(debug),
@@ -39,5 +43,7 @@ def app_factory(config: Config, debug: bool = False) -> fastapi.FastAPI:
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"],
     )
+
+    FastAPIInstrumentor.instrument_app(app, meter_provider=mp, tracer_provider=tp, excluded_urls="health")
 
     return app

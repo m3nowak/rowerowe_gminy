@@ -4,6 +4,7 @@ from typing import Annotated
 import jwt
 from fastapi import Depends, Request
 from fastapi.exceptions import HTTPException
+from opentelemetry.trace import get_current_span
 
 from rg_app.api.dependencies.config import Config
 
@@ -23,6 +24,9 @@ def _provide_user(request: Request, config: Config) -> UserInfo | None:
         decoded = jwt.decode(token, config.auth.get_secret(), algorithms=["HS256"])
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = int(decoded.get("sub"))
+    span = get_current_span()
+    span.set_attribute("user.id", user_id)
     return UserInfo(user_id=int(decoded["sub"]), username=decoded["preferred_username"])
 
 

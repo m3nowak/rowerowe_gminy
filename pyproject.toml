@@ -21,10 +21,11 @@ version = "0.0.1"
 [project.optional-dependencies]
 all = ["rowerowe_gminy[api,db,geo,scrap,wha,wkk,worker,nats-defs]"]
 api = [
-  "pyjwt>=2.9.0",
-  "fastapi[standard]>=0.115.6",
-  "faststream[nats,otel]>=0.5.33",
-  "rowerowe_gminy[db-common, otel]",
+    "pyjwt>=2.9.0",
+    "fastapi[standard]>=0.115.6",
+    "faststream[nats,otel]>=0.5.33",
+    "rowerowe_gminy[db-common, otel]",
+    "opentelemetry-instrumentation-fastapi>=0.49b2",
 ]
 db = ["alembic>=1.13.2", "rowerowe_gminy[db-common]"]
 db-common = ["SQLAlchemy>=2.0.34", "psycopg[binary]>=3.2.1"]
@@ -84,12 +85,6 @@ distribution = true
 [tool.pdm.build]
 includes = ["src/rg_app/"]
 
-[tool.pdm.dev-dependencies]
-dev = [
-  "ruff>=0.6.3",
-  "pyright>=1.1.382.post1",
-]
-
 [tool.pdm.scripts]
 format = {cmd = "ruff format --check src tests"}
 format-fix = {cmd = "ruff format src tests"}
@@ -133,3 +128,10 @@ include = ["src", "tests"]
 pythonPlatform = "Linux"
 pythonVersion = "3.12"
 reportMissingImports = "error"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6.3",
+    "pyright>=1.1.382.post1",
+    "opentelemetry-instrumentation-fastapi",
+]

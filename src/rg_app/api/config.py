@@ -9,6 +9,7 @@ from rg_app.common.config import (
     CommonSecretType,
     unpack_safe,
 )
+from rg_app.common.otel.config import BaseOtelConfig
 
 
 class NatsConfig(BaseNatsConfig):
@@ -31,3 +32,4 @@ class Config(BaseConfigModel):
     db: BaseDbConfig
     auth: AuthConfig
     origins: list[str] = Field(default_factory=list)
+    otel: BaseOtelConfig = Field(default_factory=lambda: BaseOtelConfig())
