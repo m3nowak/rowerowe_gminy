@@ -1,0 +1,26 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: akeyless-css
+spec:
+  provider:
+    akeyless:
+      akeylessGWApiURL: "https://api.akeyless.io"
+      authSecretRef:
+        secretRef:
+          accessID:
+            namespace: external-secrets
+            name: akeyless-secret-creds
+            key: accessId
+          accessType:
+            namespace: external-secrets
+            name: akeyless-secret-creds
+            key: accessType
+          accessTypeParam:
+            namespace: external-secrets
+            name: akeyless-secret-creds
+            key: accessTypeParam
+  conditions:
+    - namespaceRegexes:
+        - ".*" # All namespaces
+
