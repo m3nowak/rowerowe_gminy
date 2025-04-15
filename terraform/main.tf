@@ -6,27 +6,18 @@ terraform {
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "3.0.0-pre2"
+      version = "2.17.0"
     }
   }
 }
 provider "kubernetes" {
   config_path = "${path.root}/kubeconfig.yaml"
+
 }
 
 provider "helm" {
-  kubernetes = {
-    load_config_file = false
+  kubernetes {
     config_path = "${path.root}/kubeconfig.yaml"
   }
-  
-}
 
-module "migrated_example" {
-  source = "./migrated-example"
-  providers = {
-    kubernetes = kubernetes
-  }
-  content = "hello world!"
-  
 }
