@@ -1,0 +1,10 @@
+# Middleware to set Host header for the main posthog proxy
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: posthog-proxy-headers
+  namespace: posthog
+spec:
+  headers:
+    customRequestHeaders:
+      Host: "eu.i.posthog.com"
