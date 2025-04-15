@@ -1,0 +1,18 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nats-ws
+  namespace: nats
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`nats.rowerowegminy.pl`)
+      kind: Rule
+      services:
+        - name: nats
+          port: websocket # Target the port named 'websocket' in the Nats service
+      middlewares:
+        - name: ws-header # Middleware for websocket handling
+  tls:
+    secretName: cloudflare-cert # Reference to the Cloudflare origin secret for TLS
