@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: worker
+data:
+  config.yaml: |
+    nats:
+      url: "nats://nats.nats:4222"
+      credsPath: "/home/rgapp/nats.creds"
+    db:
+      host: "postgres-postgresql.postgres"
+      port: 5432
+      user: "postgres"
+      password:
+        env: "POSTGRES_PASSWORD"
+      database: "postgres"
+    strava:
+      clientId: "{{ .Values.clientId }}"
+      clientSecret:
+        env: "STRAVA_API_KEY"
+    otel:
+      useGrpc: true
+      enabled: true
+      svcName: "Worker"
+      svcNs: "prod"
+      endpoint: "alloy.alloy:4317"
+    duckDbPath: "/shared-data/geo.db"

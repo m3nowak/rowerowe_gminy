@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alloy
+  namespace: alloy
+  labels:
+    app.kubernetes.io/name: alloy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alloy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: alloy
+    spec:
+      containers:
+        - name: grafana-alloy
+          image: docker.io/grafana/alloy:v1.8.1
+          args:
+            - run
+            - --server.http.listen-addr=0.0.0.0:12345
+            # - --stability.level=experimental
+            - /etc/alloy/config.alloy
+          ports:
+            - containerPort: 12345
+              name: http-panel
+            - containerPort: 4317
+              name: grpc
+            - containerPort: 4318
+              name: http
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          env:
+            - name: GRAFANA_CLOUD_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-cloud
+                  key: password
+          volumeMounts:
+            - mountPath: /etc/alloy/
+              name: alloy-config
+      volumes:
+        - name: alloy-config
+          configMap:
+            name: alloy-config

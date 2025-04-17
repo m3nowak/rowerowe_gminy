@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wkk
+data:
+  config.yaml: |
+    strava:
+      clientId: "{{ .Values.clientId }}"
+      clientSecret:
+        env: "STRAVA_API_KEY"
+    nats:
+      url: "nats://nats.nats:4222"
+      credsPath: "/home/rgapp/nats.creds"
+    db:
+      host: "postgres-postgresql.postgres"
+      port: 5432
+      user: "postgres"
+      password:
+        env: "POSTGRES_PASSWORD"
+      database: "postgres"
+    ignoreBefore: "2025-03-03T12:00:00Z"
+    ignoreAfter: "2025-03-31T23:59:59Z"

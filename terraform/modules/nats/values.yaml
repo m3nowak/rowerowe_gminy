@@ -1,0 +1,85 @@
+config:
+  jetstream:
+    enabled: true
+    fileStore:
+      dir: /data
+      enabled: true
+      maxSize: 50Gi
+      pvc:
+        size: 50Gi
+        storageClassName: local-path
+        merge:
+          spec:
+            volumeName: nats-pv
+    memoryStore:
+      enabled: true
+      maxSize: 1Gi
+  leafnodes:
+    enabled: true
+  nats:
+    port: 4222
+  websocket:
+    enabled: true
+  resolver:
+    enabled: true
+    pvc:
+      size: 1Gi
+      storageClassName: local-path
+      merge:
+        spec:
+          volumeName: nats-resolver-pv
+    merge:
+      type: full
+      interval: 2m
+      timeout: 1.9s
+  merge:
+    jetstream:
+      domain: cloud
+    leafnodes:
+      remotes:
+        - urls: ["tls://connect.ngs.global"]
+          credentials: /etc/leaf-secrets/ngs.creds
+          account: ACP4QTDZRU443264HDWIMV4ERDEXLWO2VP4CLLRIYTWFWEC2XMZWTUEJ
+    operator: eyJ0eXAiOiJKV1QiLCJhbGciOiJlZDI1NTE5LW5rZXkifQ.eyJqdGkiOiJZTFJaNTRRN1dTUzZZWElZUFFCRlk3Nlg3Mlc3R0dZSlVBSERYTUpCSDIyNVFTTVNTN0dRIiwiaWF0IjoxNzI3MjgyODQ0LCJpc3MiOiJPRExPUFRQSVpMQUw0N0FRUElCUU5RQ05KWVNBVEo0UEZVVEJSSUFNTFI1UjU2RzU2M0dBSzdBVyIsIm5hbWUiOiJyb3dlcm93ZV9nbWlueSIsInN1YiI6Ik9ETE9QVFBJWkxBTDQ3QVFQSUJRTlFDTkpZU0FUSjRQRlVUQlJJQU1MUjVSNTZHNTYzR0FLN0FXIiwibmF0cyI6eyJvcGVyYXRvcl9zZXJ2aWNlX3VybHMiOlsibmF0czovL2xvY2FsaG9zdDo0MjIyIl0sInN5c3RlbV9hY2NvdW50IjoiQURXVElHRkJNWjQ2VTRSVlFVVEFFRFIzNDZDR1hRMzY2SDVWUzRXVUtWRUtVT1RGM0JTVlM1QlciLCJ0eXBlIjoib3BlcmF0b3IiLCJ2ZXJzaW9uIjoyfX0.h_FUBqTmoeLmhis-k8CLdOXVTRpf7ZE-gG65IWU8PvPdgLzJA91gL0L1sIH4-2U7nrBqNvB4Rk8yx-DcRddFAg
+    system_account: ADWTIGFBMZ46U4RVQUTAEDR346CGXQ366H5VS4WUKVEKUOTF3BSVS5BW
+    resolver_preload:
+      ADWTIGFBMZ46U4RVQUTAEDR346CGXQ366H5VS4WUKVEKUOTF3BSVS5BW: eyJ0eXAiOiJKV1QiLCJhbGciOiJlZDI1NTE5LW5rZXkifQ.eyJqdGkiOiJaNk5ZWkhUTjJRQzNaWjZJSFdWTlhHM0ZTT1pNRkpSMjVWTzJONzRPT1VWTlZUTFkyNTNBIiwiaWF0IjoxNzI3MjgyODQ0LCJpc3MiOiJPRExPUFRQSVpMQUw0N0FRUElCUU5RQ05KWVNBVEo0UEZVVEJSSUFNTFI1UjU2RzU2M0dBSzdBVyIsIm5hbWUiOiJTWVMiLCJzdWIiOiJBRFdUSUdGQk1aNDZVNFJWUVVUQUVEUjM0NkNHWFEzNjZINVZTNFdVS1ZFS1VPVEYzQlNWUzVCVyIsIm5hdHMiOnsiZXhwb3J0cyI6W3sibmFtZSI6ImFjY291bnQtbW9uaXRvcmluZy1zdHJlYW1zIiwic3ViamVjdCI6IiRTWVMuQUNDT1VOVC4qLlx1MDAzZSIsInR5cGUiOiJzdHJlYW0iLCJhY2NvdW50X3Rva2VuX3Bvc2l0aW9uIjozLCJkZXNjcmlwdGlvbiI6IkFjY291bnQgc3BlY2lmaWMgbW9uaXRvcmluZyBzdHJlYW0iLCJpbmZvX3VybCI6Imh0dHBzOi8vZG9jcy5uYXRzLmlvL25hdHMtc2VydmVyL2NvbmZpZ3VyYXRpb24vc3lzX2FjY291bnRzIn0seyJuYW1lIjoiYWNjb3VudC1tb25pdG9yaW5nLXNlcnZpY2VzIiwic3ViamVjdCI6IiRTWVMuUkVRLkFDQ09VTlQuKi4qIiwidHlwZSI6InNlcnZpY2UiLCJyZXNwb25zZV90eXBlIjoiU3RyZWFtIiwiYWNjb3VudF90b2tlbl9wb3NpdGlvbiI6NCwiZGVzY3JpcHRpb24iOiJSZXF1ZXN0IGFjY291bnQgc3BlY2lmaWMgbW9uaXRvcmluZyBzZXJ2aWNlcyBmb3I6IFNVQlNaLCBDT05OWiwgTEVBRlosIEpTWiBhbmQgSU5GTyIsImluZm9fdXJsIjoiaHR0cHM6Ly9kb2NzLm5hdHMuaW8vbmF0cy1zZXJ2ZXIvY29uZmlndXJhdGlvbi9zeXNfYWNjb3VudHMifV0sImxpbWl0cyI6eyJzdWJzIjotMSwiZGF0YSI6LTEsInBheWxvYWQiOi0xLCJpbXBvcnRzIjotMSwiZXhwb3J0cyI6LTEsIndpbGRjYXJkcyI6dHJ1ZSwiY29ubiI6LTEsImxlYWYiOi0xfSwic2lnbmluZ19rZXlzIjpbIkFDTlFLNlNBUU5JSDZYS05NWFE0Q1JWUkJMWlFMWVRWNjNMSUNITzZVTFdaSkVSS0hMNjdYMk1ZIl0sImRlZmF1bHRfcGVybWlzc2lvbnMiOnsicHViIjp7fSwic3ViIjp7fX0sImF1dGhvcml6YXRpb24iOnt9LCJ0eXBlIjoiYWNjb3VudCIsInZlcnNpb24iOjJ9fQ.eCflVLyqURy9CQxGnyJRf4NNr7xPiwSDbDWkGJrMN_tfqaG2m-YgP0CL8NFmb1qlOa4tivAzJykiFSoZGwaODw
+container:
+  env:
+    GOMEMLIMIT: 2GiB # 1GiB for the JetStream, 1GiB for the NATS server
+  patch:
+    - op: add
+      path: /volumeMounts/-
+      value:
+        name: leaf-secret
+        mountPath: /etc/leaf-secrets
+        readOnly: true
+    - op: add
+      path: /resources
+      value:
+        limits:
+          memory: 2.5Gi
+          cpu: 1
+        requests:
+          memory: 2Gi
+          cpu: 750m
+promExporter:
+  enabled: true
+service:
+  ports:
+    monitor:
+      enabled: true
+podTemplate:
+  patch:
+    - op: add
+      path: /spec/volumes/-
+      value:
+        name: leaf-secret
+        secret:
+          secretName: leaf-ngs-secret
+    - op: add
+      path: /metadata/annotations
+      value:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "7777"

@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nats-migrate
+  labels:
+    app.kubernetes.io/part-of: rg-app
+    app.kubernetes.io/name: nats-migrate
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      containers:
+        - name: nats-migrate
+          image: "ghcr.io/m3nowak/rowerowe_gminy/all:{{ .Values.imageVersion }}"
+          command:
+            [
+              "rg-nats-defs",
+              "--creds",
+              "/home/rgapp/nats.creds",
+              "nats://nats.nats:4222",
+              "local",
+            ]
+          volumeMounts:
+            - name: common-secrets
+              mountPath: "/home/rgapp/nats.creds"
+              subPath: nats_creds
+      restartPolicy: OnFailure
+      volumes:
+        - name: common-secrets
+          secret:
+            secretName: common-secrets
+  backoffLimit: 4

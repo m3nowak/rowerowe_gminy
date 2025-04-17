@@ -1,0 +1,37 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterExternalSecret
+metadata:
+  name: "cloudflare-cert-ces"
+spec:
+  externalSecretName: "cloudflare-cert-es"
+
+  namespaceSelectors:
+    - matchLabels:
+        spawn-cert: cloudflare-cert
+  refreshTime: "1m"
+
+  externalSecretSpec:
+    secretStoreRef:
+      kind: ClusterSecretStore
+      name: akeyless-css
+
+    refreshInterval: "24h"
+    target:
+      name: cloudflare-cert
+      creationPolicy: "Owner"
+      template:
+        type: kubernetes.io/tls
+
+        metadata:
+          annotations:
+            refresh-gen: "1"
+          labels: {}
+        data:
+          tls.key: |
+            {{ get (fromJson .certdata) "private_key_pem" }}
+          tls.crt: |
+            {{ get (fromJson .certdata) "certificate_pem" }}
+    data:
+      - secretKey: certdata
+        remoteRef:
+          key: /rowerowegminy/cloudflare-cert

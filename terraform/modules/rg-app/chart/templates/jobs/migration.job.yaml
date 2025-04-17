@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  labels:
+    app.kubernetes.io/part-of: rg-app
+    app.kubernetes.io/name: db-migrate
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      containers:
+        - name: db-migrate
+          image: "ghcr.io/m3nowak/rowerowe_gminy/all:{{ .Values.imageVersion }}"
+          imagePullPolicy: Always
+          command: ["rg-db", "migrate"]
+          env:
+            - name: RG_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: common-secrets
+                  key: db_url
+      restartPolicy: OnFailure
+  backoffLimit: 4

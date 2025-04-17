@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels:
+    app.kubernetes.io/part-of: rg-app
+    app.kubernetes.io/name: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: rg-app
+      app.kubernetes.io/name: api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: rg-app
+        app.kubernetes.io/name: api
+    spec:
+      containers:
+        - name: worker
+          image: "ghcr.io/m3nowak/rowerowe_gminy/all:{{ .Values.imageVersion }}"
+          imagePullPolicy: Always
+          args: ["rg-api", "start", "--config", "/home/rgapp/config.yaml"]
+          env:
+            - name: STRAVA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: common-secrets
+                  key: strava_api_key
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: common-secrets
+                  key: postgres_password
+            - name: API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: common-secrets
+                  key: api_secret
+          ports:
+            - containerPort: 8000
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "512Mi"
+            requests:
+              cpu: "0.4"
+              memory: "400Mi"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /home/rgapp/config.yaml
+              subPath: config.yaml
+              readOnly: true
+            - name: common-secrets
+              mountPath: "/home/rgapp/nats.creds"
+              subPath: nats_creds
+      volumes:
+        - name: config-volume
+          configMap:
+            name: api
+        - name: common-secrets
+          secret:
+            secretName: common-secrets

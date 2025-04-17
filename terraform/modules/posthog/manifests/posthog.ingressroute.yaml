@@ -1,0 +1,31 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: posthog-proxy-ingressroute
+  namespace: posthog
+spec:
+  entryPoints:
+    - websecure # Assumes an entrypoint named 'websecure' for HTTPS
+  routes:
+    # Route for static assets (more specific path, should come first)
+    - match: Host(`ph.rowerowegminy.pl`) && PathPrefix(`/static`)
+      kind: Rule
+      services:
+        - name: posthog-assets-proxy # K8s ExternalName service
+          port: 443
+          scheme: https # Connect to backend via HTTPS & use externalName for SNI
+      middlewares:
+        - name: posthog-assets-headers # Apply middleware to set Host header
+
+    # Route for the main proxy (less specific path)
+    - match: Host(`ph.rowerowegminy.pl`) && PathPrefix(`/`)
+      kind: Rule
+      services:
+        - name: posthog-proxy # K8s ExternalName service
+          port: 443
+          scheme: https # Connect to backend via HTTPS & use externalName for SNI
+      middlewares:
+        - name: posthog-proxy-headers # Apply middleware to set Host header
+
+  tls:
+    secretName: cloudflare-cert

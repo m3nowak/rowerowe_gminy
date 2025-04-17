@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: wkk-cronjob
+spec:
+  schedule: "37 */3 * * *" # Run every 3 hours at 37 minutes past the hour
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 120 # Timeout after 2 minutes
+      backoffLimit: 0 # No retries
+      template:
+        spec:
+          containers:
+            - name: wkk
+              image: "ghcr.io/m3nowak/rowerowe_gminy/all:{{ .Values.imageVersion }}"
+              imagePullPolicy: Always
+              args: ["rg-wkk", "--config", "/home/rgapp/config.yaml"]
+              resources:
+                limits:
+                  cpu: "0.2"
+                  memory: "200Mi"
+                requests:
+                  cpu: "0.1"
+                  memory: "100Mi"
+              env:
+                - name: STRAVA_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: common-secrets
+                      key: strava_api_key
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: common-secrets
+                      key: postgres_password
+              volumeMounts:
+                - name: common-secrets
+                  mountPath: "/home/rgapp/nats.creds"
+                  subPath: nats_creds
+                - name: config-volume
+                  mountPath: /home/rgapp/config.yaml
+                  subPath: config.yaml
+                  readOnly: true
+          restartPolicy: Never
+          volumes:
+            - name: common-secrets
+              secret:
+                secretName: common-secrets
+            - name: config-volume
+              configMap:
+                name: wkk

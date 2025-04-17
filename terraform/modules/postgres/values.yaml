@@ -1,0 +1,18 @@
+auth:
+  existingSecret: postgres-secret
+  secretKeys:
+    adminPasswordKey: adminPasswordKey
+primary:
+  persistence:
+    existingClaim: postgres-pvc
+  resources:
+    requests:
+      cpu: 1500m
+      memory: 3Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+  service:
+    type: NodePort
+    nodePorts:
+      postgresql: 30054
