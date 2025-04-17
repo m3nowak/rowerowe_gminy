@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wha-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rg-wha
+  template:
+    metadata:
+      labels:
+        app: rg-wha
+    spec:
+      containers:
+        - name: wha
+          image: "ghcr.io/m3nowak/rowerowe_gminy/wha:{{ .Values.imageVersion }}"
+          imagePullPolicy: Always
+          args: ["--config", "/home/rgapp/config/config.yaml", "--debug"]
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+          resources:
+            limits:
+              cpu: "0.2"
+              memory: "200Mi"
+            requests:
+              cpu: "0.1"
+              memory: "100Mi"
+          volumeMounts:
+            - name: secret-volume
+              mountPath: /home/rgapp/secret
+              readOnly: true
+            - name: config-volume
+              mountPath: /home/rgapp/config
+              readOnly: true
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: wha-secret
+        - name: config-volume
+          configMap:
+            name: wha-config

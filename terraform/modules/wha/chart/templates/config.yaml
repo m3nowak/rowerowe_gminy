@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wha-config
+data:
+  # Configuration values
+  config.yaml: |
+    strava:
+      clientId: "{{ .Values.clientId }}"
+      clientSecret:
+        secretMountPath: "/home/rgapp/secret"
+        secretKey: strava-key
+    selfUrl: "https://webhook.rowerowegminy.pl/"
+    verifyToken:
+      secretMountPath: "/home/rgapp/secret"
+      secretKey: webhook-key
+    nats:
+      url: "tls://connect.ngs.global"
+      credsPath: "/home/rgapp/secret/rg.creds"
+    otel:
+      useGrpc: true
+      enabled: false
+      svcName: "WebhookAdapter"
+      svcNs: "prod"
+      endpoint: "alloy.alloy:4317"

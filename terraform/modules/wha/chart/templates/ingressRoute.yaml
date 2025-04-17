@@ -1,0 +1,18 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wha-ingressroute
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`webhook.rowerowegminy.pl`)
+      priority: 10
+      services:
+        - kind: Service
+          name: wha-service
+          passHostHeader: true
+          port: 8000
+  tls:
+    secretName: cloudflare-cert

@@ -1,0 +1,18 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: api
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - kind: Rule
+    match: Host(`api.rowerowegminy.pl`)
+    priority: 10
+    services:
+    - kind: Service
+      name: api
+      passHostHeader: true
+      port: 80
+  tls:
+    secretName: cloudflare-cert
