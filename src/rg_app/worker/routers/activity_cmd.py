@@ -10,6 +10,7 @@ from opentelemetry import trace
 from sqlalchemy import and_, func, not_, select
 
 from rg_app.api.dependencies.db import AsyncSession
+from rg_app.common.enums import DescUpdateOptions
 from rg_app.common.faststream.otel import otel_logger, tracer_fn
 from rg_app.common.internal import activity_filter
 from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel, UpsertModelIneligible
@@ -124,7 +125,7 @@ DESC_COMMUNE_HEADER = "🏡 Zdobyte Gminy :"
 
 def _declinate_commune(count: int) -> str:
     if count == 1:
-        return "gmina"
+        return "gminę"
     elif count == 2 or count == 3 or count == 4:
         return "gminy"
     else:
@@ -140,10 +141,10 @@ def _declinate_new(count: int) -> str:
         return "nowych"
 
 
-async def _get_activity_description_content(session: AsyncSession, db_activity: Activity) -> list[str]:
+async def _get_activity_description_content(session: AsyncSession, db_activity: Activity) -> tuple[list[str], bool]:
     """
     Generate activity description content with commune and town information.
-    Returns a list of lines to be inserted in the activity description.
+    Returns a list of lines to be inserted in the activity description and a boolean indicating if any new regions were found.
     """
     # Target record CTE
     target_record_cte = (
@@ -234,7 +235,7 @@ async def _get_activity_description_content(session: AsyncSession, db_activity: 
         f"Przejechano do tej pory {so_far_regions_unique_count} {_declinate_commune(so_far_regions_unique_count)} z {total_achievable_count}! ({achieved_percent})"
     )
     desc_lines.append(DESC_SECTION_END)
-    return desc_lines
+    return desc_lines, bool(new_communes) or bool(new_towns)
 
 
 async def _update_activity_desc(
@@ -243,17 +244,26 @@ async def _update_activity_desc(
     activity: ActivityPartial,
     auth: StravaAuth,
     rlm: RateLimitManager,
+    update_desc: DescUpdateOptions,
 ) -> None:
     """
     Update activity description in strava.
     Has to be called after activity is created in DB.
     """
+
+    if update_desc == DescUpdateOptions.NONE:
+        # No need to update desc
+        return
+
     db_activity = await session.get_one(Activity, activity.id)
     if not db_activity.visited_regions:
         # No regions visited, no need to update desc
         return
 
-    desc_content = await _get_activity_description_content(session, db_activity)
+    desc_content, new_regions_visited = await _get_activity_description_content(session, db_activity)
+
+    if not new_regions_visited and update_desc == DescUpdateOptions.NEW_ONLY:
+        desc_content = []
 
     activity_desc_lines = (activity.description or "").splitlines()
     start_idx = -1
@@ -358,11 +368,12 @@ async def std_handle(
             assert resp_parsed == "OK"
 
             # Acitivity desc update
-            if user.update_strava_desc and not body.is_from_backlog:
+            update_desc = DescUpdateOptions(user.update_strava_desc)
+            if update_desc != DescUpdateOptions.NONE and not body.is_from_backlog:
                 if auth is None:
                     auth = await stm.get_httpx_auth(body.owner_id)
                 try:
-                    await _update_activity_desc(session, http_client, activity_expanded, auth, rlm)
+                    await _update_activity_desc(session, http_client, activity_expanded, auth, rlm, update_desc)
                 except HTTPStatusError as e:
                     if e.response.status_code == 401:
                         # User not authorized to update activity

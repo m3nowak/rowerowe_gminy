@@ -2,10 +2,11 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Optional
 
-from sqlalchemy import BigInteger, Boolean, ForeignKey, Numeric, String, func
+from sqlalchemy import BigInteger, Boolean, ForeignKey, Integer, Numeric, String, func
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from rg_app.common.enums import DescUpdateOptions
 from rg_app.db.decorators import UTCDateTime
 
 from .base import Base
@@ -29,7 +30,9 @@ class User(Base):
     strava_account_created_at: Mapped[datetime] = mapped_column(
         UTCDateTime, default=lambda: datetime.now(UTC), server_default=func.now()
     )
-    update_strava_desc: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    update_strava_desc: Mapped[int] = mapped_column(
+        Integer, default=DescUpdateOptions.NONE.value, server_default=str(DescUpdateOptions.NONE.value)
+    )
     activities: Mapped[list["Activity"]] = relationship(
         "Activity",
         back_populates="user",
