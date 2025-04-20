@@ -144,7 +144,7 @@ def _declinate_new(count: int) -> str:
 async def _get_activity_description_content(session: AsyncSession, db_activity: Activity) -> tuple[list[str], bool]:
     """
     Generate activity description content with commune and town information.
-    Returns a list of lines to be inserted in the activity description.
+    Returns a list of lines to be inserted in the activity description and a boolean indicating if any new regions were found.
     """
     # Target record CTE
     target_record_cte = (
