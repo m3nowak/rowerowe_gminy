@@ -10,6 +10,7 @@ from opentelemetry import trace
 from sqlalchemy import and_, func, not_, select
 
 from rg_app.api.dependencies.db import AsyncSession
+from rg_app.common.enums import DescUpdateOptions
 from rg_app.common.faststream.otel import otel_logger, tracer_fn
 from rg_app.common.internal import activity_filter
 from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel, UpsertModelIneligible
@@ -358,7 +359,8 @@ async def std_handle(
             assert resp_parsed == "OK"
 
             # Acitivity desc update
-            if user.update_strava_desc and not body.is_from_backlog:
+            update_desc = DescUpdateOptions(user.update_strava_desc)
+            if update_desc != DescUpdateOptions.NONE and not body.is_from_backlog:
                 if auth is None:
                     auth = await stm.get_httpx_auth(body.owner_id)
                 try:
