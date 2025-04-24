@@ -4,21 +4,23 @@ from typing import Annotated
 import sqlalchemy.ext.asyncio as sa_async
 from fastapi import Depends, FastAPI, Request
 
-from .config import get_config_from_app
+from rg_app.common.config import BaseDbConfig
 
 _ENGINE_KEY = "SQLALCHEMY_ENGINE"
 _SESSIONMAKER_KEY = "SQLALCHEMY_SESSIONMAKER"
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    config = get_config_from_app(app)
-    engine = sa_async.create_async_engine(config.db.get_url())
-    sessionmaker = sa_async.async_sessionmaker(bind=engine)
-    setattr(app.state, _ENGINE_KEY, engine)
-    setattr(app.state, _SESSIONMAKER_KEY, sessionmaker)
-    yield
-    await engine.dispose()
+def lifespan_factory(config_db: BaseDbConfig):
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        engine = sa_async.create_async_engine(config_db.get_url())
+        sessionmaker = sa_async.async_sessionmaker(bind=engine)
+        setattr(app.state, _ENGINE_KEY, engine)
+        setattr(app.state, _SESSIONMAKER_KEY, sessionmaker)
+        yield
+        await engine.dispose()
+
+    return lifespan
 
 
 async def _provide_session(request: Request):

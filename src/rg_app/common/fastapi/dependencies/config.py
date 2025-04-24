@@ -1,14 +1,13 @@
 from contextlib import asynccontextmanager
-from typing import Annotated
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Request
 
-from rg_app.api.config import Config as _Config
+from rg_app.common.config import BaseConfigModel
 
 _CONFIG_KEY = "config"
 
 
-def lifespan_factory(config: _Config):
+def lifespan_factory(config: BaseConfigModel):
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         setattr(app.state, _CONFIG_KEY, config)
@@ -17,14 +16,11 @@ def lifespan_factory(config: _Config):
     return lifespan
 
 
-def _provide_config(request: Request) -> _Config:
+def provide_config(request: Request) -> BaseConfigModel:
     return getattr(request.app.state, _CONFIG_KEY)
 
 
-def get_config_from_app(app: FastAPI) -> _Config:
+def get_config_from_app(app: FastAPI) -> BaseConfigModel:
     if not hasattr(app.state, _CONFIG_KEY):
         raise RuntimeError("Config not set on app")
     return getattr(app.state, _CONFIG_KEY)
-
-
-Config = Annotated[_Config, Depends(_provide_config)]

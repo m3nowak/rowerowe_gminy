@@ -1,8 +1,8 @@
 import fastapi
 import sqlalchemy as sa
 
-from rg_app.api.dependencies.broker import NatsBroker
 from rg_app.api.dependencies.db import AsyncSession
+from rg_app.common.fastapi.dependencies.broker import NatsBroker
 
 router = fastapi.APIRouter(tags=["health"])
 

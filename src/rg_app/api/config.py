@@ -1,3 +1,6 @@
+from typing import Annotated
+
+from fastapi import Depends
 from pydantic import Field
 
 from rg_app.common.config import (
@@ -9,6 +12,7 @@ from rg_app.common.config import (
     CommonSecretType,
     unpack_safe,
 )
+from rg_app.common.fastapi.dependencies.config import provide_config
 from rg_app.common.otel.config import BaseOtelConfig
 
 
@@ -33,3 +37,6 @@ class Config(BaseConfigModel):
     auth: AuthConfig
     origins: list[str] = Field(default_factory=list)
     otel: BaseOtelConfig = Field(default_factory=lambda: BaseOtelConfig())
+
+
+ConfigDI = Annotated[Config, Depends(provide_config)]

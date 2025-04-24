@@ -1,10 +1,6 @@
-from typing import Annotated
-
-from fastapi import Depends
 from pydantic import Field
 
 from rg_app.common.config import BaseConfigModel, BaseNatsConfig, BaseStravaConfig, CommonSecretType, unpack
-from rg_app.common.fastapi.dependencies.config import provide_config
 from rg_app.common.otel.config import BaseOtelConfig
 
 
@@ -25,6 +21,3 @@ class Config(BaseConfigModel):
         value = unpack(self.verify_token)
         assert value, "Verify token is not set"
         return value
-
-
-ConfigDI = Annotated[Config, Depends(provide_config)]

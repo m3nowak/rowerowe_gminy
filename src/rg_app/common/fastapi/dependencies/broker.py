@@ -8,21 +8,20 @@ from nats.aio.client import Client as _NatsClient
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.trace import TracerProvider
 
-from rg_app.api.dependencies.config import get_config_from_app
+from rg_app.common.config import BaseNatsConfig
 from rg_app.common.faststream.otel import direct_prepare_bundle
 
 _BROKER_KEY = "broker"
 
 
-def lifespan_factory(mp: MeterProvider, tp: TracerProvider, logger: Logger):
+def lifespan_factory(mp: MeterProvider, tp: TracerProvider, logger: Logger, nats_config: BaseNatsConfig):
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        config = get_config_from_app(app)
         bundle = direct_prepare_bundle(mp, tp, logger)
         broker = _NatsBroker(
-            config.nats.url,
-            user_credentials=config.nats.creds_path,
-            inbox_prefix=config.nats.inbox_prefix,
+            nats_config.url,
+            user_credentials=nats_config.creds_path,
+            inbox_prefix=nats_config.inbox_prefix,
             middlewares=[bundle.middleware],
         )
         await broker.start()
