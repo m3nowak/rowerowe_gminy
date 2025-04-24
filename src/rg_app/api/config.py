@@ -1,7 +1,7 @@
 from typing import Annotated
-from pydantic import Field
+
 from fastapi import Depends
-from rg_app.common.fastapi.dependencies.config import provide_config
+from pydantic import Field
 
 from rg_app.common.config import (
     BaseConfigModel,
@@ -12,6 +12,7 @@ from rg_app.common.config import (
     CommonSecretType,
     unpack_safe,
 )
+from rg_app.common.fastapi.dependencies.config import provide_config
 from rg_app.common.otel.config import BaseOtelConfig
 
 
