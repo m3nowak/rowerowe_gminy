@@ -22,10 +22,10 @@ async def hc(broker: NatsBroker):
 @router.get("/webhook/{path_token}", tags=["webhook"])
 async def webhook_validation(
     path_token: str,
-    verify_token: Annotated[str, Query(alias="hub.verify_token", default="")],
-    _: Annotated[str, Query(alias="hub.mode", default="")],
-    challenge: Annotated[str, Query(alias="hub.challenge", default="")],
     config: ConfigDI,
+    verify_token: Annotated[str, Query(alias="hub.verify_token")] = "",
+    _: Annotated[str, Query(alias="hub.mode")] = "",
+    challenge: Annotated[str, Query(alias="hub.challenge")] = "",
 ) -> dict[str, str]:
     if verify_token != config.get_verify_token():
         raise HTTPException(401, "Invalid verify token")
