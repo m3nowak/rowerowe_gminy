@@ -19,7 +19,7 @@ data:
       credsPath: "/home/rgapp/secret/rg.creds"
     otel:
       useGrpc: true
-      enabled: false
+      enabled: true
       svcName: "WebhookAdapter"
       svcNs: "prod"
       endpoint: "alloy.alloy:4317"

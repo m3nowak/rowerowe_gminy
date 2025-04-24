@@ -14,26 +14,26 @@ spec:
     spec:
       containers:
         - name: wha
-          image: "ghcr.io/m3nowak/rowerowe_gminy/wha:{{ .Values.imageVersion }}"
+          image: "ghcr.io/m3nowak/rowerowe_gminy/all:{{ .Values.imageVersion }}"
           imagePullPolicy: Always
-          args: ["--config", "/home/rgapp/config/config.yaml", "--debug"]
+          args: ["rg-wha", "--config", "/home/rgapp/config/config.yaml"]
           ports:
             - containerPort: 8000
           readinessProbe:
             httpGet:
-              path: /
+              path: /health
               port: 8000
           livenessProbe:
             httpGet:
-              path: /
+              path: /health
               port: 8000
           resources:
             limits:
-              cpu: "0.2"
-              memory: "200Mi"
+              cpu: "0.5"
+              memory: "400Mi"
             requests:
-              cpu: "0.1"
-              memory: "100Mi"
+              cpu: "0.5"
+              memory: "400Mi"
           volumeMounts:
             - name: secret-volume
               mountPath: /home/rgapp/secret
