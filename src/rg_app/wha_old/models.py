@@ -1,10 +1,10 @@
 # from rg_app.common.msg import BaseStruct
 from typing import Any
 
-from rg_app.common.msg.base_model import BaseModel
+from msgspec import Struct
 
 
-class StravaEvent(BaseModel):
+class StravaEvent(Struct):
     object_type: str
     object_id: int
     aspect_type: str

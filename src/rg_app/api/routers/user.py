@@ -1,10 +1,10 @@
 import fastapi
 
 from rg_app.api.dependencies.auth import UserInfoRequired
-from rg_app.api.dependencies.broker import NatsBroker
 from rg_app.api.dependencies.db import AsyncSession
 from rg_app.api.models.user import UserSettings, UserSettingsPartial
 from rg_app.common.enums import DescUpdateOptions
+from rg_app.common.fastapi.dependencies.broker import NatsBroker
 from rg_app.common.internal.common import BasicResponse
 from rg_app.common.internal.user_svc import AccountDeleteRequest
 from rg_app.db.models import User

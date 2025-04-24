@@ -5,13 +5,13 @@ import fastapi
 import jwt
 from httpx import HTTPStatusError
 
-from rg_app.api.dependencies.broker import NatsBroker
-from rg_app.api.dependencies.config import Config
+from rg_app.api.config import ConfigDI
 from rg_app.api.dependencies.db import AsyncSession
 from rg_app.api.dependencies.debug_flag import DebugFlag
 from rg_app.api.dependencies.http_client import AsyncClient
 from rg_app.api.dependencies.strava import RateLimitManager, StravaTokenManager
 from rg_app.api.models.auth import LoginErrorCause, LoginRequest, LoginResponse, LoginResponseError, StravaScopes
+from rg_app.common.fastapi.dependencies.broker import NatsBroker
 from rg_app.common.msg.cmd import BacklogActivityCmd
 from rg_app.common.strava.activities import verify_activities_accessible
 from rg_app.common.strava.athletes import get_athlete
@@ -72,7 +72,7 @@ async def _initialize_backlog_import(
 )
 async def login(
     login_data: LoginRequest,
-    config: Config,
+    config: ConfigDI,
     stm: StravaTokenManager,
     session: AsyncSession,
     df: DebugFlag,

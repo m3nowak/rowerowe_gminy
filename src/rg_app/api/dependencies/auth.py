@@ -6,7 +6,7 @@ from fastapi import Depends, Request
 from fastapi.exceptions import HTTPException
 from opentelemetry.trace import get_current_span
 
-from rg_app.api.dependencies.config import Config
+from rg_app.api.config import ConfigDI
 
 
 @dataclass
@@ -15,7 +15,7 @@ class UserInfo:
     username: str
 
 
-def _provide_user(request: Request, config: Config) -> UserInfo | None:
+def _provide_user(request: Request, config: ConfigDI) -> UserInfo | None:
     auth = request.headers.get("Authorization")
     if not auth:
         return None
@@ -30,7 +30,7 @@ def _provide_user(request: Request, config: Config) -> UserInfo | None:
     return UserInfo(user_id=int(decoded["sub"]), username=decoded["preferred_username"])
 
 
-def _provide_user_force(request: Request, config: Config) -> UserInfo:
+def _provide_user_force(request: Request, config: ConfigDI) -> UserInfo:
     user = _provide_user(request, config)
     if user is None:
         raise HTTPException(status_code=401, detail="Missing token")

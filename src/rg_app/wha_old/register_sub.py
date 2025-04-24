@@ -1,27 +1,24 @@
 import asyncio
 import sys
-from contextlib import asynccontextmanager
-from logging import Logger
 from urllib.parse import urljoin
 
 import httpx
-from fastapi import FastAPI
+from litestar import Litestar
 
+from .common import LOCAL_WH_URL
 from .config import Config
 
 STRAVA_SUB_URL = "https://www.strava.com/api/v3/push_subscriptions"
 
 
-def lifespan_factory(config: Config, sleep: int = 5, logger: Logger | None = None):
-    @asynccontextmanager
-    async def register_sub_hook(app: FastAPI):
-        asyncio.create_task(register_sub(config, sleep, logger))
-        yield
+def register_sub_hook_factory(config: Config, sleep: int = 5):
+    async def register_sub_hook(app: Litestar):
+        asyncio.create_task(register_sub(config, sleep, app))
 
     return register_sub_hook
 
 
-async def register_sub(config: Config, sleep: int = 5, logger: Logger | None = None):
+async def register_sub(config: Config, sleep: int = 5, app: Litestar | None = None):
     await asyncio.sleep(sleep)
     async with httpx.AsyncClient() as client:
         current_subs = await client.get(
@@ -31,7 +28,7 @@ async def register_sub(config: Config, sleep: int = 5, logger: Logger | None = N
         current_subs.raise_for_status()
         sub_list = current_subs.json()
 
-        callback_url = urljoin(config.self_url, "/".join(["webhook", config.get_verify_token()]))
+        callback_url = urljoin(config.self_url, "/".join([LOCAL_WH_URL, config.get_verify_token()]))
         callback_present = False
 
         if sub_list:
@@ -42,8 +39,8 @@ async def register_sub(config: Config, sleep: int = 5, logger: Logger | None = N
                 else:
                     callback_present = True
         if callback_present:
-            if logger:
-                logger.info("Webhook already registered")
+            if app and app.logger:
+                app.logger.info("Webhook already registered")
             return
         sub = {
             "client_id": config.strava.client_id,
@@ -53,11 +50,13 @@ async def register_sub(config: Config, sleep: int = 5, logger: Logger | None = N
         }
         new_sub = await client.post(STRAVA_SUB_URL, data=sub)
         if new_sub.is_success:
-            if logger:
-                logger.info("Webhook registered!")
+            if app and app.logger:
+                app.logger.info("Webhook registered!")
         else:
-            if logger:
-                logger.error("Failed to register webhook")
-                logger.error(new_sub.text)
-                logger.error("I am dead 😱")
-            sys.exit(1)
+            if app:
+                if app.logger:
+                    app.logger.error("Failed to register webhook")
+                    app.logger.error(new_sub.text)
+                    app.logger.error("I am dead 😱")
+                sys.exit(1)
+        new_sub.raise_for_status()

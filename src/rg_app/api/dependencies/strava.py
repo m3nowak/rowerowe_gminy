@@ -3,42 +3,44 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, Request
 
+from rg_app.common.config import BaseStravaConfig
+from rg_app.common.fastapi.dependencies.broker import get_broker_from_app
 from rg_app.common.strava import RateLimitManager as _RateLimitManager
 from rg_app.common.strava import RLNatsConfig
 from rg_app.common.strava import StravaTokenManager as _StravaTokenManager
 
-from .broker import get_broker_from_app
-from .config import get_config_from_app
 from .db import get_engine_from_app
 
 _STRAVA_TOKEN_MANAGER_KEY = "strava_token_manager"
 _RATE_LIMIT_MANAGER_KEY = "rate_limit_manager"
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    config = get_config_from_app(app)
-    broker = get_broker_from_app(app)
-    engine = get_engine_from_app(app)
-    conn = broker._connection
-    assert conn is not None
-    async with AsyncExitStack() as aes:
-        rlm = _RateLimitManager(RLNatsConfig(conn))
-        rlm = await aes.enter_async_context(rlm.begin())
-        setattr(app.state, _RATE_LIMIT_MANAGER_KEY, rlm)
+def lifespan_factory(config_strava: BaseStravaConfig):
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        broker = get_broker_from_app(app)
+        engine = get_engine_from_app(app)
+        conn = broker._connection
+        assert conn is not None
+        async with AsyncExitStack() as aes:
+            rlm = _RateLimitManager(RLNatsConfig(conn))
+            rlm = await aes.enter_async_context(rlm.begin())
+            setattr(app.state, _RATE_LIMIT_MANAGER_KEY, rlm)
 
-        client_secret = config.strava.get_client_secret()
-        assert client_secret is not None
+            client_secret = config_strava.get_client_secret()
+            assert client_secret is not None
 
-        stm = _StravaTokenManager(
-            config.strava.client_id,
-            client_secret,
-            rlm,
-            engine,
-        )
-        stm = await aes.enter_async_context(stm.begin())
-        setattr(app.state, _STRAVA_TOKEN_MANAGER_KEY, stm)
-        yield
+            stm = _StravaTokenManager(
+                config_strava.client_id,
+                client_secret,
+                rlm,
+                engine,
+            )
+            stm = await aes.enter_async_context(stm.begin())
+            setattr(app.state, _STRAVA_TOKEN_MANAGER_KEY, stm)
+            yield
+
+    return lifespan
 
 
 async def provide_strava_token_manager(request: Request):

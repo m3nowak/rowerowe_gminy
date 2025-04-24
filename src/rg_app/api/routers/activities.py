@@ -6,9 +6,9 @@ import fastapi
 
 from rg_app.api.common import user_check_last_trigger
 from rg_app.api.dependencies.auth import UserInfoRequired
-from rg_app.api.dependencies.broker import NatsBroker
 from rg_app.api.dependencies.db import AsyncSession
 from rg_app.api.dependencies.debug_flag import DebugFlag
+from rg_app.common.fastapi.dependencies.broker import NatsBroker
 from rg_app.common.msg.base_model import BaseModel
 from rg_app.common.msg.cmd import BacklogActivityCmd
 from rg_app.db.models import User

@@ -3,16 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
+from rg_app.common.fastapi.dependencies.broker import lifespan_factory as broker_lifespan_factory
+from rg_app.common.fastapi.dependencies.config import lifespan_factory as config_lifespan_factory
+from rg_app.common.fastapi.dependencies.util import combined_lifespans_factory
 from rg_app.common.otel.base import prepare_utils
 
 from .config import Config
-from .dependencies.broker import lifespan_factory as broker_lifespan_factory
-from .dependencies.config import lifespan_factory as config_lifespan_factory
-from .dependencies.db import lifespan as db_lifespan
+from .dependencies.db import lifespan_factory as db_lifespan_factory
 from .dependencies.debug_flag import lifespan_factory as debug_flag_lifespan_factory
 from .dependencies.http_client import lifespan as http_client_lifespan
-from .dependencies.strava import lifespan as strava_lifespan
-from .dependencies.util import combined_lifespans_factory
+from .dependencies.strava import lifespan_factory as strava_lifespan_factory
 from .routers import activities_router, athletes_router, auth_router, health_router, regions_router, user_router
 
 
@@ -20,10 +20,10 @@ def app_factory(config: Config, debug: bool = False) -> fastapi.FastAPI:
     mp, tp, lg = prepare_utils(config.otel)
     lifespans = [
         config_lifespan_factory(config),
-        db_lifespan,
-        broker_lifespan_factory(mp, tp, lg),
+        db_lifespan_factory(config.db),
+        broker_lifespan_factory(mp, tp, lg, config.nats),
         http_client_lifespan,
-        strava_lifespan,
+        strava_lifespan_factory(config.strava),
         debug_flag_lifespan_factory(debug),
     ]
 
