@@ -16,7 +16,7 @@ from rg_app.common.internal.geo_svc import (
     GeoSvcCheckResponseItem,
 )
 from rg_app.worker.common import DEFAULT_QUEUE
-from rg_app.worker.duck_deps import duck_conn
+from rg_app.worker.dependencies.duckdb import DuckDBConnDI
 
 geo_svc_router = NatsRouter("rg.svc.geo.")
 
@@ -29,7 +29,7 @@ async def ping() -> str:
 @geo_svc_router.subscriber("check-polyline", DEFAULT_QUEUE)
 async def check_polyline(
     body: GeoSvcCheckPolylineRequest,
-    conn: duckdb.DuckDBPyConnection = Depends(duck_conn),
+    conn: DuckDBConnDI,
     tracer: trace.Tracer = Depends(tracer_fn),
 ) -> GeoSvcCheckResponse:
     geojson_list = polyline.decode(body.data, precision=5, geojson=True)
@@ -40,7 +40,7 @@ async def check_polyline(
 @geo_svc_router.subscriber("check", DEFAULT_QUEUE)
 async def check(
     body: GeoSvcCheckRequest,
-    conn: duckdb.DuckDBPyConnection = Depends(duck_conn),
+    conn: DuckDBConnDI,
     tracer: trace.Tracer = Depends(tracer_fn),
 ) -> GeoSvcCheckResponse:
     line_string = geojson.LineString(body.coordinates)

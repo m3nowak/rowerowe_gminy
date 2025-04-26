@@ -24,7 +24,7 @@ class RateLimit(BaseStruct):
 
     @property
     def use_percent(self):
-        return self.usage / self.limit
+        return (self.usage / self.limit) * 100.0
 
 
 class RateLimitSet(BaseStruct):

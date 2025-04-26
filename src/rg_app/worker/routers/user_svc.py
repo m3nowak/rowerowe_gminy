@@ -16,7 +16,9 @@ from rg_app.common.strava.user import deauthorize
 from rg_app.db.models.models import User
 from rg_app.nats_defs.local import STREAM_ACTIVITY_CMD
 from rg_app.worker.common import DEFAULT_QUEUE
-from rg_app.worker.deps import db_session, http_client, rate_limit_mgr, token_mgr
+from rg_app.worker.dependencies.db import AsyncSessionDI
+from rg_app.worker.dependencies.http_client import AsyncClientDI
+from rg_app.worker.dependencies.strava import RateLimitManagerDI, StravaTokenManagerDI
 
 user_svc_router = NatsRouter("rg.svc.user.")
 
@@ -24,7 +26,7 @@ user_svc_router = NatsRouter("rg.svc.user.")
 @user_svc_router.subscriber("regions-unlocked", DEFAULT_QUEUE)
 async def user_unlocked(
     body: UnlockedRequest,
-    session: AsyncSession = Depends(db_session),
+    session: AsyncSessionDI,
 ) -> list[str]:
     query = text(
         """
@@ -43,10 +45,10 @@ async def user_unlocked(
 async def delete_account(
     body: AccountDeleteRequest,
     broker: NatsBroker,
-    session: AsyncSession = Depends(db_session),
-    stm: StravaTokenManager = Depends(token_mgr),
-    rlm: RateLimitManager = Depends(rate_limit_mgr),
-    async_client=Depends(http_client),
+    http_client: AsyncClientDI,
+    rlm: RateLimitManagerDI,
+    stm: StravaTokenManagerDI,
+    session: AsyncSessionDI,
     logger: Logger = Depends(otel_logger),
 ) -> BasicResponse:
     user_id = body.user_id
@@ -54,7 +56,7 @@ async def delete_account(
 
     try:
         token = await stm.get_token(user_id)
-        await deauthorize(client=async_client, rlm=rlm, access_token=token)
+        await deauthorize(client=http_client, rlm=rlm, access_token=token)
     except HTTPStatusError as e:
         if e.response.status_code == 401:
             pass
