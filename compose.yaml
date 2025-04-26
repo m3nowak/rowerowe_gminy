@@ -78,6 +78,7 @@ services:
   app-wha:
     profiles:
       - "app"
+      - "wha"
     build:
       context: .
       dockerfile: Dockerfile

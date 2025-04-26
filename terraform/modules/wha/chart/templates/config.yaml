@@ -15,11 +15,11 @@ data:
       secretMountPath: "/home/rgapp/secret"
       secretKey: webhook-key
     nats:
-      url: "tls://connect.ngs.global"
+      url: "wss://connect.ngs.global"
       credsPath: "/home/rgapp/secret/rg.creds"
     otel:
       useGrpc: true
-      enabled: false
+      enabled: true
       svcName: "WebhookAdapter"
       svcNs: "prod"
       endpoint: "alloy.alloy:4317"
