@@ -15,7 +15,7 @@ data:
       secretMountPath: "/home/rgapp/secret"
       secretKey: webhook-key
     nats:
-      url: "tls://connect.ngs.global"
+      url: "wss://connect.ngs.global"
       credsPath: "/home/rgapp/secret/rg.creds"
     otel:
       useGrpc: true
