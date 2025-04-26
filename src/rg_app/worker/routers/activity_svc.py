@@ -1,17 +1,15 @@
 from typing import Literal
 
 import polyline
-from faststream import Depends
 from faststream.nats import NatsRouter
 from faststream.nats.annotations import NatsBroker
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel, UpsertModelIneligible
 from rg_app.common.internal.geo_svc import GeoSvcCheckRequest, GeoSvcCheckResponse
 from rg_app.db.models import Activity, IneligibleActivity
 from rg_app.worker.common import DEFAULT_QUEUE
-from rg_app.worker.deps import db_session
+from rg_app.worker.dependencies.db import AsyncSessionDI
 
 activity_svc_router = NatsRouter("rg.svc.activity.")
 
@@ -21,7 +19,7 @@ req_check = activity_svc_router.publisher("rg.svc.geo.check", schema=GeoSvcCheck
 @activity_svc_router.subscriber("upsert-ineligible", DEFAULT_QUEUE)
 async def upsert_ineligible(
     body: UpsertModelIneligible,
-    session: AsyncSession = Depends(db_session),
+    session: AsyncSessionDI,
 ) -> Literal["OK"]:
     try:
         activity = await session.get_one(IneligibleActivity, body.id)
@@ -44,7 +42,7 @@ async def upsert_ineligible(
 async def upsert(
     body: UpsertModel,
     broker: NatsBroker,
-    session: AsyncSession = Depends(db_session),
+    session: AsyncSessionDI,
 ) -> Literal["OK"]:
     try:
         activity = await session.get_one(Activity, body.id)
@@ -86,7 +84,7 @@ async def upsert(
 @activity_svc_router.subscriber("delete", DEFAULT_QUEUE)
 async def delete(
     body: DeleteModel,
-    session: AsyncSession = Depends(db_session),
+    session: AsyncSessionDI,
 ) -> Literal["OK"]:
     activity = await session.get(Activity, body.id)
     if not activity:

@@ -99,6 +99,7 @@ CONSUMER_ACTIVITY_CMD_STD = make_durable(
             "rg.internal.cmd.activity.update.>",
             "rg.internal.cmd.activity.delete.>",
         ],
+        max_ack_pending=20,
     )
 )
 
@@ -112,6 +113,7 @@ CONSUMER_ACTIVITY_CMD_BACKLOG = make_durable(
         filter_subjects=[
             "rg.internal.cmd.activity.backlog.>",
         ],
+        max_ack_pending=20,
     )
 )
 

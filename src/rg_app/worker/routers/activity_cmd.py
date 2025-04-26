@@ -16,13 +16,16 @@ from rg_app.common.internal import activity_filter
 from rg_app.common.internal.activity_svc import DeleteModel, UpsertModel, UpsertModelIneligible
 from rg_app.common.msg.cmd import BacklogActivityCmd, StdActivityCmd
 from rg_app.common.strava.activities import get_activity, get_activity_range, update_activity
-from rg_app.common.strava.auth import StravaAuth, StravaTokenManager
+from rg_app.common.strava.auth import StravaAuth
 from rg_app.common.strava.models.activity import ActivityPartial, ActivityPatch
 from rg_app.common.strava.rate_limits import RateLimitManager
 from rg_app.db.models import User
 from rg_app.db.models.models import Activity, Region
 from rg_app.nats_defs.local import CONSUMER_ACTIVITY_CMD_BACKLOG, CONSUMER_ACTIVITY_CMD_STD, STREAM_ACTIVITY_CMD
-from rg_app.worker.deps import db_session, http_client, rate_limit_mgr, token_mgr
+from rg_app.worker.dependencies.db import AsyncSessionDI
+from rg_app.worker.dependencies.http_client import AsyncClientDI
+from rg_app.worker.dependencies.message_delayer import rate_limit_percent_below
+from rg_app.worker.dependencies.strava import RateLimitManagerDI, StravaTokenManagerDI
 
 router = NatsRouter()
 
@@ -74,17 +77,18 @@ def _mk_upsert_model(activity: ActivityPartial, polyline_str: str, is_detailed: 
     durable=CONSUMER_ACTIVITY_CMD_BACKLOG.durable_name,
     pull_sub=PullSub(),
     no_ack=True,
+    dependencies=[rate_limit_percent_below(50)],
 )
 async def backlog_handle(
     body: BacklogActivityCmd,
     broker: NatsBroker,
     nats_msg: NatsMessage,
-    http_client: AsyncClient = Depends(http_client),
-    rlm: RateLimitManager = Depends(rate_limit_mgr),
-    stm: StravaTokenManager = Depends(token_mgr),
+    http_client: AsyncClientDI,
+    rlm: RateLimitManagerDI,
+    stm: StravaTokenManagerDI,
+    session: AsyncSessionDI,
     tracer: trace.Tracer = Depends(tracer_fn),
     otel_logger: Logger = Depends(otel_logger),
-    session: AsyncSession = Depends(db_session),
 ):
     auth = await stm.get_httpx_auth(body.owner_id)
 
@@ -303,17 +307,18 @@ async def _update_activity_desc(
     durable=CONSUMER_ACTIVITY_CMD_STD.durable_name,
     pull_sub=PullSub(),
     no_ack=True,
+    dependencies=[rate_limit_percent_below(90)],
 )
 async def std_handle(
     body: StdActivityCmd,
     broker: NatsBroker,
     nats_msg: NatsMessage,
-    http_client: AsyncClient = Depends(http_client),
-    rlm: RateLimitManager = Depends(rate_limit_mgr),
-    stm: StravaTokenManager = Depends(token_mgr),
+    http_client: AsyncClientDI,
+    rlm: RateLimitManagerDI,
+    stm: StravaTokenManagerDI,
+    session: AsyncSessionDI,
     tracer: trace.Tracer = Depends(tracer_fn),
     otel_logger: Logger = Depends(otel_logger),
-    session: AsyncSession = Depends(db_session),
 ):
     span = trace.get_current_span()
     if body.type in ["create", "update"]:

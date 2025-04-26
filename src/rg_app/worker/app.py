@@ -1,15 +1,19 @@
 import logging
-from typing import Any, Awaitable, Callable
+from typing import AsyncContextManager, Callable
 
-from faststream import FastStream
+from faststream import ContextRepo, FastStream
 from faststream.asyncapi import get_app_schema
 from faststream.nats import NatsBroker
 
+from rg_app.common.faststream.dep_util import combined_lifespans_factory
 from rg_app.common.faststream.otel import prepare_bundle
 
 from .config import Config
-from .deps import after_startup, lifespan, on_startup_factory
-from .duck_deps import after_startup as duck_after_startup
+from .dependencies.config import lifespan_factory as config_lifespan_factory
+from .dependencies.db import lifespan_factory as db_lifespan_factory
+from .dependencies.duckdb import lifespan_factory as duckdb_lifespan_factory
+from .dependencies.http_client import lifespan as http_client_lifespan
+from .dependencies.strava import lifespan_factory as strava_lifespan_factory
 from .routers import (
     activity_cmd_router,
     activity_svc_router,
@@ -23,6 +27,17 @@ from .routers import (
 def app_factory(config: Config, debug: bool) -> FastStream:
     log_level = logging.DEBUG if debug else logging.INFO
     otel_bundle = prepare_bundle(config.otel)
+
+    lifespans: list[Callable[[ContextRepo], AsyncContextManager[None]]] = [
+        config_lifespan_factory(config),
+        db_lifespan_factory(config.db.get_url()),
+        duckdb_lifespan_factory(config.duck_db_path),
+        http_client_lifespan,
+        strava_lifespan_factory(config.strava),
+    ]
+    if otel_bundle:
+        lifespans.append(otel_bundle.lifespan)
+
     broker = NatsBroker(
         config.nats.url,
         log_level=log_level,
@@ -39,15 +54,9 @@ def app_factory(config: Config, debug: bool) -> FastStream:
         user_svc_router,
     )
 
-    on_startup: list[Callable[..., Awaitable[Any]]] = [on_startup_factory(config)]
-    if otel_bundle:
-        on_startup.append(otel_bundle.on_startup)
-
     app = FastStream(
         broker,
-        on_startup=on_startup,
-        after_startup=[after_startup, duck_after_startup],  # type: ignore
-        lifespan=lifespan,
+        lifespan=combined_lifespans_factory(*lifespans),
     )
     return app
 

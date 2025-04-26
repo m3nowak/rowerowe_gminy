@@ -24,7 +24,7 @@ class RateLimit(BaseStruct):
 
     @property
     def use_percent(self):
-        return self.usage / self.limit
+        return (self.usage / self.limit) * 100.0
 
 
 class RateLimitSet(BaseStruct):
@@ -163,8 +163,19 @@ class RateLimitManager:
     def _nc_available(self):
         return self._nc is not None
 
+    async def _get_limits_fallback(self) -> RateLimitSet | None:
+        if self._kv is not None and self._kv_name is not None:
+            assert self._kv_name is not None
+            limits_raw = await self._kv.get(self._kv_name)
+            if limits_raw.value is not None:
+                return msgspec.json.decode(limits_raw.value, type=RateLimitSet)
+        return None
+
     async def get_limits(self) -> RateLimitSet | None:
-        return self.limits_set.get()
+        limits = self.limits_set.get()
+        if limits is None:
+            limits = await self._get_limits_fallback()
+        return limits
 
     async def feed_headers(self, headers: Headers):
         tp = get_tracer_provider()
