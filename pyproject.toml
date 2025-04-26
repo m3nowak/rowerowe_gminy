@@ -19,7 +19,7 @@ requires-python = ">=3.12,<3.13"
 version = "0.0.1"
 
 [project.optional-dependencies]
-all = ["rowerowe_gminy[api,db,geo,scrap,wha,wkk,worker,nats-defs]"]
+all = ["rowerowe_gminy[api,db,geo,scrap,wkk,worker,nats-defs]"]
 api = [
     "pyjwt>=2.9.0",
     "fastapi[standard]>=0.115.6",
@@ -51,11 +51,6 @@ scrap = [
     "beautifulsoup4>=4.12.3",
     "pillow>=11.1.0",
     "rembg[cpu]>=2.0.62",
-]
-wha = [
-  "litestar[standard, opentelemetry]>=2.11.0",
-  "nats-py[nkeys]>=2.9.0",
-  "rowerowe_gminy[db-common, otel]",
 ]
 wkk = [
   "polyline>=2.0.2",
