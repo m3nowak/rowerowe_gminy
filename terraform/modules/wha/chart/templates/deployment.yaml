@@ -20,7 +20,7 @@ spec:
             [
               "rg-wha",
               "--config",
-              "/home/rgapp/config/config.yaml",
+              "/home/rgapp/config/config.yaml"
             ]
           ports:
             - containerPort: 8000
