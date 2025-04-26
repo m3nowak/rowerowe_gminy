@@ -24,6 +24,7 @@ from rg_app.db.models.models import Activity, Region
 from rg_app.nats_defs.local import CONSUMER_ACTIVITY_CMD_BACKLOG, CONSUMER_ACTIVITY_CMD_STD, STREAM_ACTIVITY_CMD
 from rg_app.worker.dependencies.db import AsyncSessionDI
 from rg_app.worker.dependencies.http_client import AsyncClientDI
+from rg_app.worker.dependencies.message_delayer import rate_limit_percent_below
 from rg_app.worker.dependencies.strava import RateLimitManagerDI, StravaTokenManagerDI
 
 router = NatsRouter()
@@ -35,8 +36,6 @@ pub_activity_std = router.publisher("rg.internal.cmd.activity.create.{athlete_id
 req_upsert = router.publisher("rg.svc.activity.upsert", schema=UpsertModel)
 req_upsert_ineligible = router.publisher("rg.svc.activity.upsert-ineligible", schema=UpsertModel)
 req_delete = router.publisher("rg.svc.activity.delete", schema=DeleteModel)
-
-from rg_app.worker.dependencies.message_delayer import rate_limit_percent_below
 
 
 def _mk_ineligible_activity(activity: ActivityPartial, reason: str) -> UpsertModelIneligible:
