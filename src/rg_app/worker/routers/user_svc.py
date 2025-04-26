@@ -6,12 +6,10 @@ from faststream.nats import NatsRouter
 from faststream.nats.annotations import NatsBroker
 from httpx import HTTPStatusError
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from rg_app.common.faststream.otel import otel_logger
 from rg_app.common.internal.common import BasicResponse
 from rg_app.common.internal.user_svc import AccountDeleteRequest, UnlockedRequest
-from rg_app.common.strava.auth import RateLimitManager, StravaTokenManager
 from rg_app.common.strava.user import deauthorize
 from rg_app.db.models.models import User
 from rg_app.nats_defs.local import STREAM_ACTIVITY_CMD
