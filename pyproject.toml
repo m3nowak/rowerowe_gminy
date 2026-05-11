@@ -60,7 +60,7 @@ wkk = [
   "types-lxml>=2024.9.16",
 ]
 worker = [
-  "faststream[nats, otel]>=0.5.25",
+  "faststream[nats, otel]>=0.5.25,<0.6.0",
   "rowerowe_gminy[geobase, otel]",
 ]
 nats-defs = [
