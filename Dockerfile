@@ -11,41 +11,49 @@ RUN ["python3.12", "-m", "pip", "install", "pdm"]
 COPY . /app
 WORKDIR /app
 RUN ["pdm", "build"]
+RUN pdm export --prod --no-hashes --no-extras -o constraints.txt
 
 FROM common as venv-all
 RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
-RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[all]
+COPY --from=build /app/constraints.txt /app/constraints.txt
+RUN /home/rgapp/venv/bin/pip install -f /app/whl -c /app/constraints.txt rowerowe_gminy[all]
 
 FROM common as venv-api
 RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
-RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[api]
+COPY --from=build /app/constraints.txt /app/constraints.txt
+RUN /home/rgapp/venv/bin/pip install -f /app/whl -c /app/constraints.txt rowerowe_gminy[api]
 
 FROM common as venv-db
 RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
-RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[db]
+COPY --from=build /app/constraints.txt /app/constraints.txt
+RUN /home/rgapp/venv/bin/pip install -f /app/whl -c /app/constraints.txt rowerowe_gminy[db]
 
 FROM common as venv-nats-defs
 RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
-RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[nats-defs]
+COPY --from=build /app/constraints.txt /app/constraints.txt
+RUN /home/rgapp/venv/bin/pip install -f /app/whl -c /app/constraints.txt rowerowe_gminy[nats-defs]
 
 FROM common as venv-wha
 RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
-RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[wha]
+COPY --from=build /app/constraints.txt /app/constraints.txt
+RUN /home/rgapp/venv/bin/pip install -f /app/whl -c /app/constraints.txt rowerowe_gminy[wha]
 
 FROM common as venv-wkk
 RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
-RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[wkk]
+COPY --from=build /app/constraints.txt /app/constraints.txt
+RUN /home/rgapp/venv/bin/pip install -f /app/whl -c /app/constraints.txt rowerowe_gminy[wkk]
 
 FROM common as venv-worker
 RUN ["python3.12", "-m", "venv", "/home/rgapp/venv"]
 COPY --from=build /app/dist/*.whl /app/whl/
-RUN /home/rgapp/venv/bin/pip install -f /app/whl rowerowe_gminy[worker]
+COPY --from=build /app/constraints.txt /app/constraints.txt
+RUN /home/rgapp/venv/bin/pip install -f /app/whl -c /app/constraints.txt rowerowe_gminy[worker]
 
 FROM common as runtime
 RUN groupadd -g 1000 rgapp
