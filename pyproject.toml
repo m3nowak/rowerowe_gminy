@@ -23,7 +23,7 @@ all = ["rowerowe_gminy[api,db,geo,scrap,wkk,worker,nats-defs]"]
 api = [
     "pyjwt>=2.9.0",
     "fastapi[standard]>=0.115.6",
-    "faststream[nats,otel]>=0.5.33",
+    "faststream[nats,otel]>=0.5.33,<0.6.0",
     "rowerowe_gminy[db-common, otel]",
     "opentelemetry-instrumentation-fastapi>=0.49b2",
 ]
